@@ -1,0 +1,10 @@
+.vs/
+*.suo
+*.user
+bin/
+obj/
+packages/
+Hoops.Web/Scripts/all.min.js
+Hoops.Web/Content/old.tmp.css
+Hoops.Web/Content/xo.css
+_ReSharper.Caches/
