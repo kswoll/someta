@@ -33,7 +33,7 @@
     <WarningLevel>4</WarningLevel>
   </PropertyGroup>
   <ItemGroup>
-    <WeaverFiles Include="$(SolutionDir)SoMeta.Fody\bin\$(Configuration)\SoMeta.Fody.dll" />
+    <WeaverFiles Include="$(SolutionDir)SoMeta.Fody\bin\$(Configuration)\netstandard2.0\SoMeta.Fody.dll" />
     <Content Include="FodyWeavers.xml" />
   </ItemGroup>
   <ItemGroup>

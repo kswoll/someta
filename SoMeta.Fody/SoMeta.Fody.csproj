@@ -1,67 +1,13 @@
-﻿<?xml version="1.0" encoding="utf-8"?>
-<Project ToolsVersion="15.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
-  <Import Project="$(MSBuildExtensionsPath)\$(MSBuildToolsVersion)\Microsoft.Common.props" Condition="Exists('$(MSBuildExtensionsPath)\$(MSBuildToolsVersion)\Microsoft.Common.props')" />
-  <Import Project="..\packages\FodyHelpers.5.0.6\build\FodyHelpers.props" Condition="Exists('..\packages\FodyHelpers.5.0.6\build\FodyHelpers.props')" />
+﻿<Project Sdk="Microsoft.NET.Sdk">
 
   <PropertyGroup>
-    <Configuration Condition=" '$(Configuration)' == '' ">Debug</Configuration>
-    <Platform Condition=" '$(Platform)' == '' ">AnyCPU</Platform>
-    <ProjectGuid>{A30979D6-FBBF-4C2D-8DCD-599E0C337891}</ProjectGuid>
-    <OutputType>Library</OutputType>
-    <AppDesignerFolder>Properties</AppDesignerFolder>
-    <RootNamespace>SoMeta.Fody</RootNamespace>
-    <AssemblyName>SoMeta.Fody</AssemblyName>
-    <TargetFrameworkVersion>v4.7.2</TargetFrameworkVersion>
-    <FileAlignment>512</FileAlignment>
-    <Deterministic>true</Deterministic>
-    <Authors>Kirk Woll</Authors>
-    <Copyright>Copyright $([System.DateTime]::UtcNow.ToString(yyyy)).</Copyright>
-    <Description>General Metaprogramming through Fody</Description>
-    <PackageLicenseExpression>MIT</PackageLicenseExpression>
-    <!-- PackageTags are optional. Defaults to 'ILWeaving, Fody, Cecil, AOP' -->
-    <PackageTags>ILWeaving, Fody, Cecil, AOP</PackageTags>
-    <PackageOutputPath>$(SolutionDir)../nugets</PackageOutputPath>
-    <PackageProjectUrl>https://github.com/Fody/Home/tree/master/BasicFodyAddin</PackageProjectUrl>
+    <TargetFramework>netstandard2.0</TargetFramework>
+    <Version>2.0.0</Version>
+    <GeneratePackageOnBuild>false</GeneratePackageOnBuild>
   </PropertyGroup>
-  <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|AnyCPU' ">
-    <DebugSymbols>true</DebugSymbols>
-    <DebugType>full</DebugType>
-    <Optimize>false</Optimize>
-    <OutputPath>bin\Debug\</OutputPath>
-    <DefineConstants>DEBUG;TRACE</DefineConstants>
-    <ErrorReport>prompt</ErrorReport>
-    <WarningLevel>4</WarningLevel>
-  </PropertyGroup>
-  <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Release|AnyCPU' ">
-    <DebugType>pdbonly</DebugType>
-    <Optimize>true</Optimize>
-    <OutputPath>bin\Release\</OutputPath>
-    <DefineConstants>TRACE</DefineConstants>
-    <ErrorReport>prompt</ErrorReport>
-    <WarningLevel>4</WarningLevel>
-  </PropertyGroup>
+
   <ItemGroup>
-    <WeaverFiles Include="$(SolutionDir)SoMeta.Fody\bin\$(Configuration)\SoMeta.Fody.dll" />
+    <PackageReference Include="FodyHelpers" Version="3.2.0" />
   </ItemGroup>
-  <ItemGroup>
-    <Reference Include="System" />
-    <Reference Include="System.Core" />
-    <Reference Include="System.Xml.Linq" />
-    <Reference Include="System.Data.DataSetExtensions" />
-    <Reference Include="Microsoft.CSharp" />
-    <Reference Include="System.Data" />
-    <Reference Include="System.Net.Http" />
-    <Reference Include="System.Xml" />
-  </ItemGroup>
-  <ItemGroup>
-    <Compile Include="ModuleWeaver.cs" />
-    <Compile Include="Properties\AssemblyInfo.cs" />
-  </ItemGroup>
-  <ItemGroup>
-    <PackageReference Include="FodyHelpers">
-      <Version>5.0.6</Version>
-    </PackageReference>
-  </ItemGroup>
-  <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
-  <Import Project="..\packages\FodyHelpers.5.0.6\build\FodyHelpers.targets" Condition="Exists('..\packages\FodyHelpers.5.0.6\build\FodyHelpers.targets')" />
+
 </Project>
