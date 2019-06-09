@@ -11,6 +11,7 @@ using Mono.Cecil.Cil;
 using Mono.Cecil.Rocks;
 using CallSite = Mono.Cecil.CallSite;
 using FieldAttributes = Mono.Cecil.FieldAttributes;
+using ICustomAttributeProvider = Mono.Cecil.ICustomAttributeProvider;
 using MethodAttributes = Mono.Cecil.MethodAttributes;
 using MethodBody = Mono.Cecil.Cil.MethodBody;
 
@@ -56,6 +57,7 @@ namespace SoMeta.Fody
             var methodBaseType = ModuleDefinition.ImportReference(typeof(MethodBase));
             methodBaseGetCurrentMethod = ModuleDefinition.FindMethod(methodBaseType, nameof(MethodBase.GetCurrentMethod));
 
+            var func1Type = ModuleDefinition.ImportReference(typeof(Func<>));
             var func2Type = ModuleDefinition.ImportReference(typeof(Func<,>));
             var action1Type = ModuleDefinition.ImportReference(typeof(Action<>));
             var objectArrayType = ModuleDefinition.ImportReference(typeof(object[]));
@@ -74,6 +76,7 @@ namespace SoMeta.Fody
                 LogError = LogError,
                 LogInfo = LogInfo,
                 Action1Type = action1Type,
+                Func1Type = func1Type,
                 Func2Type = func2Type,
                 ObjectArrayType = objectArrayType,
                 TaskType = taskType,
@@ -193,9 +196,9 @@ namespace SoMeta.Fody
             return property.CustomAttributes.Where(x => x.AttributeType.FullName == attributeType.FullName);
         }
 
-        public static IEnumerable<CustomAttribute> GetCustomAttributesInAncestry(this PropertyDefinition property, TypeReference attributeType)
+        public static IEnumerable<CustomAttribute> GetCustomAttributesInAncestry(this ICustomAttributeProvider member, TypeReference attributeType)
         {
-            return property.CustomAttributes.Where(x => attributeType.IsAssignableFrom(x.AttributeType));
+            return member.CustomAttributes.Where(x => attributeType.IsAssignableFrom(x.AttributeType));
         }
 
         public static bool IsDefined(this IMemberDefinition member, TypeReference attributeType, bool inherit = false)
@@ -376,10 +379,46 @@ namespace SoMeta.Fody
             il.Emit(OpCodes.Castclass, attributeType);
         }
 
+        /// <summary>
+        /// If the specified type is a value type or a generic parameter, this will box the value on
+        /// the stack (turning it into an object)
+        /// </summary>
         public static void EmitBoxIfNeeded(this ILProcessor il, TypeReference type)
         {
             if (type.IsValueType || type.IsGenericParameter)
                 il.Emit(OpCodes.Box, Import(type));
+        }
+
+        public static void EmitUnboxIfNeeded(this ILProcessor il, TypeReference type, TypeDefinition declaringType)
+        {
+            // If it's a value type, unbox it
+            if (type.IsValueType || type.IsGenericParameter)
+                il.Emit(OpCodes.Unbox_Any, type.ResolveGenericParameter(declaringType).Import());
+            // Otherwise, cast it
+            else
+                il.Emit(OpCodes.Castclass, type.ResolveGenericParameter(declaringType).Import());
+        }
+
+        public static MethodReference BindAll(this MethodReference method, TypeDefinition declaringType)
+        {
+            MethodReference result = method;
+            if (declaringType.HasGenericParameters)
+                result = method.Bind(declaringType.MakeGenericInstanceType(declaringType.GenericParameters.ToArray()));
+            var proceedTargetMethod = result.Import();
+            var genericProceedTargetMethod = proceedTargetMethod;
+            if (method.GenericParameters.Count > 0)
+                genericProceedTargetMethod = genericProceedTargetMethod.MakeGenericMethod(method.GenericParameters.Select(x => x.ResolveGenericParameter(declaringType)).ToArray());
+
+            return genericProceedTargetMethod;
+        }
+
+        public static void EmitDelegate(this ILProcessor il, MethodReference handler, TypeReference delegateType)
+        {
+            var proceedDelegateType = delegateType.MakeGenericInstanceType(TypeSystem.ObjectReference);
+            var proceedDelegateTypeConstructor = delegateType.Resolve().GetConstructors().First().Bind(proceedDelegateType);
+            il.Emit(OpCodes.Ldarg_0);
+            il.Emit(OpCodes.Ldftn, handler);
+            il.Emit(OpCodes.Newobj, proceedDelegateTypeConstructor);
         }
 
         /// <summary>
@@ -407,6 +446,118 @@ namespace SoMeta.Fody
             });
 
             return propertyInfoField;
+        }
+
+        private static Dictionary<TypeDefinition, Dictionary<string, int>> uniqueMethodNames = new Dictionary<TypeDefinition, Dictionary<string, int>>();
+
+        /// <summary>
+        /// In the case of method overloads, many methods have the same name, but we often want a single unique identifier
+        /// per overload.  When there are no overloads, this method will just return the method's name.  Otherwise, a counter
+        /// will drive subsequent overloaded methods.  Note: the actual name for any given overload is non-deterministic since
+        /// it's based on when this method is called for that particular overload.  The only exception, of course, is when there
+        /// are no overloads at all.
+        /// </summary>
+        private static string GetUniqueMethodName(this MethodDefinition method)
+        {
+            if (!uniqueMethodNames.TryGetValue(method.DeclaringType, out var uniqueNames))
+            {
+                uniqueNames = new Dictionary<string, int>();
+                uniqueMethodNames[method.DeclaringType] = uniqueNames;
+            }
+
+            var name = method.Name;
+            if (uniqueNames.TryGetValue(name, out var index))
+            {
+                uniqueNames[name] = index + 1;
+                name += "$" + index;
+            }
+            else
+            {
+                uniqueNames[name] = 2;
+            }
+
+            return name;
+        }
+
+        /// <summary>
+        /// Declares a static field to store the PropertyInfo for the specified PropertyDefinition and initializes
+        /// it in the declaring class' static initializer.  If no static initializer currently exists, one will
+        /// be created.
+        /// </summary>
+        public static FieldDefinition CacheMethodInfo(this MethodDefinition method)
+        {
+            // Add static field for property
+            var type = method.DeclaringType;
+
+            var fieldName = method.GetUniqueMethodName();
+
+            var propertyInfoField = new FieldDefinition($"{fieldName}$PropertyInfo", FieldAttributes.Static | FieldAttributes.Private, Context.PropertyInfoType);
+            type.Fields.Add(propertyInfoField);
+
+            var staticConstructor = type.GetStaticConstructor();
+            if (staticConstructor == null)
+            {
+                staticConstructor = type.CreateStaticConstructor();
+                staticConstructor.Body.GetILProcessor().Emit(OpCodes.Ret);
+            }
+            staticConstructor.Body.EmitBeforeReturn(il =>
+            {
+                il.EmitGetProperty(property);
+                il.Emit(OpCodes.Stsfld, propertyInfoField);
+            });
+
+            return propertyInfoField;
+        }
+
+        /// <summary>
+        /// Moves the implementation of the specified (original) method into a new method defined in the same class
+        /// and returns the new method.  Also, the implementation of the original method is cleared (including debug
+        /// state)
+        /// </summary>
+        public static MethodDefinition MoveImplementation(this MethodDefinition original, string newName)
+        {
+            var method = new MethodDefinition(newName, MethodAttributes.Private, original.ReturnType);
+            method.CustomAttributes.Add(new CustomAttribute(Context.OriginalMethodAttributeConstructor)
+            {
+                ConstructorArguments = { new CustomAttributeArgument(TypeSystem.StringReference, method.Name) }
+            });
+            original.CopyParameters(method);
+            original.CopyGenericParameters(method);
+
+            method.DebugInformation.Scope = original.DebugInformation.Scope;
+            method.DebugInformation.StateMachineKickOffMethod = original.DebugInformation.StateMachineKickOffMethod;
+            foreach (var sequencePoint in original.DebugInformation.SequencePoints)
+            {
+                method.DebugInformation.SequencePoints.Add(sequencePoint);
+            }
+            method.Body = new MethodBody(method);
+            foreach (var variable in original.Body.Variables)
+            {
+                method.Body.InitLocals = true;
+                method.Body.Variables.Add(new VariableDefinition(variable.VariableType));
+            }
+            foreach (var handler in original.Body.ExceptionHandlers)
+            {
+                method.Body.ExceptionHandlers.Add(handler);
+            }
+            method.Body.Emit(il =>
+            {
+                foreach (var instruction in original.Body.Instructions)
+                {
+                    il.Append(instruction);
+                }
+            });
+            original.DeclaringType.Methods.Add(method);
+
+            // Erase scope since the body is being moved into the $Original method
+            original.DebugInformation.Scope = null;
+            original.DebugInformation.StateMachineKickOffMethod = null;
+            original.DebugInformation.SequencePoints.Clear();
+
+            original.Body = new MethodBody(original);
+            original.Body.InitLocals = true;
+
+            return method;
         }
 
         public static TypeReference Import(this TypeReference type)
@@ -748,6 +899,26 @@ namespace SoMeta.Fody
                 throw new ArgumentException("Pass in a method call expression", nameof(expression));
 
             return body.Method;
+        }
+
+        public static MethodAttributes GetStatic(this MethodAttributes attributes)
+        {
+            return attributes & MethodAttributes.Static;
+        }
+
+        public static MethodDefinition CreateSimilarMethod(this MethodDefinition method, string name, MethodAttributes attributes, TypeReference returnType)
+        {
+            var type = method.DeclaringType;
+            var result = new MethodDefinition(name, attributes | method.Attributes.GetStatic(), returnType);
+            result.Body = new MethodBody(result);
+            result.Body.InitLocals = true;
+            type.Methods.Add(result);
+            return result;
+        }
+
+        public static string Describe(this MethodDefinition method)
+        {
+            return $"{method.DeclaringType.FullName}.{method.Name}({string.Join(", ", method.Parameters.Select(x => $"{x.ParameterType.Name} {x.Name}"))})";
         }
     }
 }

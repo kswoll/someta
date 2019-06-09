@@ -4,7 +4,7 @@ using System.Reflection;
 namespace SoMeta
 {
     [AttributeUsage(AttributeTargets.Property)]
-    public abstract class PropertyInterceptorAttribute : Attribute
+    public abstract class PropertyInterceptorAttribute : InterceptorAttribute
     {
         public virtual object GetPropertyValue(PropertyInfo propertyInfo, object instance, Func<object> getter)
         {

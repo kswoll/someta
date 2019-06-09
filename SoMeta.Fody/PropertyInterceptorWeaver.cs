@@ -39,37 +39,28 @@ namespace SoMeta.Fody
                 if (interceptsGetter)
                 {
                     LogInfo("Getter is intercepted");
+
+                    var method = property.GetMethod;
+                    var proceedReference = ImplementProceedGet(method);
+
+                    // Re-implement method
+                    method.Body.Emit(il =>
+                    {
+                        ImplementGetBody(property, propertyInfoField, method, il, proceedReference);
+                    });
                 }
 
                 if (interceptsSetter)
                 {
                     LogInfo("Setter is intercepted");
 
-                    var proceed = new MethodDefinition($"{property.SetMethod.Name}$Proceed", MethodAttributes.Public, TypeSystem.VoidReference);
-                    proceed.Parameters.Add(new ParameterDefinition(TypeSystem.ObjectReference));
-                    proceed.Body = new MethodBody(proceed);
-                    proceed.Body.InitLocals = true;
-                    type.Methods.Add(proceed);
-
-                    MethodReference proceedReference = proceed;
                     var method = property.SetMethod;
-                    if (type.HasGenericParameters)
-                    {
-                        proceedReference = proceed.Bind(type.MakeGenericInstanceType(type.GenericParameters.Concat(method.GenericParameters).ToArray()));
-                    }
-
-                    var original = MoveMethodImplementation(method, $"{method.Name}$Original");
-
-                    proceed.Body.Emit(il =>
-                    {
-                        ImplementProceedSet(type, original, il);
-                    });
+                    var proceedReference = ImplementProceedSet(method);
 
                     // Re-implement method
-                    method.Body = new MethodBody(method);
                     method.Body.Emit(il =>
                     {
-                        ImplementBody(propertyInfoField, method, il, proceedReference);
+                        ImplementSetBody(property, propertyInfoField, method, il, proceedReference);
                     });
                 }
             }
@@ -79,52 +70,34 @@ namespace SoMeta.Fody
             }
         }
 
-        private MethodDefinition MoveMethodImplementation(MethodDefinition original, string newName)
+        private void ImplementGetBody(PropertyDefinition property, FieldDefinition propertyInfoField, MethodDefinition method, ILProcessor il, MethodReference proceed)
         {
-            var method = new MethodDefinition(newName, MethodAttributes.Private, original.ReturnType);
-            method.CustomAttributes.Add(new CustomAttribute(Context.OriginalMethodAttributeConstructor)
-            {
-                ConstructorArguments = { new CustomAttributeArgument(TypeSystem.StringReference, method.Name) }
-            });
-            original.CopyParameters(method);
-            original.CopyGenericParameters(method);
+            // We want to call the interceptor's setter method:
+            // void GetPropertyValue(PropertyInfo propertyInfo, object instance, Action<object> getter)
 
-            method.DebugInformation.Scope = original.DebugInformation.Scope;
-            method.DebugInformation.StateMachineKickOffMethod = original.DebugInformation.StateMachineKickOffMethod;
-            foreach (var sequencePoint in original.DebugInformation.SequencePoints)
-            {
-                method.DebugInformation.SequencePoints.Add(sequencePoint);
-            }
-            method.Body = new MethodBody(method);
-            foreach (var variable in original.Body.Variables)
-            {
-                method.Body.InitLocals = true;
-                method.Body.Variables.Add(new VariableDefinition(variable.VariableType));
-            }
-            foreach (var handler in original.Body.ExceptionHandlers)
-            {
-                method.Body.ExceptionHandlers.Add(handler);
-            }
-            method.Body.Emit(il =>
-            {
-                foreach (var instruction in original.Body.Instructions)
-                {
-                    il.Append(instruction);
-                }
-            });
-            original.DeclaringType.Methods.Add(method);
+            // Get interceptor attribute
+            il.EmitGetAttribute(propertyInfoField, propertyInterceptorAttribute);
 
-            // Erase scope since the body is being moved into the $Original method
-            original.DebugInformation.Scope = null;
-            original.DebugInformation.StateMachineKickOffMethod = null;
-            original.DebugInformation.SequencePoints.Clear();
+            // Leave PropertyInfo on the stack as the first argument
+            il.EmitGetProperty(property);
 
-            original.Body = new MethodBody(original);
+            // Leave instance (this) on the stack as the second argument
+            il.Emit(OpCodes.Ldarg_0);
 
-            return method;
+            // Leave the delegate for the proceed implementation on the stack as the fourth argument
+            il.EmitDelegate(proceed, Context.Func1Type);
+
+            // Finally, we emit the call to the interceptor
+            il.Emit(OpCodes.Callvirt, baseGetPropertyValue);
+
+            // Now unbox the value if necessary
+            il.EmitUnboxIfNeeded(method.ReturnType, method.DeclaringType);
+
+            // Return
+            il.Emit(OpCodes.Ret);
         }
 
-        private void ImplementBody(FieldDefinition propertyInfoField, MethodDefinition method, ILProcessor il, MethodReference proceed)
+        private void ImplementSetBody(PropertyDefinition property, FieldDefinition propertyInfoField, MethodDefinition method, ILProcessor il, MethodReference proceed)
         {
             // We want to call the interceptor's setter method:
             // void SetPropertyValue(PropertyInfo propertyInfo, object instance, object newValue, Action<object> setter)
@@ -133,13 +106,9 @@ namespace SoMeta.Fody
             il.EmitGetAttribute(propertyInfoField, propertyInterceptorAttribute);
 
             // Leave PropertyInfo on the stack as the first argument
-            var methodSignature = method.GenerateSignature();
-            var methodFinder = Context.MethodFinder.MakeGenericInstanceType(method.DeclaringType);
-            var findProperty = Context.FindProperty.Bind(methodFinder);
-            il.Emit(OpCodes.Ldstr, methodSignature);
-            il.Emit(OpCodes.Call, findProperty);
+            il.EmitGetProperty(property);
 
-            // Leave instance on the stack as the second argument
+            // Leave instance (this) on the stack as the second argument
             il.Emit(OpCodes.Ldarg_0);
 
             // Leave the new value on the stack as the third argument
@@ -147,11 +116,7 @@ namespace SoMeta.Fody
             il.EmitBoxIfNeeded(method.Parameters[0].ParameterType);
 
             // Leave the delegate for the proceed implementation on the stack as the fourth argument
-            var proceedDelegateType = Context.Action1Type.MakeGenericInstanceType(TypeSystem.ObjectReference);
-            var proceedDelegateTypeConstructor = Context.Action1Type.Resolve().GetConstructors().First().Bind(proceedDelegateType);
-            il.Emit(OpCodes.Ldarg_0);
-            il.Emit(OpCodes.Ldftn, proceed);
-            il.Emit(OpCodes.Newobj, proceedDelegateTypeConstructor);
+            il.EmitDelegate(proceed, Context.Action1Type);
 
             // Finally, we emit the call to the interceptor
             il.Emit(OpCodes.Callvirt, baseSetPropertyValue);
@@ -160,36 +125,69 @@ namespace SoMeta.Fody
             il.Emit(OpCodes.Ret);
         }
 
-        private void ImplementProceedSet(TypeDefinition type, MethodDefinition method, ILProcessor il)
+        private MethodReference ImplementProceedGet(MethodDefinition method)
         {
-            var parameterInfos = method.Parameters;
+            var type = method.DeclaringType;
+            var original = method.MoveImplementation($"{method.Name}$Original");
+            var proceed = method.CreateSimilarMethod($"{method.Name}$Proceed", MethodAttributes.Private, method.ReturnType);
 
-            // Load target for subsequent call
-            il.Emit(OpCodes.Ldarg_0);                    // Load "this"
-            il.Emit(OpCodes.Castclass, method.DeclaringType);
-
-            var parameterInfo = parameterInfos[0];
-
-            // Push object argument (setter.value)
-            il.Emit(OpCodes.Ldarg_1);
-
-            // If it's a value type, unbox it
-            if (parameterInfo.ParameterType.IsValueType || parameterInfo.ParameterType.IsGenericParameter)
-                il.Emit(OpCodes.Unbox_Any, parameterInfo.ParameterType.ResolveGenericParameter(type).Import());
-            // Otherwise, cast it
-            else
-                il.Emit(OpCodes.Castclass, parameterInfo.ParameterType.ResolveGenericParameter(type).Import());
-
-            MethodReference result = method;
+            MethodReference proceedReference = proceed;
             if (type.HasGenericParameters)
-                result = method.Bind(type.MakeGenericInstanceType(type.GenericParameters.ToArray()));
-            var proceedTargetMethod = result.Import();
-            var genericProceedTargetMethod = proceedTargetMethod;
-            if (method.GenericParameters.Count > 0)
-                genericProceedTargetMethod = genericProceedTargetMethod.MakeGenericMethod(method.GenericParameters.Select(x => x.ResolveGenericParameter(type)).ToArray());
+            {
+                proceedReference = proceed.Bind(type.MakeGenericInstanceType(type.GenericParameters.Concat(method.GenericParameters).ToArray()));
+            }
+            proceed.Body.Emit(il =>
+            {
+                // Load target for subsequent call
+                il.Emit(OpCodes.Ldarg_0);                    // Load "this"
+                il.Emit(OpCodes.Castclass, original.DeclaringType);
 
-            il.Emit(OpCodes.Callvirt, genericProceedTargetMethod);
-            il.Emit(OpCodes.Ret);
+                var genericProceedTargetMethod = original.BindAll(type);
+                il.Emit(OpCodes.Callvirt, genericProceedTargetMethod);
+
+                // If it's a value type, box it
+                il.EmitBoxIfNeeded(method.ReturnType);
+
+                il.Emit(OpCodes.Ret);
+            });
+
+            return proceedReference;
+        }
+
+        private MethodReference ImplementProceedSet(MethodDefinition method)
+        {
+            var type = method.DeclaringType;
+            var original = method.MoveImplementation($"{method.Name}$Original");
+            var proceed = method.CreateSimilarMethod($"{method.Name}$Proceed", MethodAttributes.Private, TypeSystem.VoidReference);
+            proceed.Parameters.Add(new ParameterDefinition(TypeSystem.ObjectReference));
+
+            MethodReference proceedReference = proceed;
+            if (type.HasGenericParameters)
+            {
+                proceedReference = proceed.Bind(type.MakeGenericInstanceType(type.GenericParameters.Concat(method.GenericParameters).ToArray()));
+            }
+            proceed.Body.Emit(il =>
+            {
+                var parameterInfos = original.Parameters;
+
+                // Load target for subsequent call
+                il.Emit(OpCodes.Ldarg_0);                    // Load "this"
+                il.Emit(OpCodes.Castclass, original.DeclaringType);
+
+                var parameterInfo = parameterInfos[0];
+
+                // Push object argument (setter.value)
+                il.Emit(OpCodes.Ldarg_1);
+
+                // If it's a value type, unbox it
+                il.EmitUnboxIfNeeded(parameterInfo.ParameterType, type);
+
+                var genericProceedTargetMethod = original.BindAll(type);
+                il.Emit(OpCodes.Callvirt, genericProceedTargetMethod);
+                il.Emit(OpCodes.Ret);
+            });
+
+            return proceedReference;
         }
     }
 }

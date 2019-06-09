@@ -25,10 +25,13 @@ namespace SoMeta.Fody
 
             // Inventory candidate classes
             var propertyInterceptorAttribute = ModuleDefinition.FindType("SoMeta", "PropertyInterceptorAttribute", soMeta);
+            var methodInterceptorAttribute = ModuleDefinition.FindType("SoMeta", "MethodInterceptorAttribute", soMeta);
 
             var propertyInterceptions = new List<(PropertyDefinition, CustomAttribute)>();
+            var methodInterceptions = new List<(MethodDefinition, CustomAttribute)>();
 
             var propertyInterceptorWeaver = new PropertyInterceptorWeaver(ModuleDefinition, CecilExtensions.Context, TypeSystem, LogInfo, LogError, LogWarning, propertyInterceptorAttribute);
+            var methodInterceptorWeaver = new MethodInterceptorWeaver(ModuleDefinition, CecilExtensions.Context, TypeSystem, LogInfo, LogError, LogWarning, methodInterceptorAttribute);
 
             foreach (var type in ModuleDefinition.GetAllTypes())
             {
@@ -41,11 +44,25 @@ namespace SoMeta.Fody
                         propertyInterceptions.Add((property, interceptor));
                     }
                 }
+                foreach (var method in type.Methods)
+                {
+                    var interceptor = method.GetCustomAttributesInAncestry(methodInterceptorAttribute).SingleOrDefault();
+                    if (interceptor != null)
+                    {
+                        LogInfo($"Discovered method interceptor {interceptor.AttributeType.FullName} at {type.FullName}.{method.Name}");
+                        methodInterceptions.Add((method, interceptor));
+                    }
+                }
             }
 
             foreach (var (property, interceptor) in propertyInterceptions)
             {
                 propertyInterceptorWeaver.Weave(property, interceptor);
+            }
+
+            foreach (var (method, interceptor) in methodInterceptions)
+            {
+                methodInterceptorWeaver.Weave(method, interceptor);
             }
         }
     }
