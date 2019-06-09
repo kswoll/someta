@@ -30,6 +30,14 @@ namespace SoMeta.Fody.Tests
         }
 
         [Test]
+        public void SumMethod()
+        {
+            var o = new TestClass();
+            var result = o.Sum(1, 2, 3);
+            result.ShouldBe(6);
+        }
+
+        [Test]
         public void SetterTest()
         {
             var action = new Action<object>(Setter);
@@ -58,6 +66,12 @@ namespace SoMeta.Fody.Tests
             {
                 await Task.Delay(1);
                 return StringProperty;
+            }
+
+            [SumParametersMethod]
+            public int Sum(params int[] values)
+            {
+                return values.Length;
             }
         }
 

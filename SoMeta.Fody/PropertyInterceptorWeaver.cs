@@ -92,7 +92,7 @@ namespace SoMeta.Fody
             }
 
             // Leave the delegate for the proceed implementation on the stack as the fourth argument
-            il.EmitDelegate(proceed, Context.Func1Type);
+            il.EmitDelegate(proceed, Context.Func1Type, );
 
             // Finally, we emit the call to the interceptor
             il.Emit(OpCodes.Callvirt, baseGetPropertyValue);
