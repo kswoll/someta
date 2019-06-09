@@ -79,7 +79,7 @@ namespace SoMeta.Fody
             il.EmitGetAttribute(propertyInfoField, propertyInterceptorAttribute);
 
             // Leave PropertyInfo on the stack as the first argument
-            il.EmitGetProperty(property);
+            il.EmitGetPropertyInfo(property);
 
             // Leave instance (this) on the stack as the second argument
             il.Emit(OpCodes.Ldarg_0);
@@ -106,7 +106,7 @@ namespace SoMeta.Fody
             il.EmitGetAttribute(propertyInfoField, propertyInterceptorAttribute);
 
             // Leave PropertyInfo on the stack as the first argument
-            il.EmitGetProperty(property);
+            il.EmitGetPropertyInfo(property);
 
             // Leave instance (this) on the stack as the second argument
             il.Emit(OpCodes.Ldarg_0);

@@ -35,6 +35,7 @@ namespace SoMeta.Fody
         private static TypeReference taskType;
         private static MethodReference getTypeFromRuntimeHandleMethod;
         private static MethodReference typeGetMethod;
+        private static MethodReference typeGetMethods;
         private static TypeReference taskTType;
         private static MethodReference taskFromResult;
         private static MethodReference attributeGetCustomAttribute;
@@ -47,6 +48,7 @@ namespace SoMeta.Fody
             typeType = ModuleDefinition.ImportReference(typeof(Type)).Resolve();
             taskType = ModuleDefinition.ImportReference(typeof(Task));
             getTypeFromRuntimeHandleMethod = ModuleDefinition.ImportReference(typeType.Methods.Single(x => x.Name == "GetTypeFromHandle"));
+            typeGetMethods = ModuleDefinition.ImportReference(CaptureFunc<Type, MethodInfo[]>(x => x.GetMethods(default)));
             typeGetMethod = ModuleDefinition.ImportReference(typeType.Methods.Single(x => x.Name == "GetMethod" && x.Parameters.Count == 5));
             typeGetProperty = ModuleDefinition.ImportReference(CaptureFunc<Type, PropertyInfo>(x => x.GetProperty(default, default(BindingFlags))));
             taskTType = ModuleDefinition.ImportReference(typeof(Task<>));
@@ -360,7 +362,7 @@ namespace SoMeta.Fody
             ilProcessor.Emit(OpCodes.Ret);
         }
 
-        public static void EmitGetProperty(this ILProcessor il, PropertyDefinition property)
+        public static void EmitGetPropertyInfo(this ILProcessor il, PropertyDefinition property)
         {
             var bindingFlags = (int)(BindingFlags.Instance | BindingFlags.Static | BindingFlags.Public | BindingFlags.NonPublic);
 
@@ -370,9 +372,30 @@ namespace SoMeta.Fody
             il.Emit(OpCodes.Call, typeGetProperty);
         }
 
+/*
+        public static void EmitGetMethodInfo(this ILProcessor il, MethodDefinition method)
+        {
+            var bindingFlags = (int)(BindingFlags.Instance | BindingFlags.Static | BindingFlags.Public | BindingFlags.NonPublic);
+
+            il.LoadType(method.DeclaringType);
+            il.Emit(OpCodes.Ldstr, property.Name);
+            il.Emit(OpCodes.Ldc_I4, bindingFlags);
+            il.Emit(OpCodes.Call, typeGetMethod);
+        }
+*/
+
         public static void EmitGetAttribute(this ILProcessor il, FieldReference memberInfo, TypeReference attributeType)
         {
             il.Emit(OpCodes.Ldsfld, memberInfo);
+            il.LoadType(attributeType);
+
+            il.Emit(OpCodes.Call, attributeGetCustomAttribute);
+            il.Emit(OpCodes.Castclass, attributeType);
+        }
+
+        public static void EmitGetAttributeFromCurrentMethod(this ILProcessor il, TypeReference attributeType)
+        {
+            il.LoadCurrentMethodInfo();
             il.LoadType(attributeType);
 
             il.Emit(OpCodes.Call, attributeGetCustomAttribute);
@@ -441,72 +464,16 @@ namespace SoMeta.Fody
             }
             staticConstructor.Body.EmitBeforeReturn(il =>
             {
-                il.EmitGetProperty(property);
+                il.EmitGetPropertyInfo(property);
                 il.Emit(OpCodes.Stsfld, propertyInfoField);
             });
 
             return propertyInfoField;
         }
 
-        private static Dictionary<TypeDefinition, Dictionary<string, int>> uniqueMethodNames = new Dictionary<TypeDefinition, Dictionary<string, int>>();
-
-        /// <summary>
-        /// In the case of method overloads, many methods have the same name, but we often want a single unique identifier
-        /// per overload.  When there are no overloads, this method will just return the method's name.  Otherwise, a counter
-        /// will drive subsequent overloaded methods.  Note: the actual name for any given overload is non-deterministic since
-        /// it's based on when this method is called for that particular overload.  The only exception, of course, is when there
-        /// are no overloads at all.
-        /// </summary>
-        private static string GetUniqueMethodName(this MethodDefinition method)
+        private static string GetMethodSignature(this MethodDefinition method)
         {
-            if (!uniqueMethodNames.TryGetValue(method.DeclaringType, out var uniqueNames))
-            {
-                uniqueNames = new Dictionary<string, int>();
-                uniqueMethodNames[method.DeclaringType] = uniqueNames;
-            }
-
-            var name = method.Name;
-            if (uniqueNames.TryGetValue(name, out var index))
-            {
-                uniqueNames[name] = index + 1;
-                name += "$" + index;
-            }
-            else
-            {
-                uniqueNames[name] = 2;
-            }
-
-            return name;
-        }
-
-        /// <summary>
-        /// Declares a static field to store the PropertyInfo for the specified PropertyDefinition and initializes
-        /// it in the declaring class' static initializer.  If no static initializer currently exists, one will
-        /// be created.
-        /// </summary>
-        public static FieldDefinition CacheMethodInfo(this MethodDefinition method)
-        {
-            // Add static field for property
-            var type = method.DeclaringType;
-
-            var fieldName = method.GetUniqueMethodName();
-
-            var propertyInfoField = new FieldDefinition($"{fieldName}$PropertyInfo", FieldAttributes.Static | FieldAttributes.Private, Context.PropertyInfoType);
-            type.Fields.Add(propertyInfoField);
-
-            var staticConstructor = type.GetStaticConstructor();
-            if (staticConstructor == null)
-            {
-                staticConstructor = type.CreateStaticConstructor();
-                staticConstructor.Body.GetILProcessor().Emit(OpCodes.Ret);
-            }
-            staticConstructor.Body.EmitBeforeReturn(il =>
-            {
-                il.EmitGetProperty(property);
-                il.Emit(OpCodes.Stsfld, propertyInfoField);
-            });
-
-            return propertyInfoField;
+            return $"{method.Name}_{string.Join("_", method.Parameters.Select(x => x.ParameterType.FullName))}";
         }
 
         /// <summary>

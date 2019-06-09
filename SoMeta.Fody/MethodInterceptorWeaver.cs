@@ -31,16 +31,14 @@ namespace SoMeta.Fody
 
             if (isIntercepted)
             {
-                var methodInfoField = method.CachePropertyInfo();
+                LogInfo("Method is intercepted");
 
-                LogInfo("Getter is intercepted");
-
-                var proceedReference = ImplementProceedGet(method);
+                var proceedReference = ImplementProceed(method);
 
                 // Re-implement method
                 method.Body.Emit(il =>
                 {
-                    ImplementGetBody(property, propertyInfoField, method, il, proceedReference);
+                    ImplementBody(method, il, proceedReference);
                 });
             }
             else
@@ -49,17 +47,16 @@ namespace SoMeta.Fody
             }
         }
 
-
-        private void ImplementGetBody(PropertyDefinition property, FieldDefinition propertyInfoField, MethodDefinition method, ILProcessor il, MethodReference proceed)
+        private void ImplementBody(MethodDefinition method, ILProcessor il, MethodReference proceed)
         {
             // We want to call the interceptor's setter method:
             // void GetPropertyValue(PropertyInfo propertyInfo, object instance, Action<object> getter)
 
             // Get interceptor attribute
-            il.EmitGetAttribute(propertyInfoField, propertyInterceptorAttribute);
+            il.EmitGetAttributeFromCurrentMethod(methodInterceptorAttribute);
 
             // Leave PropertyInfo on the stack as the first argument
-            il.EmitGetProperty(property);
+            il.LoadCurrentMethodInfo();
 
             // Leave instance (this) on the stack as the second argument
             il.Emit(OpCodes.Ldarg_0);
@@ -68,7 +65,7 @@ namespace SoMeta.Fody
             il.EmitDelegate(proceed, Context.Func1Type);
 
             // Finally, we emit the call to the interceptor
-            il.Emit(OpCodes.Callvirt, baseGetPropertyValue);
+            il.Emit(OpCodes.Callvirt, baseInvoke);
 
             // Now unbox the value if necessary
             il.EmitUnboxIfNeeded(method.ReturnType, method.DeclaringType);
@@ -77,7 +74,7 @@ namespace SoMeta.Fody
             il.Emit(OpCodes.Ret);
         }
 
-        private MethodReference ImplementProceedGet(MethodDefinition method)
+        private MethodReference ImplementProceed(MethodDefinition method)
         {
             var type = method.DeclaringType;
             var original = method.MoveImplementation($"{method.Name}$Original");
