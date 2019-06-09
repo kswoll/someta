@@ -34,21 +34,7 @@ namespace SoMeta.Fody
 
             if (interceptsGetter || interceptsSetter)
             {
-                // Add static field for property
-                var propertyInfoField = new FieldDefinition($"{property.Name}$PropertyInfo", FieldAttributes.Static | FieldAttributes.Private, Context.PropertyInfoType);
-                type.Fields.Add(propertyInfoField);
-
-                var staticConstructor = type.GetStaticConstructor();
-                if (staticConstructor == null)
-                {
-                    staticConstructor = type.CreateStaticConstructor();
-                    staticConstructor.Body.GetILProcessor().Emit(OpCodes.Ret);
-                }
-                staticConstructor.Body.EmitBeforeReturn(il =>
-                {
-                    il.EmitGetProperty(property);
-                    il.Emit(OpCodes.Stsfld, propertyInfoField);
-                });
+                var propertyInfoField = property.CachePropertyInfo();
 
                 if (interceptsGetter)
                 {
@@ -145,7 +131,6 @@ namespace SoMeta.Fody
 
             // Get interceptor attribute
             il.EmitGetAttribute(propertyInfoField, propertyInterceptorAttribute);
-//            il.Emit(OpCodes.Pop);
 
             // Leave PropertyInfo on the stack as the first argument
             var methodSignature = method.GenerateSignature();
@@ -153,26 +138,22 @@ namespace SoMeta.Fody
             var findProperty = Context.FindProperty.Bind(methodFinder);
             il.Emit(OpCodes.Ldstr, methodSignature);
             il.Emit(OpCodes.Call, findProperty);
-//            il.Emit(OpCodes.Pop);
 
             // Leave instance on the stack as the second argument
             il.Emit(OpCodes.Ldarg_0);
-//            il.Emit(OpCodes.Pop);
 
             // Leave the new value on the stack as the third argument
             il.Emit(OpCodes.Ldarg_1);
             il.EmitBoxIfNeeded(method.Parameters[0].ParameterType);
-//            il.Emit(OpCodes.Pop);
 
             // Leave the delegate for the proceed implementation on the stack as the fourth argument
             var proceedDelegateType = Context.Action1Type.MakeGenericInstanceType(TypeSystem.ObjectReference);
             var proceedDelegateTypeConstructor = Context.Action1Type.Resolve().GetConstructors().First().Bind(proceedDelegateType);
             il.Emit(OpCodes.Ldarg_0);
-//            il.Emit(OpCodes.Castclass, method.DeclaringType);
             il.Emit(OpCodes.Ldftn, proceed);
             il.Emit(OpCodes.Newobj, proceedDelegateTypeConstructor);
-//            il.Emit(OpCodes.Pop);
 
+            // Finally, we emit the call to the interceptor
             il.Emit(OpCodes.Callvirt, baseSetPropertyValue);
 
             // Return

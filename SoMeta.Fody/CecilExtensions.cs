@@ -10,6 +10,7 @@ using Mono.Cecil;
 using Mono.Cecil.Cil;
 using Mono.Cecil.Rocks;
 using CallSite = Mono.Cecil.CallSite;
+using FieldAttributes = Mono.Cecil.FieldAttributes;
 using MethodAttributes = Mono.Cecil.MethodAttributes;
 using MethodBody = Mono.Cecil.Cil.MethodBody;
 
@@ -379,6 +380,33 @@ namespace SoMeta.Fody
         {
             if (type.IsValueType || type.IsGenericParameter)
                 il.Emit(OpCodes.Box, Import(type));
+        }
+
+        /// <summary>
+        /// Declares a static field to store the PropertyInfo for the specified PropertyDefinition and initializes
+        /// it in the declaring class' static initializer.  If no static initializer currently exists, one will
+        /// be created.
+        /// </summary>
+        public static FieldDefinition CachePropertyInfo(this PropertyDefinition property)
+        {
+            // Add static field for property
+            var type = property.DeclaringType;
+            var propertyInfoField = new FieldDefinition($"{property.Name}$PropertyInfo", FieldAttributes.Static | FieldAttributes.Private, Context.PropertyInfoType);
+            type.Fields.Add(propertyInfoField);
+
+            var staticConstructor = type.GetStaticConstructor();
+            if (staticConstructor == null)
+            {
+                staticConstructor = type.CreateStaticConstructor();
+                staticConstructor.Body.GetILProcessor().Emit(OpCodes.Ret);
+            }
+            staticConstructor.Body.EmitBeforeReturn(il =>
+            {
+                il.EmitGetProperty(property);
+                il.Emit(OpCodes.Stsfld, propertyInfoField);
+            });
+
+            return propertyInfoField;
         }
 
         public static TypeReference Import(this TypeReference type)

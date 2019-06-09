@@ -12,7 +12,9 @@ namespace SoMeta.Fody.Tests
         {
             var o = new DoubleStringOnSetClass();
             o.StringProperty = "foo";
+            o.StringProperty2 = "bar";
             o.StringProperty.ShouldBe("foofoo");
+            o.StringProperty2.ShouldBe("barbar");
         }
 
         [Test]
@@ -25,6 +27,9 @@ namespace SoMeta.Fody.Tests
         {
             [DoubleStringOnSet]
             public string StringProperty { get; set; }
+
+            [DoubleStringOnSet]
+            public string StringProperty2 { get; set; }
         }
 
         private void Setter(object o)
