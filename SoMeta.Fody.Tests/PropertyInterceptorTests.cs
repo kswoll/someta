@@ -14,8 +14,10 @@ namespace SoMeta.Fody.Tests
             var o = new TestClass();
             o.StringProperty = "foo";
             o.StringProperty2 = "bar";
+            TestClass.StaticStringProperty = "foobar";
             o.StringProperty.ShouldBe("foofoo");
             o.StringProperty2.ShouldBe("barbar");
+            TestClass.StaticStringProperty.ShouldBe("foobarfoobar");
         }
 
         [Test]
@@ -39,6 +41,9 @@ namespace SoMeta.Fody.Tests
 
             [DoubleStringOnSet]
             public string StringProperty2 { get; set; }
+
+            [DoubleStringOnSet]
+            public static string StaticStringProperty { get; set; }
 
             [PrependValueWithDollarOnGet]
             public string Amount { get; set; }

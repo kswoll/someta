@@ -108,11 +108,22 @@ namespace SoMeta.Fody
             // Leave PropertyInfo on the stack as the first argument
             il.EmitGetPropertyInfo(property);
 
-            // Leave instance (this) on the stack as the second argument
-            il.Emit(OpCodes.Ldarg_0);
+            if (!method.IsStatic)
+            {
+                // Leave instance (this) on the stack as the second argument
+                il.Emit(OpCodes.Ldarg_0);
+            }
+            else
+            {
+                il.Emit(OpCodes.Ldnull);
+            }
 
             // Leave the new value on the stack as the third argument
-            il.Emit(OpCodes.Ldarg_1);
+            if (method.IsStatic)
+                il.Emit(OpCodes.Ldarg_0);
+            else
+                il.Emit(OpCodes.Ldarg_1);
+
             il.EmitBoxIfNeeded(method.Parameters[0].ParameterType);
 
             // Leave the delegate for the proceed implementation on the stack as the fourth argument
@@ -170,20 +181,37 @@ namespace SoMeta.Fody
             {
                 var parameterInfos = original.Parameters;
 
-                // Load target for subsequent call
-                il.Emit(OpCodes.Ldarg_0);                    // Load "this"
-                il.Emit(OpCodes.Castclass, original.DeclaringType);
+                if (!method.IsStatic)
+                {
+                    // Load target for subsequent call
+                    il.Emit(OpCodes.Ldarg_0);                    // Load "this"
+                    il.Emit(OpCodes.Castclass, original.DeclaringType);
+                }
 
                 var parameterInfo = parameterInfos[0];
 
                 // Push object argument (setter.value)
-                il.Emit(OpCodes.Ldarg_1);
+                if (!method.IsStatic)
+                {
+                    il.Emit(OpCodes.Ldarg_1);
+                }
+                else
+                {
+                    il.Emit(OpCodes.Ldarg_0);
+                }
 
                 // If it's a value type, unbox it
                 il.EmitUnboxIfNeeded(parameterInfo.ParameterType, type);
 
                 var genericProceedTargetMethod = original.BindAll(type);
-                il.Emit(OpCodes.Callvirt, genericProceedTargetMethod);
+                if (method.IsStatic)
+                {
+                    il.Emit(OpCodes.Call, genericProceedTargetMethod);
+                }
+                else
+                {
+                    il.Emit(OpCodes.Callvirt, genericProceedTargetMethod);
+                }
                 il.Emit(OpCodes.Ret);
             });
 

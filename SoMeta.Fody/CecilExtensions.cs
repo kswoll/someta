@@ -439,7 +439,10 @@ namespace SoMeta.Fody
         {
             var proceedDelegateType = delegateType.MakeGenericInstanceType(TypeSystem.ObjectReference);
             var proceedDelegateTypeConstructor = delegateType.Resolve().GetConstructors().First().Bind(proceedDelegateType);
-            il.Emit(OpCodes.Ldarg_0);
+            if (!handler.Resolve().IsStatic)
+                il.Emit(OpCodes.Ldarg_0);
+            else
+                il.Emit(OpCodes.Ldnull);
             il.Emit(OpCodes.Ldftn, handler);
             il.Emit(OpCodes.Newobj, proceedDelegateTypeConstructor);
         }
@@ -483,7 +486,7 @@ namespace SoMeta.Fody
         /// </summary>
         public static MethodDefinition MoveImplementation(this MethodDefinition original, string newName)
         {
-            var method = new MethodDefinition(newName, MethodAttributes.Private, original.ReturnType);
+            var method = new MethodDefinition(newName, MethodAttributes.Private | original.Attributes.GetStatic(), original.ReturnType);
             method.CustomAttributes.Add(new CustomAttribute(Context.OriginalMethodAttributeConstructor)
             {
                 ConstructorArguments = { new CustomAttributeArgument(TypeSystem.StringReference, method.Name) }
