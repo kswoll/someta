@@ -81,8 +81,15 @@ namespace SoMeta.Fody
             // Leave PropertyInfo on the stack as the first argument
             il.EmitGetPropertyInfo(property);
 
-            // Leave instance (this) on the stack as the second argument
-            il.Emit(OpCodes.Ldarg_0);
+            if (!method.IsStatic)
+            {
+                // Leave instance (this) on the stack as the second argument
+                il.Emit(OpCodes.Ldarg_0);
+            }
+            else
+            {
+                il.Emit(OpCodes.Ldnull);
+            }
 
             // Leave the delegate for the proceed implementation on the stack as the fourth argument
             il.EmitDelegate(proceed, Context.Func1Type);
@@ -149,12 +156,22 @@ namespace SoMeta.Fody
             }
             proceed.Body.Emit(il =>
             {
-                // Load target for subsequent call
-                il.Emit(OpCodes.Ldarg_0);                    // Load "this"
-                il.Emit(OpCodes.Castclass, original.DeclaringType);
+                if (!method.IsStatic)
+                {
+                    // Load target for subsequent call
+                    il.Emit(OpCodes.Ldarg_0);                    // Load "this"
+                    il.Emit(OpCodes.Castclass, original.DeclaringType);
+                }
 
                 var genericProceedTargetMethod = original.BindAll(type);
-                il.Emit(OpCodes.Callvirt, genericProceedTargetMethod);
+                if (method.IsStatic)
+                {
+                    il.Emit(OpCodes.Call, genericProceedTargetMethod);
+                }
+                else
+                {
+                    il.Emit(OpCodes.Callvirt, genericProceedTargetMethod);
+                }
 
                 // If it's a value type, box it
                 il.EmitBoxIfNeeded(method.ReturnType);

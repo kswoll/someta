@@ -25,7 +25,8 @@ namespace SoMeta.Fody.Tests
         {
             var o = new TestClass();
             o.Amount = "100";
-            o.Amount.ShouldBe("$100");
+            TestClass.StaticAmount = "200";
+            TestClass.StaticAmount.ShouldBe("$200");
         }
 
         [Test]
@@ -47,6 +48,9 @@ namespace SoMeta.Fody.Tests
 
             [PrependValueWithDollarOnGet]
             public string Amount { get; set; }
+
+            [PrependValueWithDollarOnGet]
+            public static string StaticAmount { get; set; }
 
             public Task<string> StringTask => AsyncWork();
 
