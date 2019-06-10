@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Diagnostics;
 using System.Linq;
 using Mono.Cecil;
 using Mono.Cecil.Cil;
@@ -112,6 +113,10 @@ namespace SoMeta.Fody
 
         private MethodReference ImplementProceed(MethodDefinition method)
         {
+            if (method.DeclaringType.HasGenericParameters)
+            {
+//                Debugger.Launch();
+            }
             var type = method.DeclaringType;
             var original = method.MoveImplementation($"{method.Name}$Original");
             var proceed = method.CreateSimilarMethod($"{method.Name}$Proceed", MethodAttributes.Private, TypeSystem.ObjectReference);
@@ -121,7 +126,9 @@ namespace SoMeta.Fody
             MethodReference proceedReference = proceed;
             if (type.HasGenericParameters)
             {
-                proceedReference = proceed.Bind(type.MakeGenericInstanceType(type.GenericParameters.Concat(method.GenericParameters).ToArray()));
+//                proceedReference = proceed.Bind(type.MakeGenericInstanceType(type.GenericParameters.Concat(method.GenericParameters).ToArray()));
+//                if (method.HasGenericParameters)
+//                    proceedReference = proceedReference.MakeGenericMethod(method.GenericParameters.ToArray());
             }
             proceed.Body.Emit(il =>
             {
@@ -129,7 +136,7 @@ namespace SoMeta.Fody
                 {
                     // Load target for subsequent call
                     il.Emit(OpCodes.Ldarg_0);                    // Load "this"
-                    il.Emit(OpCodes.Castclass, original.DeclaringType);
+//                    il.Emit(OpCodes.Castclass, original.DeclaringType);
                 }
 
                 // Decompose array into arguments
@@ -138,12 +145,12 @@ namespace SoMeta.Fody
                     var parameterInfo = method.Parameters[i];
                     il.Emit(method.IsStatic ? OpCodes.Ldarg_0 : OpCodes.Ldarg_1);                                                    // Push array
                     il.Emit(OpCodes.Ldc_I4, i);                                                  // Push element index
-                    il.Emit(OpCodes.Ldelem_Any, TypeSystem.ObjectReference);                    // Get element
+                    il.Emit(OpCodes.Ldelem_Any, TypeSystem.ObjectReference);                     // Get element
                     il.EmitUnboxIfNeeded(parameterInfo.ParameterType, type);
                 }
 
                 var genericProceedTargetMethod = original.BindAll(type);
-                il.Emit(OpCodes.Callvirt, genericProceedTargetMethod);
+                il.Emit(method.IsStatic ? OpCodes.Call : OpCodes.Callvirt, genericProceedTargetMethod);
 
                 if (method.ReturnType.CompareTo(TypeSystem.VoidReference))
                 {
