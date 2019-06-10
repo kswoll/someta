@@ -113,23 +113,21 @@ namespace SoMeta.Fody
 
         private MethodReference ImplementProceed(MethodDefinition method)
         {
-            if (method.DeclaringType.HasGenericParameters)
+            if (method.HasGenericParameters)
             {
 //                Debugger.Launch();
             }
 
             var type = method.DeclaringType;
-//            var original = method.MoveImplementation($"{method.Name}$Original");
+            var original = method.MoveImplementation($"{method.Name}$Original");
             var proceed = method.CreateSimilarMethod($"{method.Name}$Proceed", MethodAttributes.Private, TypeSystem.ObjectReference);
-            proceed.Parameters.Add(new ParameterDefinition(Context.ObjectArrayType));
-            proceed.Body.Emit(il =>
+/*            proceed.Body.Emit(il =>
             {
                 il.Emit(OpCodes.Ldnull);
                 il.Emit(OpCodes.Ret);
             });
-            return proceed;
-
-            method.CopyGenericParameters(proceed);
+*/
+            method.CopyGenericParameters(proceed, x => $"{x}_Proceed");
 
             LogInfo($"ImplementProceed: {method.ReturnType}");
             proceed.Parameters.Add(new ParameterDefinition(Context.ObjectArrayType));
@@ -142,12 +140,12 @@ namespace SoMeta.Fody
 //                    proceedReference = proceedReference.MakeGenericMethod(method.GenericParameters.ToArray());
             }
 
-/*            if (method.HasGenericParameters)
+            if (method.HasGenericParameters)
             {
                 proceedReference = proceedReference.MakeGenericMethod(method.GenericParameters.Select(x => x.ResolveGenericParameter(null)).ToArray());
             }
-*/
-/*            proceed.Body.Emit(il =>
+
+            proceed.Body.Emit(il =>
             {
                 if (!method.IsStatic)
                 {
@@ -166,7 +164,7 @@ namespace SoMeta.Fody
                     il.EmitUnboxIfNeeded(parameterInfo.ParameterType, type);
                 }
 
-                var genericProceedTargetMethod = original.BindAll(type);
+                var genericProceedTargetMethod = original.BindAll(type, proceed);
                 il.Emit(method.IsStatic ? OpCodes.Call : OpCodes.Callvirt, genericProceedTargetMethod);
 
                 if (method.ReturnType.CompareTo(TypeSystem.VoidReference))
@@ -184,6 +182,6 @@ namespace SoMeta.Fody
             });
 
             return proceedReference;
-*/        }
+        }
     }
 }

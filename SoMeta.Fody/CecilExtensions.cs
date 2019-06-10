@@ -436,6 +436,19 @@ namespace SoMeta.Fody
             return genericProceedTargetMethod;
         }
 
+        public static MethodReference BindAll(this MethodReference method, TypeDefinition declaringType, MethodDefinition callerMethod)
+        {
+            MethodReference result = method;
+//            if (declaringType.HasGenericParameters)
+//                result = method.Bind(declaringType.MakeGenericInstanceType(declaringType.GenericParameters.ToArray()));
+            var proceedTargetMethod = result.Import();
+            var genericProceedTargetMethod = proceedTargetMethod;
+            if (method.GenericParameters.Count > 0)
+                genericProceedTargetMethod = genericProceedTargetMethod.MakeGenericMethod(callerMethod.GenericParameters.ToArray());
+
+            return genericProceedTargetMethod;
+        }
+
         public static void EmitDelegate(this ILProcessor il, MethodReference handler, TypeReference delegateType, params TypeReference[] typeArguments)
         {
             var proceedDelegateType = delegateType.MakeGenericInstanceType(typeArguments);
@@ -776,13 +789,13 @@ namespace SoMeta.Fody
             }
         }
 
-        public static void CopyGenericParameters(this IGenericParameterProvider source, IGenericParameterProvider destination)
+        public static void CopyGenericParameters(this IGenericParameterProvider source, IGenericParameterProvider destination, Func<string, string> nameMapper = null)
         {
             if (source.HasGenericParameters)
             {
                 foreach (var genericParameter in source.GenericParameters)
                 {
-                    var newGenericParameter = new GenericParameter(genericParameter.Name, destination);
+                    var newGenericParameter = new GenericParameter(nameMapper?.Invoke(genericParameter.Name) ?? genericParameter.Name, destination);
                     foreach (var constraint in genericParameter.Constraints)
                     {
                         newGenericParameter.Constraints.Add(constraint);

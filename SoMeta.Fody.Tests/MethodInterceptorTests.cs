@@ -133,6 +133,11 @@ namespace SoMeta.Fody.Tests
             {
                 return null;
             }
+
+            private void GenericWrapper<U2, V2>(T a, U2 u, V2 v)
+            {
+                WithGenericParameters<U2, V2>(a, u, v);
+            }
         }
     }
 }
