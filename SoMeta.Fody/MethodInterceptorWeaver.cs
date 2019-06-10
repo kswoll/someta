@@ -117,9 +117,20 @@ namespace SoMeta.Fody
             {
 //                Debugger.Launch();
             }
+
             var type = method.DeclaringType;
-            var original = method.MoveImplementation($"{method.Name}$Original");
+//            var original = method.MoveImplementation($"{method.Name}$Original");
             var proceed = method.CreateSimilarMethod($"{method.Name}$Proceed", MethodAttributes.Private, TypeSystem.ObjectReference);
+            proceed.Parameters.Add(new ParameterDefinition(Context.ObjectArrayType));
+            proceed.Body.Emit(il =>
+            {
+                il.Emit(OpCodes.Ldnull);
+                il.Emit(OpCodes.Ret);
+            });
+            return proceed;
+
+            method.CopyGenericParameters(proceed);
+
             LogInfo($"ImplementProceed: {method.ReturnType}");
             proceed.Parameters.Add(new ParameterDefinition(Context.ObjectArrayType));
 
@@ -130,7 +141,13 @@ namespace SoMeta.Fody
 //                if (method.HasGenericParameters)
 //                    proceedReference = proceedReference.MakeGenericMethod(method.GenericParameters.ToArray());
             }
-            proceed.Body.Emit(il =>
+
+/*            if (method.HasGenericParameters)
+            {
+                proceedReference = proceedReference.MakeGenericMethod(method.GenericParameters.Select(x => x.ResolveGenericParameter(null)).ToArray());
+            }
+*/
+/*            proceed.Body.Emit(il =>
             {
                 if (!method.IsStatic)
                 {
@@ -167,6 +184,6 @@ namespace SoMeta.Fody
             });
 
             return proceedReference;
-        }
+*/        }
     }
 }
