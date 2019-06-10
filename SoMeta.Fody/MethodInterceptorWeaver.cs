@@ -121,25 +121,12 @@ namespace SoMeta.Fody
             var type = method.DeclaringType;
             var original = method.MoveImplementation($"{method.Name}$Original");
             var proceed = method.CreateSimilarMethod($"{method.Name}$Proceed", MethodAttributes.Private, TypeSystem.ObjectReference);
-/*            proceed.Body.Emit(il =>
-            {
-                il.Emit(OpCodes.Ldnull);
-                il.Emit(OpCodes.Ret);
-            });
-*/
             method.CopyGenericParameters(proceed, x => $"{x}_Proceed");
 
             LogInfo($"ImplementProceed: {method.ReturnType}");
             proceed.Parameters.Add(new ParameterDefinition(Context.ObjectArrayType));
 
             MethodReference proceedReference = proceed;
-            if (type.HasGenericParameters)
-            {
-//                proceedReference = proceed.Bind(type.MakeGenericInstanceType(type.GenericParameters.Concat(method.GenericParameters).ToArray()));
-//                if (method.HasGenericParameters)
-//                    proceedReference = proceedReference.MakeGenericMethod(method.GenericParameters.ToArray());
-            }
-
             if (method.HasGenericParameters)
             {
                 proceedReference = proceedReference.MakeGenericMethod(method.GenericParameters.Select(x => x.ResolveGenericParameter(null)).ToArray());
@@ -151,7 +138,6 @@ namespace SoMeta.Fody
                 {
                     // Load target for subsequent call
                     il.Emit(OpCodes.Ldarg_0);                    // Load "this"
-//                    il.Emit(OpCodes.Castclass, original.DeclaringType);
                 }
 
                 // Decompose array into arguments
