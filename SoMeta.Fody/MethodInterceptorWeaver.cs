@@ -136,7 +136,7 @@ namespace SoMeta.Fody
                 for (var i = 0; i < method.Parameters.Count; i++)
                 {
                     var parameterInfo = method.Parameters[i];
-                    il.Emit(OpCodes.Ldarg_0);                                                    // Push array
+                    il.Emit(method.IsStatic ? OpCodes.Ldarg_0 : OpCodes.Ldarg_1);                                                    // Push array
                     il.Emit(OpCodes.Ldc_I4, i);                                                  // Push element index
                     il.Emit(OpCodes.Ldelem_Any, TypeSystem.ObjectReference);                    // Get element
                     il.EmitUnboxIfNeeded(parameterInfo.ParameterType, type);

@@ -71,14 +71,6 @@ namespace SoMeta.Fody.Tests
                 await Task.Delay(1);
                 return StringProperty;
             }
-/*
-
-            [SumParametersMethod]
-            public int Sum(params int[] values)
-            {
-                return values.Length;
-            }
-*/
         }
 
         private void Setter(object o)
