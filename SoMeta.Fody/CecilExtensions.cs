@@ -330,6 +330,7 @@ namespace SoMeta.Fody
         public static void LoadCurrentMethodInfo(this ILProcessor il)
         {
             il.Emit(OpCodes.Call, methodBaseGetCurrentMethod);
+            il.Emit(OpCodes.Castclass, Context.MethodInfoType);
         }
 
 /*
@@ -435,9 +436,9 @@ namespace SoMeta.Fody
             return genericProceedTargetMethod;
         }
 
-        public static void EmitDelegate(this ILProcessor il, MethodReference handler, TypeReference delegateType)
+        public static void EmitDelegate(this ILProcessor il, MethodReference handler, TypeReference delegateType, params TypeReference[] typeArguments)
         {
-            var proceedDelegateType = delegateType.MakeGenericInstanceType(TypeSystem.ObjectReference);
+            var proceedDelegateType = delegateType.MakeGenericInstanceType(typeArguments);
             var proceedDelegateTypeConstructor = delegateType.Resolve().GetConstructors().First().Bind(proceedDelegateType);
             if (!handler.Resolve().IsStatic)
                 il.Emit(OpCodes.Ldarg_0);
@@ -888,7 +889,7 @@ namespace SoMeta.Fody
 
         public static string Describe(this MethodDefinition method)
         {
-            return $"{method.DeclaringType.FullName}.{method.Name}({string.Join(", ", method.Parameters.Select(x => $"{x.ParameterType.Name} {x.Name}"))})";
+            return $"{method.ReturnType.Name} {method.DeclaringType.FullName}.{method.Name}({string.Join(", ", method.Parameters.Select(x => $"{x.ParameterType.Name} {x.Name}"))})";
         }
     }
 }

@@ -91,13 +91,20 @@ namespace SoMeta.Fody
             }
 
             // Leave the delegate for the proceed implementation on the stack as the fourth argument
-            il.EmitDelegate(proceed, Context.Func2Type, Context.ObjectArrayType);
+            il.EmitDelegate(proceed, Context.Func2Type, Context.ObjectArrayType, TypeSystem.ObjectReference);
 
             // Finally, we emit the call to the interceptor
             il.Emit(OpCodes.Callvirt, baseInvoke);
 
-            // Now unbox the value if necessary
-            il.EmitUnboxIfNeeded(method.ReturnType, method.DeclaringType);
+            if (method.ReturnType.CompareTo(TypeSystem.VoidReference))
+            {
+                il.Emit(OpCodes.Pop);
+            }
+            else
+            {
+                // Now unbox the value if necessary
+                il.EmitUnboxIfNeeded(method.ReturnType, method.DeclaringType);
+            }
 
             // Return
             il.Emit(OpCodes.Ret);
@@ -107,7 +114,8 @@ namespace SoMeta.Fody
         {
             var type = method.DeclaringType;
             var original = method.MoveImplementation($"{method.Name}$Original");
-            var proceed = method.CreateSimilarMethod($"{method.Name}$Proceed", MethodAttributes.Private, method.ReturnType);
+            var proceed = method.CreateSimilarMethod($"{method.Name}$Proceed", MethodAttributes.Private, TypeSystem.ObjectReference);
+            LogInfo($"ImplementProceed: {method.ReturnType}");
             proceed.Parameters.Add(new ParameterDefinition(Context.ObjectArrayType));
 
             MethodReference proceedReference = proceed;
@@ -125,23 +133,28 @@ namespace SoMeta.Fody
                 }
 
                 // Decompose array into arguments
-                for (int i = 0; i < method.Parameters.Count; i++)
+                for (var i = 0; i < method.Parameters.Count; i++)
                 {
                     var parameterInfo = method.Parameters[i];
                     il.Emit(OpCodes.Ldarg_0);                                                    // Push array
                     il.Emit(OpCodes.Ldc_I4, i);                                                  // Push element index
-                    il.Emit(OpCodes.Ldelem_Any, TypeSystem.ObjectReference);     // Get element
-                    if (parameterInfo.ParameterType.IsValueType || parameterInfo.ParameterType.IsGenericParameter) // If it's a value type, unbox it
-                        il.Emit(OpCodes.Unbox_Any, parameterInfo.ParameterType.ResolveGenericParameter(method.DeclaringType).Import());
-                    else                                                                         // Otherwise, cast it
-                        il.Emit(OpCodes.Castclass, parameterInfo.ParameterType.ResolveGenericParameter(method.DeclaringType).Import());
+                    il.Emit(OpCodes.Ldelem_Any, TypeSystem.ObjectReference);                    // Get element
+                    il.EmitUnboxIfNeeded(parameterInfo.ParameterType, type);
                 }
 
                 var genericProceedTargetMethod = original.BindAll(type);
                 il.Emit(OpCodes.Callvirt, genericProceedTargetMethod);
 
-                // If it's a value type, box it
-                il.EmitBoxIfNeeded(method.ReturnType);
+                if (method.ReturnType.CompareTo(TypeSystem.VoidReference))
+                {
+                    // Void methods won't leave anything on the stack, but the proceed method is expected to return a value
+                    il.Emit(OpCodes.Ldnull);
+                }
+                else
+                {
+                    // If it's a value type, box it
+                    il.EmitBoxIfNeeded(method.ReturnType);
+                }
 
                 il.Emit(OpCodes.Ret);
             });

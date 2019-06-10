@@ -26,9 +26,12 @@ namespace SoMeta.Fody.Tests
             var o = new TestClass();
             o.Amount = "100";
             TestClass.StaticAmount = "200";
+
+            o.Amount.ShouldBe("$100");
             TestClass.StaticAmount.ShouldBe("$200");
         }
 
+/*
         [Test]
         public void SumMethod()
         {
@@ -36,6 +39,7 @@ namespace SoMeta.Fody.Tests
             var result = o.Sum(1, 2, 3);
             result.ShouldBe(6);
         }
+*/
 
         [Test]
         public void SetterTest()
@@ -67,12 +71,14 @@ namespace SoMeta.Fody.Tests
                 await Task.Delay(1);
                 return StringProperty;
             }
+/*
 
             [SumParametersMethod]
             public int Sum(params int[] values)
             {
                 return values.Length;
             }
+*/
         }
 
         private void Setter(object o)
