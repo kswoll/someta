@@ -61,16 +61,16 @@ namespace SoMeta.Fody.Tests
 
         public class LogInterceptorAttribute : MethodInterceptorAttribute
         {
-            public override object InvokeMethod(MethodInfo methodInfo, object instance, object[] parameters, Func<object[], object> invoker)
+            public override object Invoke(MethodInfo methodInfo, object instance, object[] parameters, Func<object[], object> invoker)
             {
                 ((TestClass)instance).InvocationCount++;
-                return base.InvokeMethod(methodInfo, instance, parameters, invoker);
+                return base.Invoke(methodInfo, instance, parameters, invoker);
             }
         }
 
         public class ConcatParameterTypes : MethodInterceptorAttribute
         {
-            public override object InvokeMethod(MethodInfo methodInfo, object instance, object[] parameters, Func<object[], object> invoker)
+            public override object Invoke(MethodInfo methodInfo, object instance, object[] parameters, Func<object[], object> invoker)
             {
                 return parameters.Select(x => x.GetType()).ToArray();
             }
@@ -85,7 +85,7 @@ namespace SoMeta.Fody.Tests
                 Data = data;
             }
 
-            public override object InvokeMethod(MethodInfo methodInfo, object instance, object[] parameters, Func<object[], object> invoker)
+            public override object Invoke(MethodInfo methodInfo, object instance, object[] parameters, Func<object[], object> invoker)
             {
                 var originalValue = invoker(parameters);
                 return originalValue + Data;

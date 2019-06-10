@@ -81,17 +81,10 @@ namespace SoMeta.Fody
             // Leave PropertyInfo on the stack as the first argument
             il.EmitGetPropertyInfo(property);
 
-            if (!method.IsStatic)
-            {
-                // Leave instance (this) on the stack as the second argument
-                il.Emit(OpCodes.Ldarg_0);
-            }
-            else
-            {
-                il.Emit(OpCodes.Ldnull);
-            }
+            // Leave the instance on the stack as the second argument
+            EmitInstanceArgument(il, method);
 
-            // Leave the delegate for the proceed implementation on the stack as the fourth argument
+            // Leave the delegate for the proceed implementation on the stack as the third argument
             il.EmitDelegate(proceed, Context.Func1Type, TypeSystem.ObjectReference);
 
             // Finally, we emit the call to the interceptor
@@ -115,15 +108,8 @@ namespace SoMeta.Fody
             // Leave PropertyInfo on the stack as the first argument
             il.EmitGetPropertyInfo(property);
 
-            if (!method.IsStatic)
-            {
-                // Leave instance (this) on the stack as the second argument
-                il.Emit(OpCodes.Ldarg_0);
-            }
-            else
-            {
-                il.Emit(OpCodes.Ldnull);
-            }
+            // Leave the instance on the stack as the second argument
+            EmitInstanceArgument(il, method);
 
             // Leave the new value on the stack as the third argument
             if (method.IsStatic)

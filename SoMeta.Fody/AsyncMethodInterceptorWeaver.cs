@@ -6,21 +6,21 @@ using TypeSystem = Fody.TypeSystem;
 
 namespace SoMeta.Fody
 {
-    public class MethodInterceptorWeaver : BaseWeaver
+    public class AsyncMethodInterceptorWeaver : BaseWeaver
     {
         private TypeReference methodInterceptorAttribute;
         private MethodReference baseInvoke;
 
-        public MethodInterceptorWeaver(ModuleDefinition moduleDefinition, WeaverContext context, TypeSystem typeSystem, Action<string> logInfo, Action<string> logError, Action<string> logWarning, TypeReference methodInterceptorAttribute) :
+        public AsyncMethodInterceptorWeaver(ModuleDefinition moduleDefinition, WeaverContext context, TypeSystem typeSystem, Action<string> logInfo, Action<string> logError, Action<string> logWarning, TypeReference methodInterceptorAttribute) :
             base(moduleDefinition, context, typeSystem, logInfo, logError, logWarning)
         {
             this.methodInterceptorAttribute = methodInterceptorAttribute;
-            baseInvoke = moduleDefinition.FindMethod(methodInterceptorAttribute, "Invoke");
+            baseInvoke = moduleDefinition.FindMethod(methodInterceptorAttribute, "InvokeAsync");
         }
 
         public void Weave(MethodDefinition method, CustomAttribute interceptor)
         {
-            LogInfo($"Weaving method interceptor {interceptor.AttributeType.FullName} at {method.Describe()}");
+            LogInfo($"Weaving async method interceptor {interceptor.AttributeType.FullName} at {method.Describe()}");
 
             // Check to see if the get interceptor is overridden
             var attributeType = interceptor.AttributeType.Resolve();
@@ -48,7 +48,7 @@ namespace SoMeta.Fody
         private void ImplementBody(MethodDefinition method, ILProcessor il, MethodReference proceed)
         {
             // We want to call the interceptor's setter method:
-            // object InvokeMethod(MethodInfo methodInfo, object instance, object[] parameters, Func<object[], object> invoker)
+            // Task<object> InvokeMethodAsync(MethodInfo methodInfo, object instance, object[] parameters, Func<object[], Task<object>> invoker)
 
             // Get interceptor attribute
             il.EmitGetAttributeFromCurrentMethod(methodInterceptorAttribute);

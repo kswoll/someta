@@ -24,14 +24,18 @@ namespace SoMeta.Fody
             CecilExtensions.Initialize(ModuleDefinition, soMeta);
 
             // Inventory candidate classes
+            var interceptorAttribute = ModuleDefinition.FindType("SoMeta", "InterceptorAttribute", soMeta);
             var propertyInterceptorAttribute = ModuleDefinition.FindType("SoMeta", "PropertyInterceptorAttribute", soMeta);
             var methodInterceptorAttribute = ModuleDefinition.FindType("SoMeta", "MethodInterceptorAttribute", soMeta);
+            var asyncMethodInterceptorAttribute = ModuleDefinition.FindType("SoMeta", "AsyncMethodInterceptorAttribute", soMeta);
 
             var propertyInterceptions = new List<(PropertyDefinition, CustomAttribute)>();
             var methodInterceptions = new List<(MethodDefinition, CustomAttribute)>();
+            var asyncMethodInterceptions = new List<(MethodDefinition, CustomAttribute)>();
 
             var propertyInterceptorWeaver = new PropertyInterceptorWeaver(ModuleDefinition, CecilExtensions.Context, TypeSystem, LogInfo, LogError, LogWarning, propertyInterceptorAttribute);
             var methodInterceptorWeaver = new MethodInterceptorWeaver(ModuleDefinition, CecilExtensions.Context, TypeSystem, LogInfo, LogError, LogWarning, methodInterceptorAttribute);
+            var asyncMethodInterceptorWeaver = new AsyncMethodInterceptorWeaver(ModuleDefinition, CecilExtensions.Context, TypeSystem, LogInfo, LogError, LogWarning, asyncMethodInterceptorAttribute);
 
             foreach (var type in ModuleDefinition.GetAllTypes())
             {
@@ -46,11 +50,19 @@ namespace SoMeta.Fody
                 }
                 foreach (var method in type.Methods)
                 {
-                    var interceptor = method.GetCustomAttributesInAncestry(methodInterceptorAttribute).SingleOrDefault();
+                    var interceptor = method.GetCustomAttributesInAncestry(interceptorAttribute).SingleOrDefault();
                     if (interceptor != null)
                     {
-                        LogInfo($"Discovered method interceptor {interceptor.AttributeType.FullName} at {type.FullName}.{method.Name}");
-                        methodInterceptions.Add((method, interceptor));
+                        if (methodInterceptorAttribute.IsAssignableFrom(interceptor.AttributeType))
+                        {
+                            LogInfo($"Discovered method interceptor {interceptor.AttributeType.FullName} at {type.FullName}.{method.Name}");
+                            methodInterceptions.Add((method, interceptor));
+                        }
+                        else
+                        {
+                            LogInfo($"Discovered async method interceptor {interceptor.AttributeType.FullName} at {type.FullName}.{method.Name}");
+                            asyncMethodInterceptions.Add((method, interceptor));
+                        }
                     }
                 }
             }
@@ -63,6 +75,11 @@ namespace SoMeta.Fody
             foreach (var (method, interceptor) in methodInterceptions)
             {
                 methodInterceptorWeaver.Weave(method, interceptor);
+            }
+
+            foreach (var (method, interceptor) in asyncMethodInterceptions)
+            {
+                asyncMethodInterceptorWeaver.Weave(method, interceptor);
             }
         }
     }

@@ -1,5 +1,6 @@
 ﻿using System;
 using Mono.Cecil;
+using Mono.Cecil.Cil;
 using TypeSystem = Fody.TypeSystem;
 
 namespace SoMeta.Fody
@@ -21,6 +22,19 @@ namespace SoMeta.Fody
             LogInfo = logInfo;
             LogError = logError;
             LogWarning = logWarning;
+        }
+
+        protected void EmitInstanceArgument(ILProcessor il, MethodDefinition method)
+        {
+            if (!method.IsStatic)
+            {
+                // Leave instance (this) on the stack as the second argument
+                il.Emit(OpCodes.Ldarg_0);
+            }
+            else
+            {
+                il.Emit(OpCodes.Ldnull);
+            }
         }
     }
 }

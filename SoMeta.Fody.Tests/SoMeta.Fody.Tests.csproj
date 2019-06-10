@@ -54,6 +54,7 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="AsyncMethodInterceptorTests.cs" />
     <Compile Include="DoubleStringOnSetAttribute.cs" />
     <Compile Include="GlobalSuppressions.cs" />
     <Compile Include="MethodInterceptorTests.cs" />
