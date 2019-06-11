@@ -8,50 +8,34 @@ namespace SoMeta.Fody
 {
     public class MethodInterceptorWeaver : BaseWeaver
     {
-        private TypeReference methodInterceptorAttribute;
-        private MethodReference baseInvoke;
+        private readonly MethodReference baseInvoke;
 
-        public MethodInterceptorWeaver(ModuleDefinition moduleDefinition, WeaverContext context, TypeSystem typeSystem, Action<string> logInfo, Action<string> logError, Action<string> logWarning, TypeReference methodInterceptorAttribute) :
+        public MethodInterceptorWeaver(ModuleDefinition moduleDefinition, WeaverContext context, TypeSystem typeSystem, Action<string> logInfo, Action<string> logError, Action<string> logWarning, TypeReference methodInterceptorInterface) :
             base(moduleDefinition, context, typeSystem, logInfo, logError, logWarning)
         {
-            this.methodInterceptorAttribute = methodInterceptorAttribute;
-            baseInvoke = moduleDefinition.FindMethod(methodInterceptorAttribute, "Invoke");
+            baseInvoke = moduleDefinition.FindMethod(methodInterceptorInterface, "Invoke");
         }
 
         public void Weave(MethodDefinition method, CustomAttribute interceptor)
         {
             LogInfo($"Weaving method interceptor {interceptor.AttributeType.FullName} at {method.Describe()}");
 
-            // Check to see if the get interceptor is overridden
-            var attributeType = interceptor.AttributeType.Resolve();
+            var proceedReference = ImplementProceed(method);
 
-            var isIntercepted = attributeType.IsMethodOverridden(baseInvoke);
-
-            if (isIntercepted)
+            // Re-implement method
+            method.Body.Emit(il =>
             {
-                LogInfo("Method is intercepted");
-
-                var proceedReference = ImplementProceed(method);
-
-                // Re-implement method
-                method.Body.Emit(il =>
-                {
-                    ImplementBody(method, il, proceedReference);
-                });
-            }
-            else
-            {
-                LogWarning("Interceptor does not override any intercept methods");
-            }
+                ImplementBody(method, il, proceedReference, interceptor.AttributeType);
+            });
         }
 
-        private void ImplementBody(MethodDefinition method, ILProcessor il, MethodReference proceed)
+        private void ImplementBody(MethodDefinition method, ILProcessor il, MethodReference proceed, TypeReference interceptorAttribute)
         {
             // We want to call the interceptor's setter method:
             // object InvokeMethod(MethodInfo methodInfo, object instance, object[] parameters, Func<object[], object> invoker)
 
             // Get interceptor attribute
-            il.EmitGetAttributeFromCurrentMethod(methodInterceptorAttribute);
+            il.EmitGetAttributeFromCurrentMethod(interceptorAttribute);
 
             // Leave MethodInfo on the stack as the first argument
             il.LoadCurrentMethodInfo();
