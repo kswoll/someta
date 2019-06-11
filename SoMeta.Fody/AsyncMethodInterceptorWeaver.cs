@@ -10,16 +10,14 @@ namespace SoMeta.Fody
 {
     public class AsyncMethodInterceptorWeaver : BaseWeaver
     {
-        private TypeReference methodInterceptorAttribute;
         private MethodReference baseInvoke;
         private MethodReference asyncInvokerUnwrap;
         private MethodReference asyncInvokerWrap;
 
-        public AsyncMethodInterceptorWeaver(ModuleDefinition moduleDefinition, WeaverContext context, TypeSystem typeSystem, Action<string> logInfo, Action<string> logError, Action<string> logWarning, TypeReference methodInterceptorAttribute, MethodReference asyncInvokerWrap, MethodReference asyncInvokerUnwrap) :
+        public AsyncMethodInterceptorWeaver(ModuleDefinition moduleDefinition, WeaverContext context, TypeSystem typeSystem, Action<string> logInfo, Action<string> logError, Action<string> logWarning, TypeReference methodInterceptorInterface, MethodReference asyncInvokerWrap, MethodReference asyncInvokerUnwrap) :
             base(moduleDefinition, context, typeSystem, logInfo, logError, logWarning)
         {
-            this.methodInterceptorAttribute = methodInterceptorAttribute;
-            baseInvoke = moduleDefinition.FindMethod(methodInterceptorAttribute, "InvokeAsync");
+            baseInvoke = moduleDefinition.FindMethod(methodInterceptorInterface, "InvokeAsync");
             this.asyncInvokerWrap = asyncInvokerWrap;
             this.asyncInvokerUnwrap = asyncInvokerUnwrap;
         }
@@ -28,30 +26,16 @@ namespace SoMeta.Fody
         {
             LogInfo($"Weaving async method interceptor {interceptor.AttributeType.FullName} at {method.Describe()}");
 
-            // Check to see if the get interceptor is overridden
-            var attributeType = interceptor.AttributeType.Resolve();
+            var proceedReference = ImplementProceed(method);
 
-            var isIntercepted = attributeType.IsMethodOverridden(baseInvoke);
-
-            if (isIntercepted)
+            // Re-implement method
+            method.Body.Emit(il =>
             {
-                LogInfo("Method is intercepted");
-
-                var proceedReference = ImplementProceed(method);
-
-                // Re-implement method
-                method.Body.Emit(il =>
-                {
-                    ImplementBody(method, il, proceedReference);
-                });
-            }
-            else
-            {
-                LogWarning("Interceptor does not override any intercept methods");
-            }
+                ImplementBody(method, il, proceedReference, interceptor.AttributeType);
+            });
         }
 
-        private void ImplementBody(MethodDefinition method, ILProcessor il, MethodReference proceed)
+        private void ImplementBody(MethodDefinition method, ILProcessor il, MethodReference proceed, TypeReference interceptorAttribute)
         {
 //            Debugger.Launch();
 
@@ -59,7 +43,7 @@ namespace SoMeta.Fody
             // Task<object> InvokeMethodAsync(MethodInfo methodInfo, object instance, object[] parameters, Func<object[], Task<object>> invoker)
 
             // Get interceptor attribute
-            il.EmitGetAttributeFromCurrentMethod(methodInterceptorAttribute);
+            il.EmitGetAttributeFromCurrentMethod(interceptorAttribute);
 
             // Leave MethodInfo on the stack as the first argument
             il.LoadCurrentMethodInfo();

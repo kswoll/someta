@@ -2,7 +2,7 @@
 
 namespace SoMeta
 {
-    public abstract class InterceptorAttribute : Attribute
+    public abstract class InterceptorAttribute : Attribute, IInterceptor
     {
     }
 }

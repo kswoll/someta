@@ -4,7 +4,7 @@ using System.Reflection;
 namespace SoMeta
 {
     [AttributeUsage(AttributeTargets.Method)]
-    public abstract class MethodInterceptorAttribute : InterceptorAttribute
+    public abstract class MethodInterceptorAttribute : InterceptorAttribute, IMethodInterceptor
     {
         public virtual object Invoke(MethodInfo methodInfo, object instance, object[] parameters, Func<object[], object> invoker)
         {

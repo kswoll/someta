@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Reflection;
 using System.Threading.Tasks;
 using NUnit.Framework;
 using Shouldly;
@@ -42,9 +43,10 @@ namespace SoMeta.Fody.Tests
 */
 
         [Test]
-        public void SetterTest()
+        public void GetOnly()
         {
-            var action = new Action<object>(Setter);
+            var o = new TestClass();
+            o.GetOnly.ShouldBe("foobar");
         }
 
         private class TestClass
@@ -64,6 +66,9 @@ namespace SoMeta.Fody.Tests
             [PrependValueWithDollarOnGet]
             public static string StaticAmount { get; set; }
 
+            [GetOnlyInterceptor]
+            public string GetOnly { get; set; }
+
             public Task<string> StringTask => AsyncWork();
 
             private async Task<string> AsyncWork()
@@ -73,8 +78,12 @@ namespace SoMeta.Fody.Tests
             }
         }
 
-        private void Setter(object o)
+        private class GetOnlyInterceptor : Attribute, IPropertyGetInterceptor
         {
+            public object GetPropertyValue(PropertyInfo propertyInfo, object instance, Func<object> getter)
+            {
+                return "foobar";
+            }
         }
     }
 }
