@@ -3,12 +3,9 @@ using System.Reflection;
 
 namespace SoMeta
 {
-    [AttributeUsage(AttributeTargets.Method)]
+    [AttributeUsage(AttributeTargets.Method | AttributeTargets.Class)]
     public abstract class MethodInterceptorAttribute : InterceptorAttribute, IMethodInterceptor
     {
-        public virtual object Invoke(MethodInfo methodInfo, object instance, object[] parameters, Func<object[], object> invoker)
-        {
-            return invoker(parameters);
-        }
+        public abstract object Invoke(MethodInfo methodInfo, object instance, object[] parameters, Func<object[], object> invoker);
     }
 }

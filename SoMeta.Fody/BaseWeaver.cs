@@ -74,5 +74,35 @@ namespace SoMeta.Fody
                 il.EmitUnboxIfNeeded(parameterInfo.ParameterType, method.DeclaringType);
             }
         }
+
+        protected void EmitAttribute(ILProcessor il, MethodDefinition method, TypeReference interceptorAttribute, InterceptorScope scope)
+        {
+            switch (scope)
+            {
+                case InterceptorScope.Member:
+                    il.EmitGetAttributeFromCurrentMethod(interceptorAttribute);
+                    break;
+                case InterceptorScope.Class:
+                    il.EmitGetAttributeFromClass(method.DeclaringType, interceptorAttribute);
+                    break;
+                default:
+                    throw new InvalidOperationException();
+            }
+        }
+
+        protected void EmitAttribute(ILProcessor il, MethodDefinition method, FieldReference memberInfoField, TypeReference interceptorAttribute, InterceptorScope scope)
+        {
+            switch (scope)
+            {
+                case InterceptorScope.Member:
+                    il.EmitGetAttribute(memberInfoField, interceptorAttribute);
+                    break;
+                case InterceptorScope.Class:
+                    il.EmitGetAttributeFromClass(method.DeclaringType, interceptorAttribute);
+                    break;
+                default:
+                    throw new InvalidOperationException();
+            }
+        }
     }
 }

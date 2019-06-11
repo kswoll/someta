@@ -10,13 +10,15 @@ namespace SoMeta.Fody
     {
         private readonly MethodReference baseInvoke;
 
-        public MethodInterceptorWeaver(ModuleDefinition moduleDefinition, WeaverContext context, TypeSystem typeSystem, Action<string> logInfo, Action<string> logError, Action<string> logWarning, TypeReference methodInterceptorInterface) :
-            base(moduleDefinition, context, typeSystem, logInfo, logError, logWarning)
+        public MethodInterceptorWeaver(ModuleDefinition moduleDefinition, WeaverContext context, TypeSystem typeSystem,
+            Action<string> logInfo, Action<string> logError, Action<string> logWarning, 
+            TypeReference methodInterceptorInterface)
+            : base(moduleDefinition, context, typeSystem, logInfo, logError, logWarning)
         {
             baseInvoke = moduleDefinition.FindMethod(methodInterceptorInterface, "Invoke");
         }
 
-        public void Weave(MethodDefinition method, CustomAttribute interceptor)
+        public void Weave(MethodDefinition method, CustomAttribute interceptor, InterceptorScope scope)
         {
             LogInfo($"Weaving method interceptor {interceptor.AttributeType.FullName} at {method.Describe()}");
 
@@ -25,17 +27,17 @@ namespace SoMeta.Fody
             // Re-implement method
             method.Body.Emit(il =>
             {
-                ImplementBody(method, il, proceedReference, interceptor.AttributeType);
+                ImplementBody(method, il, proceedReference, interceptor.AttributeType, scope);
             });
         }
 
-        private void ImplementBody(MethodDefinition method, ILProcessor il, MethodReference proceed, TypeReference interceptorAttribute)
+        private void ImplementBody(MethodDefinition method, ILProcessor il, MethodReference proceed, TypeReference interceptorAttribute, InterceptorScope scope)
         {
             // We want to call the interceptor's setter method:
             // object InvokeMethod(MethodInfo methodInfo, object instance, object[] parameters, Func<object[], object> invoker)
 
             // Get interceptor attribute
-            il.EmitGetAttributeFromCurrentMethod(interceptorAttribute);
+            EmitAttribute(il, method, interceptorAttribute, scope);
 
             // Leave MethodInfo on the stack as the first argument
             il.LoadCurrentMethodInfo();

@@ -17,7 +17,7 @@ namespace SoMeta.Fody
             baseGetPropertyValue = moduleDefinition.FindMethod(propertyInterceptorInterface, "GetPropertyValue");
         }
 
-        public void Weave(PropertyDefinition property, CustomAttribute interceptor)
+        public void Weave(PropertyDefinition property, CustomAttribute interceptor, InterceptorScope scope)
         {
             var type = property.DeclaringType;
             LogInfo($"Weaving property get interceptor {interceptor.AttributeType.FullName} at {type.FullName}.{property.Name}");
@@ -32,17 +32,17 @@ namespace SoMeta.Fody
             // Re-implement method
             method.Body.Emit(il =>
             {
-                ImplementGetBody(property, propertyInfoField, method, il, proceedReference, interceptor.AttributeType);
+                ImplementGetBody(property, propertyInfoField, method, il, proceedReference, interceptor.AttributeType, scope);
             });
         }
 
-        private void ImplementGetBody(PropertyDefinition property, FieldDefinition propertyInfoField, MethodDefinition method, ILProcessor il, MethodReference proceed, TypeReference interceptorAttribute)
+        private void ImplementGetBody(PropertyDefinition property, FieldDefinition propertyInfoField, MethodDefinition method, ILProcessor il, MethodReference proceed, TypeReference interceptorAttribute, InterceptorScope scope)
         {
             // We want to call the interceptor's setter method:
             // void GetPropertyValue(PropertyInfo propertyInfo, object instance, Action<object> getter)
 
             // Get interceptor attribute
-            il.EmitGetAttribute(propertyInfoField, interceptorAttribute);
+            EmitAttribute(il, method, propertyInfoField, interceptorAttribute, scope);
 
             // Leave PropertyInfo on the stack as the first argument
             il.EmitGetPropertyInfo(property);

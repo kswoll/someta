@@ -404,6 +404,15 @@ namespace SoMeta.Fody
             il.Emit(OpCodes.Castclass, attributeType);
         }
 
+        public static void EmitGetAttributeFromClass(this ILProcessor il, TypeDefinition type, TypeReference attributeType)
+        {
+            il.LoadType(type);
+            il.LoadType(attributeType);
+
+            il.Emit(OpCodes.Call, attributeGetCustomAttribute);
+            il.Emit(OpCodes.Castclass, attributeType);
+        }
+
         /// <summary>
         /// If the specified type is a value type or a generic parameter, this will box the value on
         /// the stack (turning it into an object)

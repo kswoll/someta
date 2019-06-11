@@ -64,7 +64,7 @@ namespace SoMeta.Fody.Tests
             public override object Invoke(MethodInfo methodInfo, object instance, object[] parameters, Func<object[], object> invoker)
             {
                 ((TestClass)instance).InvocationCount++;
-                return base.Invoke(methodInfo, instance, parameters, invoker);
+                return invoker(parameters);
             }
         }
 

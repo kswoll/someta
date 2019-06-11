@@ -55,6 +55,7 @@
   </ItemGroup>
   <ItemGroup>
     <Compile Include="AsyncMethodInterceptorTests.cs" />
+    <Compile Include="ClassLevelInterceptorTests.cs" />
     <Compile Include="DoubleStringOnSetAttribute.cs" />
     <Compile Include="GlobalSuppressions.cs" />
     <Compile Include="MethodInterceptorTests.cs" />
