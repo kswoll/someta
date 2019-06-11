@@ -60,27 +60,7 @@ namespace SoMeta.Fody
             EmitInstanceArgument(il, method);
 
             // Colllect all the parameters into a single array as the third argument
-            il.Emit(OpCodes.Ldc_I4, method.Parameters.Count);       // Array length
-            il.Emit(OpCodes.Newarr, TypeSystem.ObjectReference);    // Instantiate array
-            int startingIndex = method.IsStatic ? 0 : 1;
-            for (var i = 0; i < method.Parameters.Count; i++)
-            {
-                // Duplicate array
-                il.Emit(OpCodes.Dup);
-
-                // Array index
-                il.Emit(OpCodes.Ldc_I4, i);
-
-                // Element value
-                il.Emit(OpCodes.Ldarg, (short)(i + startingIndex));
-
-                var parameter = method.Parameters[i];
-                if (parameter.ParameterType.IsValueType || parameter.ParameterType.IsGenericParameter)
-                    il.Emit(OpCodes.Box, parameter.ParameterType.Import());
-
-                // Set array at index to element value
-                il.Emit(OpCodes.Stelem_Any, TypeSystem.ObjectReference);
-            }
+            ComposeArgumentsIntoArray(il, method);
 
             // Leave the delegate for the proceed implementation on the stack as the fourth argument
             il.EmitDelegate(proceed, Context.Func2Type, Context.ObjectArrayType, TypeSystem.ObjectReference);
@@ -131,15 +111,7 @@ namespace SoMeta.Fody
                     il.Emit(OpCodes.Ldarg_0);                    // Load "this"
                 }
 
-                // Decompose array into arguments
-                for (var i = 0; i < method.Parameters.Count; i++)
-                {
-                    var parameterInfo = method.Parameters[i];
-                    il.Emit(method.IsStatic ? OpCodes.Ldarg_0 : OpCodes.Ldarg_1);                                                    // Push array
-                    il.Emit(OpCodes.Ldc_I4, i);                                                  // Push element index
-                    il.Emit(OpCodes.Ldelem_Any, TypeSystem.ObjectReference);                     // Get element
-                    il.EmitUnboxIfNeeded(parameterInfo.ParameterType, type);
-                }
+                DecomposeArrayIntoArguments(il, method);
 
                 var genericProceedTargetMethod = original.BindAll(type, proceed);
                 il.Emit(method.IsStatic ? OpCodes.Call : OpCodes.Callvirt, genericProceedTargetMethod);
