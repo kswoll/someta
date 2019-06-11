@@ -1,11 +1,12 @@
-﻿namespace SoMeta.Helpers
+﻿using System.Threading.Tasks;
+
+namespace SoMeta.Helpers
 {
-    public class AsyncInvoker
+    public static class AsyncInvoker
     {
-        public override async Task<object> Proceed()
+        public static async Task<T> InvokeAsync<T>(Task<object> task)
         {
-            return await implementation(this);
+            return (T)await task;
         }
-        
     }
 }

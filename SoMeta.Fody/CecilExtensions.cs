@@ -82,6 +82,7 @@ namespace SoMeta.Fody
                 Func2Type = func2Type,
                 ObjectArrayType = objectArrayType,
                 TaskType = taskType,
+                TaskTType = taskTType,
                 AsyncTaskMethodBuilder = asyncTaskMethodBuilder,
                 OriginalMethodAttributeConstructor = originalMethodAttributeConstructor,
                 FindMethod = findMethod,

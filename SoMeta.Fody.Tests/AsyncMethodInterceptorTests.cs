@@ -13,13 +13,13 @@ namespace SoMeta.Fody.Tests
         public async Task SimpleAsyncTest()
         {
             var o = new TestClass();
-            var length = await o.M(0, 1);   
+            var length = await o.M(0, 1);
             length.ShouldBe(2);
         }
 
         public class TestClass
         {
-//            [AsyncTestInterceptor]
+            [AsyncTestInterceptor]
             public async Task<int> M(int a, long b)
             {
                 await Task.Delay(1);
@@ -29,7 +29,7 @@ namespace SoMeta.Fody.Tests
 
         public class AsyncTestInterceptor : AsyncMethodInterceptorAttribute
         {
-            public override async Task<object> InvokeMethod(MethodInfo methodInfo, object instance, object[] parameters, Func<object[], Task<object>> invoker)
+            public override async Task<object> InvokeAsync(MethodInfo methodInfo, object instance, object[] parameters, Func<object[], Task<object>> invoker)
             {
                 await Task.Delay(1);
                 return parameters.Length;

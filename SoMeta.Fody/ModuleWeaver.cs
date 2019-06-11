@@ -28,6 +28,8 @@ namespace SoMeta.Fody
             var propertyInterceptorAttribute = ModuleDefinition.FindType("SoMeta", "PropertyInterceptorAttribute", soMeta);
             var methodInterceptorAttribute = ModuleDefinition.FindType("SoMeta", "MethodInterceptorAttribute", soMeta);
             var asyncMethodInterceptorAttribute = ModuleDefinition.FindType("SoMeta", "AsyncMethodInterceptorAttribute", soMeta);
+            var asyncInvoker = ModuleDefinition.FindType("SoMeta.Helpers", "AsyncInvoker", soMeta);
+            var asyncInvokerInvoke = ModuleDefinition.FindMethod(asyncInvoker, "InvokeAsync");
 
             var propertyInterceptions = new List<(PropertyDefinition, CustomAttribute)>();
             var methodInterceptions = new List<(MethodDefinition, CustomAttribute)>();
@@ -35,7 +37,7 @@ namespace SoMeta.Fody
 
             var propertyInterceptorWeaver = new PropertyInterceptorWeaver(ModuleDefinition, CecilExtensions.Context, TypeSystem, LogInfo, LogError, LogWarning, propertyInterceptorAttribute);
             var methodInterceptorWeaver = new MethodInterceptorWeaver(ModuleDefinition, CecilExtensions.Context, TypeSystem, LogInfo, LogError, LogWarning, methodInterceptorAttribute);
-            var asyncMethodInterceptorWeaver = new AsyncMethodInterceptorWeaver(ModuleDefinition, CecilExtensions.Context, TypeSystem, LogInfo, LogError, LogWarning, asyncMethodInterceptorAttribute);
+            var asyncMethodInterceptorWeaver = new AsyncMethodInterceptorWeaver(ModuleDefinition, CecilExtensions.Context, TypeSystem, LogInfo, LogError, LogWarning, asyncMethodInterceptorAttribute, asyncInvokerInvoke);
 
             foreach (var type in ModuleDefinition.GetAllTypes())
             {

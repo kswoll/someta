@@ -1,7 +1,9 @@
 ﻿using System;
+using System.Diagnostics;
 using System.Linq;
 using Mono.Cecil;
 using Mono.Cecil.Cil;
+using Mono.Cecil.Rocks;
 using TypeSystem = Fody.TypeSystem;
 
 namespace SoMeta.Fody
@@ -10,12 +12,14 @@ namespace SoMeta.Fody
     {
         private TypeReference methodInterceptorAttribute;
         private MethodReference baseInvoke;
+        private MethodReference asyncInvokerInvoke;
 
-        public AsyncMethodInterceptorWeaver(ModuleDefinition moduleDefinition, WeaverContext context, TypeSystem typeSystem, Action<string> logInfo, Action<string> logError, Action<string> logWarning, TypeReference methodInterceptorAttribute) :
+        public AsyncMethodInterceptorWeaver(ModuleDefinition moduleDefinition, WeaverContext context, TypeSystem typeSystem, Action<string> logInfo, Action<string> logError, Action<string> logWarning, TypeReference methodInterceptorAttribute, MethodReference asyncInvokerInvoke) :
             base(moduleDefinition, context, typeSystem, logInfo, logError, logWarning)
         {
             this.methodInterceptorAttribute = methodInterceptorAttribute;
             baseInvoke = moduleDefinition.FindMethod(methodInterceptorAttribute, "InvokeAsync");
+            this.asyncInvokerInvoke = asyncInvokerInvoke;
         }
 
         public void Weave(MethodDefinition method, CustomAttribute interceptor)
@@ -47,6 +51,8 @@ namespace SoMeta.Fody
 
         private void ImplementBody(MethodDefinition method, ILProcessor il, MethodReference proceed)
         {
+//            Debugger.Launch();
+
             // We want to call the interceptor's setter method:
             // Task<object> InvokeMethodAsync(MethodInfo methodInfo, object instance, object[] parameters, Func<object[], Task<object>> invoker)
 
@@ -83,20 +89,17 @@ namespace SoMeta.Fody
             }
 
             // Leave the delegate for the proceed implementation on the stack as the fourth argument
-            il.EmitDelegate(proceed, Context.Func2Type, Context.ObjectArrayType, TypeSystem.ObjectReference);
+//            var taskFunc2Type = Context.Func2Type.MakeGenericInstanceType(Context.ObjectArrayType, Context.TaskTType.MakeGenericInstanceType(TypeSystem.ObjectReference));
+            il.EmitDelegate(proceed, Context.Func2Type, Context.ObjectArrayType, Context.TaskTType.MakeGenericInstanceType(TypeSystem.ObjectReference));
 
             // Finally, we emit the call to the interceptor
             il.Emit(OpCodes.Callvirt, baseInvoke);
 
-            if (method.ReturnType.CompareTo(TypeSystem.VoidReference))
-            {
-                il.Emit(OpCodes.Pop);
-            }
-            else
-            {
-                // Now unbox the value if necessary
-                il.EmitUnboxIfNeeded(method.ReturnType, method.DeclaringType);
-            }
+            asyncInvokerInvoke.MakeGenericMethod(((GenericInstanceType)method.ReturnType).GenericArguments[0]);
+            il.Emit(OpCodes.Call, asyncInvokerInvoke);
+
+            // Now unbox the value if necessary
+//            il.EmitUnboxIfNeeded(method.ReturnType, method.DeclaringType);
 
             // Return
             il.Emit(OpCodes.Ret);
@@ -111,7 +114,8 @@ namespace SoMeta.Fody
 
             var type = method.DeclaringType;
             var original = method.MoveImplementation($"{method.Name}$Original");
-            var proceed = method.CreateSimilarMethod($"{method.Name}$Proceed", MethodAttributes.Private, TypeSystem.ObjectReference);
+            var taskReturnType = Context.TaskTType.MakeGenericInstanceType(Context.TaskTType.MakeGenericInstanceType(TypeSystem.ObjectReference));
+            var proceed = method.CreateSimilarMethod($"{method.Name}$Proceed", MethodAttributes.Private, taskReturnType);
             method.CopyGenericParameters(proceed, x => $"{x}_Proceed");
 
             LogInfo($"ImplementProceed: {method.ReturnType}");
