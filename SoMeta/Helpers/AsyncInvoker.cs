@@ -4,7 +4,12 @@ namespace SoMeta.Helpers
 {
     public static class AsyncInvoker
     {
-        public static async Task<T> InvokeAsync<T>(Task<object> task)
+        public static async Task<object> Wrap<T>(Task<T> task)
+        {
+            return await task;
+        }
+
+        public static async Task<T> Unwrap<T>(Task<object> task)
         {
             return (T)await task;
         }
