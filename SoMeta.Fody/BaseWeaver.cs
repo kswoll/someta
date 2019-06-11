@@ -1,6 +1,10 @@
 ﻿using System;
+using System.Collections.Generic;
+using System.Diagnostics;
+using System.Linq;
 using Mono.Cecil;
 using Mono.Cecil.Cil;
+using Mono.Cecil.Rocks;
 using TypeSystem = Fody.TypeSystem;
 
 namespace SoMeta.Fody
@@ -14,6 +18,8 @@ namespace SoMeta.Fody
         public Action<string> LogError { get; set; }
         public Action<string> LogWarning { get; set; }
 
+        private readonly Dictionary<(MethodDefinition, string, string), int> uniqueNamesCounter = new Dictionary<(MethodDefinition, string, string), int>();
+
         public BaseWeaver(ModuleDefinition moduleDefinition, WeaverContext context, TypeSystem typeSystem, Action<string> logInfo, Action<string> logError, Action<string> logWarning)
         {
             ModuleDefinition = moduleDefinition;
@@ -22,6 +28,25 @@ namespace SoMeta.Fody
             LogInfo = logInfo;
             LogError = logError;
             LogWarning = logWarning;
+        }
+
+        protected string GenerateUniqueName(MethodDefinition method, TypeReference attributeType, string name)
+        {
+            var key = (method, attributeType.FullName, name);
+            if (!uniqueNamesCounter.TryGetValue(key, out var counter))
+            {
+                counter = 0;
+            }
+            counter++;
+            uniqueNamesCounter[key] = counter;
+
+            if (counter > 1)
+            {
+//                Debugger.Launch();
+                name += 2;
+            }
+
+            return $"<{method.Name}>k__{attributeType.Name}{name}";
         }
 
         protected void EmitInstanceArgument(ILProcessor il, MethodDefinition method)
@@ -90,7 +115,37 @@ namespace SoMeta.Fody
             }
         }
 
-        protected void EmitAttribute(ILProcessor il, MethodDefinition method, FieldReference memberInfoField, TypeReference interceptorAttribute, InterceptorScope scope)
+        protected FieldDefinition CacheAttributeInstance(IMemberDefinition member, FieldDefinition memberInfoField, 
+            TypeReference attributeType, int attributeIndex, InterceptorScope scope)
+        {
+            var declaration = scope == InterceptorScope.Member ? member : member.DeclaringType;
+
+            var type = member.DeclaringType;
+            var fieldName = $"<{declaration.Name}>k__{attributeType.Name}${attributeIndex}";
+            var field = type.Fields.SingleOrDefault(x => x.Name == fieldName);
+            if (field != null)
+                return field;
+             
+            // Add static field for property
+            field = new FieldDefinition(fieldName, FieldAttributes.Static | FieldAttributes.Private, attributeType);
+            type.Fields.Add(field);
+
+            var staticConstructor = type.GetStaticConstructor();
+            if (staticConstructor == null)
+            {
+                staticConstructor = type.CreateStaticConstructor();
+                staticConstructor.Body.GetILProcessor().Emit(OpCodes.Ret);
+            }
+            staticConstructor.Body.EmitBeforeReturn(il =>
+            {
+                il.EmitGetAttributeByIndex(memberInfoField, attributeIndex, attributeType);
+                il.Emit(OpCodes.Stsfld, field);
+            });
+
+            return field;
+        }
+
+/*        protected void EmitAttribute(ILProcessor il, FieldReference attributeField)
         {
             switch (scope)
             {
@@ -104,5 +159,5 @@ namespace SoMeta.Fody
                     throw new InvalidOperationException();
             }
         }
-    }
+*/    }
 }

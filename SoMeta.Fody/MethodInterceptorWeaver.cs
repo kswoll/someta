@@ -18,7 +18,7 @@ namespace SoMeta.Fody
             baseInvoke = moduleDefinition.FindMethod(methodInterceptorInterface, "Invoke");
         }
 
-        public void Weave(MethodDefinition method, CustomAttribute interceptor, InterceptorScope scope)
+        public void Weave(MethodDefinition method, CustomAttribute interceptor, int attributeIndex, InterceptorScope scope)
         {
             LogInfo($"Weaving method interceptor {interceptor.AttributeType.FullName} at {method.Describe()}");
 

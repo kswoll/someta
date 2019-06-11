@@ -38,7 +38,9 @@ namespace SoMeta.Fody
         private static MethodReference typeGetMethods;
         private static TypeReference taskTType;
         private static MethodReference taskFromResult;
+        private static TypeReference attributeType;
         private static MethodReference attributeGetCustomAttribute;
+        private static MethodReference attributeGetCustomAttributes;
         private static MethodReference methodBaseGetCurrentMethod;
         private static MethodReference typeGetProperty;
 
@@ -53,9 +55,11 @@ namespace SoMeta.Fody
             typeGetProperty = ModuleDefinition.ImportReference(CaptureFunc<Type, PropertyInfo>(x => x.GetProperty(default, default(BindingFlags))));
             taskTType = ModuleDefinition.ImportReference(typeof(Task<>));
             taskFromResult = ModuleDefinition.ImportReference(taskType.Resolve().Methods.Single(x => x.Name == "FromResult"));
-            var attributeType = ModuleDefinition.ImportReference(typeof(Attribute)).Resolve();
+            attributeType = ModuleDefinition.ImportReference(typeof(Attribute));
+            var attributeTypeDefinition = ModuleDefinition.ImportReference(typeof(Attribute)).Resolve();
             var memberInfoType = ModuleDefinition.ImportReference(typeof(MemberInfo));
-            attributeGetCustomAttribute = ModuleDefinition.ImportReference(attributeType.Methods.Single(x => x.Name == nameof(Attribute.GetCustomAttribute) && x.Parameters.Count == 2 && x.Parameters[0].ParameterType.CompareTo(memberInfoType)));
+            attributeGetCustomAttribute = ModuleDefinition.ImportReference(attributeTypeDefinition.Methods.Single(x => x.Name == nameof(Attribute.GetCustomAttribute) && x.Parameters.Count == 2 && x.Parameters[0].ParameterType.CompareTo(memberInfoType)));
+            attributeGetCustomAttributes = ModuleDefinition.ImportReference(attributeTypeDefinition.Methods.Single(x => x.Name == nameof(Attribute.GetCustomAttributes) && x.Parameters.Count == 1 && x.Parameters[0].ParameterType.CompareTo(memberInfoType)));
             var methodBaseType = ModuleDefinition.ImportReference(typeof(MethodBase));
             methodBaseGetCurrentMethod = ModuleDefinition.FindMethod(methodBaseType, nameof(MethodBase.GetCurrentMethod));
 
@@ -386,6 +390,15 @@ namespace SoMeta.Fody
         }
 */
 
+        public static void EmitGetAttributeByIndex(this ILProcessor il, FieldReference memberInfo, int index, TypeReference attributeType)
+        {
+            il.Emit(OpCodes.Ldsfld, memberInfo);
+            il.Emit(OpCodes.Call, attributeGetCustomAttributes);
+            il.Emit(OpCodes.Ldc_I4, index);
+            il.Emit(OpCodes.Ldelem_Any, CecilExtensions.attributeType);
+            il.Emit(OpCodes.Castclass, attributeType);
+        }
+
         public static void EmitGetAttribute(this ILProcessor il, FieldReference memberInfo, TypeReference attributeType)
         {
             il.Emit(OpCodes.Ldsfld, memberInfo);
@@ -478,10 +491,15 @@ namespace SoMeta.Fody
         /// </summary>
         public static FieldDefinition CachePropertyInfo(this PropertyDefinition property)
         {
-            // Add static field for property
             var type = property.DeclaringType;
-            var propertyInfoField = new FieldDefinition($"{property.Name}$PropertyInfo", FieldAttributes.Static | FieldAttributes.Private, Context.PropertyInfoType);
-            type.Fields.Add(propertyInfoField);
+            var fieldName = $"<{property.Name}>k__PropertyInfo";
+            var field = type.Fields.SingleOrDefault(x => x.Name == fieldName);
+            if (field != null)
+                return field;
+             
+            // Add static field for property
+            field = new FieldDefinition(fieldName, FieldAttributes.Static | FieldAttributes.Private, Context.PropertyInfoType);
+            type.Fields.Add(field);
 
             var staticConstructor = type.GetStaticConstructor();
             if (staticConstructor == null)
@@ -492,10 +510,10 @@ namespace SoMeta.Fody
             staticConstructor.Body.EmitBeforeReturn(il =>
             {
                 il.EmitGetPropertyInfo(property);
-                il.Emit(OpCodes.Stsfld, propertyInfoField);
+                il.Emit(OpCodes.Stsfld, field);
             });
 
-            return propertyInfoField;
+            return field;
         }
 
         private static string GetMethodSignature(this MethodDefinition method)

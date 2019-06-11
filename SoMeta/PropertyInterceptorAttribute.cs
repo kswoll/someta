@@ -3,7 +3,7 @@ using System.Reflection;
 
 namespace SoMeta
 {
-    [AttributeUsage(AttributeTargets.Property)]
+    [AttributeUsage(AttributeTargets.Property | AttributeTargets.Class, AllowMultiple = true)]
     public abstract class PropertyInterceptorAttribute : InterceptorAttribute, IPropertyGetInterceptor, IPropertySetInterceptor
     {
         public virtual object GetPropertyValue(PropertyInfo propertyInfo, object instance, Func<object> getter)

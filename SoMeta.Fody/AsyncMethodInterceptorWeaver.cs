@@ -24,7 +24,7 @@ namespace SoMeta.Fody
             this.asyncInvokerUnwrap = asyncInvokerUnwrap;
         }
 
-        public void Weave(MethodDefinition method, CustomAttribute interceptor, InterceptorScope scope)
+        public void Weave(MethodDefinition method, CustomAttribute interceptor, int attributeIndex, InterceptorScope scope)
         {
             LogInfo($"Weaving async method interceptor {interceptor.AttributeType.FullName} at {method.Describe()}");
 

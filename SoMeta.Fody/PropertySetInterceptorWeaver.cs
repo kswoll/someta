@@ -17,12 +17,13 @@ namespace SoMeta.Fody
             baseSetPropertyValue = moduleDefinition.FindMethod(propertyInterceptorInterface, "SetPropertyValue");
         }
 
-        public void Weave(PropertyDefinition property, CustomAttribute interceptor, InterceptorScope scope)
+        public void Weave(PropertyDefinition property, CustomAttribute interceptor, int attributeIndex, InterceptorScope scope)
         {
             var type = property.DeclaringType;
             LogInfo($"Weaving property interceptor {interceptor.AttributeType.FullName} at {type.FullName}.{property.Name}");
 
             var propertyInfoField = property.CachePropertyInfo();
+            var attributeField = CacheAttributeInstance(property, propertyInfoField, interceptor.AttributeType, attributeIndex, scope);
 
             LogInfo("Setter is intercepted");
 
@@ -32,20 +33,20 @@ namespace SoMeta.Fody
             // Re-implement method
             method.Body.Emit(il =>
             {
-                ImplementSetBody(property, propertyInfoField, method, il, proceedReference, interceptor.AttributeType, scope);
+                ImplementSetBody(attributeField, propertyInfoField, method, il, proceedReference, interceptor.AttributeType, scope);
             });
         }
 
-        private void ImplementSetBody(PropertyDefinition property, FieldDefinition propertyInfoField, MethodDefinition method, ILProcessor il, MethodReference proceed, TypeReference interceptorAttribute, InterceptorScope scope)
+        private void ImplementSetBody(FieldDefinition attributeField, FieldDefinition propertyInfoField, MethodDefinition method, ILProcessor il, MethodReference proceed, TypeReference interceptorAttribute, InterceptorScope scope)
         {
             // We want to call the interceptor's setter method:
             // void SetPropertyValue(PropertyInfo propertyInfo, object instance, object newValue, Action<object> setter)
 
             // Get interceptor attribute
-            EmitAttribute(il, method, propertyInfoField, interceptorAttribute, scope);
+            il.Emit(OpCodes.Ldsfld, attributeField);
 
             // Leave PropertyInfo on the stack as the first argument
-            il.EmitGetPropertyInfo(property);
+            il.Emit(OpCodes.Ldsfld, propertyInfoField);
 
             // Leave the instance on the stack as the second argument
             EmitInstanceArgument(il, method);

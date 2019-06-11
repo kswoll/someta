@@ -33,10 +33,10 @@ namespace SoMeta.Fody
             var asyncInvokerWrap = ModuleDefinition.FindMethod(asyncInvoker, "Wrap");
             var asyncInvokerUnwrap = ModuleDefinition.FindMethod(asyncInvoker, "Unwrap");
 
-            var propertyGetInterceptions = new List<(PropertyDefinition, CustomAttribute, InterceptorScope)>();
-            var propertySetInterceptions = new List<(PropertyDefinition, CustomAttribute, InterceptorScope)>();
-            var methodInterceptions = new List<(MethodDefinition, CustomAttribute, InterceptorScope)>();
-            var asyncMethodInterceptions = new List<(MethodDefinition, CustomAttribute, InterceptorScope)>();
+            var propertyGetInterceptions = new List<(PropertyDefinition, CustomAttribute, int, InterceptorScope)>();
+            var propertySetInterceptions = new List<(PropertyDefinition, CustomAttribute, int, InterceptorScope)>();
+            var methodInterceptions = new List<(MethodDefinition, CustomAttribute, int, InterceptorScope)>();
+            var asyncMethodInterceptions = new List<(MethodDefinition, CustomAttribute, int, InterceptorScope)>();
 
             var propertyGetInterceptorWeaver = new PropertyGetInterceptorWeaver(ModuleDefinition, CecilExtensions.Context, TypeSystem, LogInfo, LogError, LogWarning, propertyGetInterceptorInterface);
             var propertySetInterceptorWeaver = new PropertySetInterceptorWeaver(ModuleDefinition, CecilExtensions.Context, TypeSystem, LogInfo, LogError, LogWarning, propertySetInterceptorInterface);
@@ -48,66 +48,66 @@ namespace SoMeta.Fody
             {
                 var classInterceptors = type
                     .GetCustomAttributesInAncestry(interceptorInterface)
-                    .Select(x => (x, InterceptorScope.Class));
+                    .Select(x => (x, type.CustomAttributes.IndexOf(x), InterceptorScope.Class));
 
                 foreach (var property in type.Properties)
                 {
                     var interceptors = property.GetCustomAttributesInAncestry(interceptorInterface)
-                        .Select(x => (x, InterceptorScope.Member))
+                        .Select(x => (x, property.CustomAttributes.IndexOf(x), InterceptorScope.Member))
                         .Concat(classInterceptors);
-                    foreach (var (interceptor, scope) in interceptors)
+                    foreach (var (interceptor, index, scope) in interceptors)
                     {
                         if (propertyGetInterceptorInterface.IsAssignableFrom(interceptor.AttributeType))
                         {
                             LogInfo($"Discovered property get interceptor {interceptor.AttributeType.FullName} at {type.FullName}.{property.Name}");
-                            propertyGetInterceptions.Add((property, interceptor, scope));
+                            propertyGetInterceptions.Add((property, interceptor, index, scope));
                         }
                         if (propertySetInterceptorInterface.IsAssignableFrom(interceptor.AttributeType))
                         {
                             LogInfo($"Discovered property set interceptor {interceptor.AttributeType.FullName} at {type.FullName}.{property.Name}");
-                            propertySetInterceptions.Add((property, interceptor, scope));
+                            propertySetInterceptions.Add((property, interceptor, index, scope));
                         }
                     }
                 }
                 foreach (var method in type.Methods.Where(x => !x.IsConstructor))
                 {
                     var interceptors = method.GetCustomAttributesInAncestry(interceptorInterface)
-                        .Select(x => (x, InterceptorScope.Member))
+                        .Select(x => (x, method.CustomAttributes.IndexOf(x), InterceptorScope.Member))
                         .Concat(classInterceptors);
-                    foreach (var (interceptor, scope) in interceptors)
+                    foreach (var (interceptor, index, scope) in interceptors)
                     {
                         if (methodInterceptorInterface.IsAssignableFrom(interceptor.AttributeType))
                         {
                             LogInfo($"Discovered method interceptor {interceptor.AttributeType.FullName} at {type.FullName}.{method.Name}");
-                            methodInterceptions.Add((method, interceptor, scope));
+                            methodInterceptions.Add((method, interceptor, index, scope));
                         }
                         if (asyncMethodInterceptorInterface.IsAssignableFrom(interceptor.AttributeType))
                         {
                             LogInfo($"Discovered async method interceptor {interceptor.AttributeType.FullName} at {type.FullName}.{method.Name}");
-                            asyncMethodInterceptions.Add((method, interceptor, scope));
+                            asyncMethodInterceptions.Add((method, interceptor, index, scope));
                         }
                     }
                 }
             }
 
-            foreach (var (property, interceptor, scope) in propertyGetInterceptions)
+            foreach (var (property, interceptor, index, scope) in propertyGetInterceptions)
             {
-                propertyGetInterceptorWeaver.Weave(property, interceptor, scope);
+                propertyGetInterceptorWeaver.Weave(property, interceptor, index, scope);
             }
 
-            foreach (var (property, interceptor, scope) in propertySetInterceptions)
+            foreach (var (property, interceptor, index, scope) in propertySetInterceptions)
             {
-                propertySetInterceptorWeaver.Weave(property, interceptor, scope);
+                propertySetInterceptorWeaver.Weave(property, interceptor, index, scope);
             }
 
-            foreach (var (method, interceptor, scope) in methodInterceptions)
+            foreach (var (method, interceptor, index, scope) in methodInterceptions)
             {
-                methodInterceptorWeaver.Weave(method, interceptor, scope);
+                methodInterceptorWeaver.Weave(method, interceptor, index, scope);
             }
 
-            foreach (var (method, interceptor, scope) in asyncMethodInterceptions)
+            foreach (var (method, interceptor, index, scope) in asyncMethodInterceptions)
             {
-                asyncMethodInterceptorWeaver.Weave(method, interceptor, scope);
+                asyncMethodInterceptorWeaver.Weave(method, interceptor, index, scope);
             }
         }
     }
