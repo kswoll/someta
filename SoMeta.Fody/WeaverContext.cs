@@ -11,10 +11,12 @@ namespace SoMeta.Fody
         public Action<string> LogWarning { get; set; }
         public TypeReference MethodInfoType { get; set; }
         public TypeReference PropertyInfoType { get; set; }
+        public TypeReference Func1Type { get; set; }
         public TypeReference Func2Type { get; set; }
         public TypeReference Action1Type { get; set; }
         public TypeReference ObjectArrayType { get; set; }
         public TypeReference TaskType { get; set; }
+        public TypeReference TaskTType { get; set; }
         public TypeReference AsyncTaskMethodBuilder { get; set; }
 
         public TypeReference MethodFinder { get; set; }

@@ -54,9 +54,14 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="AsyncMethodInterceptorTests.cs" />
     <Compile Include="DoubleStringOnSetAttribute.cs" />
+    <Compile Include="GlobalSuppressions.cs" />
+    <Compile Include="MethodInterceptorTests.cs" />
+    <Compile Include="PrependValueWithDollarOnGetAttribute.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="PropertyInterceptorTests.cs" />
+    <Compile Include="SumParametersMethodAttribute.cs" />
   </ItemGroup>
   <ItemGroup>
     <None Include="packages.config" />
