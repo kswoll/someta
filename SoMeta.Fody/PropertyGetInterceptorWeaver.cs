@@ -17,13 +17,13 @@ namespace SoMeta.Fody
             baseGetPropertyValue = moduleDefinition.FindMethod(propertyInterceptorInterface, "GetPropertyValue");
         }
 
-        public void Weave(PropertyDefinition property, CustomAttribute interceptor, int attributeIndex, InterceptorScope scope)
+        public void Weave(PropertyDefinition property, InterceptorAttribute interceptor)
         {
             var type = property.DeclaringType;
             LogInfo($"Weaving property get interceptor {interceptor.AttributeType.FullName} at {type.FullName}.{property.Name}");
 
             var propertyInfoField = property.CachePropertyInfo();
-            var attributeField = CacheAttributeInstance(property, propertyInfoField, interceptor.AttributeType, attributeIndex, scope);
+            var attributeField = CacheAttributeInstance(property, propertyInfoField, interceptor);
 
             var method = property.GetMethod;
             var proceedReference = ImplementProceedGet(method, interceptor.AttributeType);

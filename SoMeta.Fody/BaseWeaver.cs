@@ -115,29 +115,28 @@ namespace SoMeta.Fody
             }
         }
 
-        protected FieldDefinition CacheAttributeInstance(TypeDefinition type,
-            TypeReference attributeType, int attributeIndex, InterceptorScope scope)
+        protected FieldDefinition CacheAttributeInstance(TypeDefinition type, InterceptorAttribute interceptor)
         {
-            return CacheAttributeInstance(type, type, null, attributeType, attributeIndex, scope);
+            return CacheAttributeInstance(type, type, null, interceptor);
         }
 
         protected FieldDefinition CacheAttributeInstance(IMemberDefinition member, FieldDefinition memberInfoField,
-            TypeReference attributeType, int attributeIndex, InterceptorScope scope)
+            InterceptorAttribute interceptor)
         {
-            return CacheAttributeInstance(member.DeclaringType, member, memberInfoField, attributeType, attributeIndex, scope);
+            return CacheAttributeInstance(member.DeclaringType, member, memberInfoField, interceptor);
         }
 
         private FieldDefinition CacheAttributeInstance(TypeDefinition type, IMemberDefinition member, FieldDefinition memberInfoField,
-            TypeReference attributeType, int attributeIndex, InterceptorScope scope)
+            InterceptorAttribute interceptor)
         {
-            var declaration = scope == InterceptorScope.Class ? type : member;
-            var fieldName = $"<{declaration.Name}>k__{attributeType.Name}${attributeIndex}";
+            var declaration = interceptor.Scope == InterceptorScope.Class ? type : member;
+            var fieldName = $"<{declaration.Name}>k__{interceptor.AttributeType.Name}${interceptor.Index}";
             var field = type.Fields.SingleOrDefault(x => x.Name == fieldName);
             if (field != null)
                 return field;
 
             // Add static field for property
-            field = new FieldDefinition(fieldName, FieldAttributes.Static | FieldAttributes.Private, attributeType);
+            field = new FieldDefinition(fieldName, FieldAttributes.Static | FieldAttributes.Private, interceptor.AttributeType);
             type.Fields.Add(field);
 
             var staticConstructor = type.GetStaticConstructor();
@@ -148,10 +147,10 @@ namespace SoMeta.Fody
             }
             staticConstructor.Body.EmitBeforeReturn(il =>
             {
-                if (scope == InterceptorScope.Class)
-                    il.EmitGetAttributeByIndex(type, attributeIndex, attributeType);
+                if (interceptor.Scope == InterceptorScope.Class)
+                    il.EmitGetAttributeByIndex(type, interceptor.Index, interceptor.AttributeType);
                 else
-                    il.EmitGetAttributeByIndex(memberInfoField, attributeIndex, attributeType);
+                    il.EmitGetAttributeByIndex(memberInfoField, interceptor.Index, interceptor.AttributeType);
                 il.Emit(OpCodes.Stsfld, field);
             });
 

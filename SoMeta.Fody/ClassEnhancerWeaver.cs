@@ -17,18 +17,18 @@ namespace SoMeta.Fody
             injectAccessAttribute = moduleDefinition.FindType("SoMeta", "InjectAccessAttribute");
         }
 
-        public void Weave(TypeDefinition type, CustomAttribute interceptor, int attributeIndex, InterceptorScope scope)
+        public void Weave(TypeDefinition type, InterceptorAttribute interceptor)
         {
             LogInfo($"Weaving class enhancer {interceptor.AttributeType.FullName} at {type.FullName}");
+//            interceptor.
 
             foreach (var interceptorProperty in interceptor.AttributeType.Resolve().Properties)
             {
                 var injectAccess = interceptorProperty.CustomAttributes.SingleOrDefault(x => x.AttributeType.CompareTo(injectAccessAttribute));
                 if (injectAccess != null)
                 {
-                    var attributeField = CacheAttributeInstance(type, interceptor.AttributeType, attributeIndex, scope);
-
 //                    Debugger.Launch();
+                    var attributeField = CacheAttributeInstance(type, interceptor);
                     var methodName = (string)injectAccess.ConstructorArguments.Single().Value;
                     var targetMethod = type.Methods.Single(x => x.Name == methodName);    // Todo: won't work for overloads
 

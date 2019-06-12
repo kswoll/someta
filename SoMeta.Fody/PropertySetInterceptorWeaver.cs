@@ -17,13 +17,13 @@ namespace SoMeta.Fody
             baseSetPropertyValue = moduleDefinition.FindMethod(propertyInterceptorInterface, "SetPropertyValue");
         }
 
-        public void Weave(PropertyDefinition property, CustomAttribute interceptor, int attributeIndex, InterceptorScope scope)
+        public void Weave(PropertyDefinition property, InterceptorAttribute interceptor)
         {
             var type = property.DeclaringType;
             LogInfo($"Weaving property interceptor {interceptor.AttributeType.FullName} at {type.FullName}.{property.Name}");
 
             var propertyInfoField = property.CachePropertyInfo();
-            var attributeField = CacheAttributeInstance(property, propertyInfoField, interceptor.AttributeType, attributeIndex, scope);
+            var attributeField = CacheAttributeInstance(property, propertyInfoField, interceptor);
 
             LogInfo("Setter is intercepted");
 

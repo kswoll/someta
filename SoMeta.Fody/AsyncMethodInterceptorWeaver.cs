@@ -14,8 +14,8 @@ namespace SoMeta.Fody
         private MethodReference asyncInvokerUnwrap;
         private MethodReference asyncInvokerWrap;
 
-        public AsyncMethodInterceptorWeaver(ModuleDefinition moduleDefinition, WeaverContext context, TypeSystem typeSystem, 
-            Action<string> logInfo, Action<string> logError, Action<string> logWarning, TypeReference methodInterceptorInterface, 
+        public AsyncMethodInterceptorWeaver(ModuleDefinition moduleDefinition, WeaverContext context, TypeSystem typeSystem,
+            Action<string> logInfo, Action<string> logError, Action<string> logWarning, TypeReference methodInterceptorInterface,
             MethodReference asyncInvokerWrap, MethodReference asyncInvokerUnwrap)
             : base(moduleDefinition, context, typeSystem, logInfo, logError, logWarning)
         {
@@ -24,7 +24,7 @@ namespace SoMeta.Fody
             this.asyncInvokerUnwrap = asyncInvokerUnwrap;
         }
 
-        public void Weave(MethodDefinition method, CustomAttribute interceptor, int attributeIndex, InterceptorScope scope)
+        public void Weave(MethodDefinition method, InterceptorAttribute interceptor)
         {
             LogInfo($"Weaving async method interceptor {interceptor.AttributeType.FullName} at {method.Describe()}");
 
@@ -33,7 +33,7 @@ namespace SoMeta.Fody
             // Re-implement method
             method.Body.Emit(il =>
             {
-                ImplementBody(method, il, proceedReference, interceptor.AttributeType, scope);
+                ImplementBody(method, il, proceedReference, interceptor.AttributeType, interceptor.Scope);
             });
         }
 

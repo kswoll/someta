@@ -20,16 +20,19 @@ namespace SoMeta.Fody.Tests
         }
 
         [NotifyPropertyChanged]
-        public class TestClass : INotifyPropertyChanged
+        public class BaseClass : INotifyPropertyChanged
         {
             public event PropertyChangedEventHandler PropertyChanged;
-
-            public string StringProperty { get; set; }
 
             protected virtual void OnPropertyChanged(string propertyName, object oldValue, object newValue)
             {
                 PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(propertyName));
             }
+        }
+
+        public class TestClass : BaseClass
+        {
+            public string StringProperty { get; set; }
         }
 
         public class NotifyPropertyChangedAttribute : Attribute, IPropertySetInterceptor, IClassEnhancer
