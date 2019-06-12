@@ -37,8 +37,14 @@ namespace SoMeta.Fody.Tests
 
         public class NotifyPropertyChangedAttribute : Attribute, IPropertySetInterceptor, IClassEnhancer
         {
+            private Action<object, string, object, object> onPropertyChanged;
+
             [InjectAccess("OnPropertyChanged")]
-            public Action<object, string, object, object> OnPropertyChanged { get; set; }
+            public Action<object, string, object, object> OnPropertyChanged
+            {
+                get => onPropertyChanged;
+                set => onPropertyChanged = value;
+            }
 
             public void SetPropertyValue(PropertyInfo propertyInfo, object instance, object oldValue, object newValue, Action<object> setter)
             {

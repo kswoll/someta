@@ -129,26 +129,28 @@ namespace SoMeta.Fody
         private FieldDefinition CacheAttributeInstance(TypeDefinition type, IMemberDefinition member, FieldDefinition memberInfoField,
             InterceptorAttribute interceptor)
         {
-            var declaration = interceptor.Scope == InterceptorScope.Class ? type : member;
+//            var declaringType = interceptor.Scope == InterceptorScope.Class ? interceptor.DeclaringType : type;
+            var declaringType = interceptor.DeclaringType;
+            var declaration = interceptor.Scope == InterceptorScope.Class ? declaringType : member;
             var fieldName = $"<{declaration.Name}>k__{interceptor.AttributeType.Name}${interceptor.Index}";
-            var field = type.Fields.SingleOrDefault(x => x.Name == fieldName);
+            var field = declaringType.Fields.SingleOrDefault(x => x.Name == fieldName);
             if (field != null)
                 return field;
 
             // Add static field for property
-            field = new FieldDefinition(fieldName, FieldAttributes.Static | FieldAttributes.Private, interceptor.AttributeType);
-            type.Fields.Add(field);
+            field = new FieldDefinition(fieldName, FieldAttributes.Static | FieldAttributes.Family, interceptor.AttributeType);
+            declaringType.Fields.Add(field);
 
-            var staticConstructor = type.GetStaticConstructor();
+            var staticConstructor = declaringType.GetStaticConstructor();
             if (staticConstructor == null)
             {
-                staticConstructor = type.CreateStaticConstructor();
+                staticConstructor = declaringType.CreateStaticConstructor();
                 staticConstructor.Body.GetILProcessor().Emit(OpCodes.Ret);
             }
             staticConstructor.Body.EmitBeforeReturn(il =>
             {
                 if (interceptor.Scope == InterceptorScope.Class)
-                    il.EmitGetAttributeByIndex(type, interceptor.Index, interceptor.AttributeType);
+                    il.EmitGetAttributeByIndex(declaringType, interceptor.Index, interceptor.AttributeType);
                 else
                     il.EmitGetAttributeByIndex(memberInfoField, interceptor.Index, interceptor.AttributeType);
                 il.Emit(OpCodes.Stsfld, field);

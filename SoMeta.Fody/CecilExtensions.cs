@@ -247,7 +247,7 @@ namespace SoMeta.Fody
             return module.CustomAttributes.Where(x => x.AttributeType.FullName == attributeType.FullName);
         }
 
-        public static IEnumerable<CustomAttribute> GetCustomAttributesInAncestry(this ModuleDefinition module, TypeReference attributeType)
+        public static IEnumerable<CustomAttribute> GetCustomAttributesIncludingSubtypes(this ModuleDefinition module, TypeReference attributeType)
         {
             return module.CustomAttributes.Where(x => attributeType.IsAssignableFrom(x.AttributeType));
         }
@@ -257,9 +257,17 @@ namespace SoMeta.Fody
             return property.CustomAttributes.Where(x => x.AttributeType.FullName == attributeType.FullName);
         }
 
-        public static IEnumerable<CustomAttribute> GetCustomAttributesInAncestry(this ICustomAttributeProvider member, TypeReference attributeType)
+        public static IEnumerable<CustomAttribute> GetCustomAttributesIncludingSubtypes(this ICustomAttributeProvider member, TypeReference attributeType)
         {
             return member.CustomAttributes.Where(x => attributeType.IsAssignableFrom(x.AttributeType));
+        }
+
+        public static IEnumerable<(TypeDefinition DeclaringType, CustomAttribute Attribute)> GetCustomAttributesInAncestry(this TypeDefinition type, TypeReference attributeType)
+        {
+            var result = type.CustomAttributes.Where(x => attributeType.IsAssignableFrom(x.AttributeType)).Select(x => (type, x));
+            if (type.BaseType != null)
+                result = result.Concat(type.BaseType.Resolve().GetCustomAttributesInAncestry(attributeType));
+            return result;
         }
 
         public static bool IsDefined(this IMemberDefinition member, TypeReference attributeType, bool inherit = false)

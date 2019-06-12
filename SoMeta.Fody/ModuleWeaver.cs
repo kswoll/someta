@@ -52,7 +52,7 @@ namespace SoMeta.Fody
             {
                 var classInterceptors = type
                     .GetCustomAttributesInAncestry(interceptorInterface)
-                    .Select(x => new InterceptorAttribute(type, x, type.CustomAttributes.IndexOf(x), InterceptorScope.Class))
+                    .Select(x => new InterceptorAttribute(x.DeclaringType, x.Attribute, x.DeclaringType.CustomAttributes.IndexOf(x.Attribute), InterceptorScope.Class))
                     .ToArray();
 
                 foreach (var classInterceptor in classInterceptors)
@@ -71,8 +71,8 @@ namespace SoMeta.Fody
 
                 foreach (var property in type.Properties)
                 {
-                    var interceptors = property.GetCustomAttributesInAncestry(interceptorInterface)
-                        .Select(x => new InterceptorAttribute(property, x, property.CustomAttributes.IndexOf(x), InterceptorScope.Member))
+                    var interceptors = property.GetCustomAttributesIncludingSubtypes(interceptorInterface)
+                        .Select(x => new InterceptorAttribute(type, x, property.CustomAttributes.IndexOf(x), InterceptorScope.Member))
                         .Concat(classInterceptors);
                     foreach (var interceptor in interceptors)
                     {
@@ -90,8 +90,8 @@ namespace SoMeta.Fody
                 }
                 foreach (var method in type.Methods.Where(x => !x.IsConstructor))
                 {
-                    var interceptors = method.GetCustomAttributesInAncestry(interceptorInterface)
-                        .Select(x => new InterceptorAttribute(method, x, method.CustomAttributes.IndexOf(x), InterceptorScope.Member))
+                    var interceptors = method.GetCustomAttributesIncludingSubtypes(interceptorInterface)
+                        .Select(x => new InterceptorAttribute(type, x, method.CustomAttributes.IndexOf(x), InterceptorScope.Member))
                         .Concat(classInterceptors);
                     foreach (var interceptor in interceptors)
                     {

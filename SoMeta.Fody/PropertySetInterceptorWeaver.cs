@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Diagnostics;
 using System.Linq;
 using Mono.Cecil;
 using Mono.Cecil.Cil;
@@ -19,6 +20,8 @@ namespace SoMeta.Fody
 
         public void Weave(PropertyDefinition property, InterceptorAttribute interceptor)
         {
+//            if (property.DeclaringType != interceptor.DeclaringType)
+//                Debugger.Launch();
             var type = property.DeclaringType;
             LogInfo($"Weaving property interceptor {interceptor.AttributeType.FullName} at {type.FullName}.{property.Name}");
 

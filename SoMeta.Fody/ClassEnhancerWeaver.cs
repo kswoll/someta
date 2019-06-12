@@ -22,6 +22,11 @@ namespace SoMeta.Fody
             LogInfo($"Weaving class enhancer {interceptor.AttributeType.FullName} at {type.FullName}");
 //            interceptor.
 
+            // For now, we don't want to impact subclasses since there's no current use case for that.  If that changes,
+            // we'll revisit.
+            if (type != interceptor.DeclaringType)
+                return;
+
             foreach (var interceptorProperty in interceptor.AttributeType.Resolve().Properties)
             {
                 var injectAccess = interceptorProperty.CustomAttributes.SingleOrDefault(x => x.AttributeType.CompareTo(injectAccessAttribute));
