@@ -606,7 +606,7 @@ namespace SoMeta.Fody
             var field = type.Fields.SingleOrDefault(x => x.Name == fieldName);
             if (field != null)
                 return field;
-             
+
             // Add static field for property
             field = new FieldDefinition(fieldName, FieldAttributes.Static | FieldAttributes.Private, Context.PropertyInfoType);
             type.Fields.Add(field);

@@ -74,7 +74,7 @@ namespace SoMeta.Fody
         {
             var type = method.DeclaringType;
             var original = method.MoveImplementation(GenerateUniqueName(method, interceptorAttribute, "Original"));
-            var proceed = method.CreateSimilarMethod(GenerateUniqueName(method, interceptorAttribute, "Proceed"), 
+            var proceed = method.CreateSimilarMethod(GenerateUniqueName(method, interceptorAttribute, "Proceed"),
                 MethodAttributes.Private, TypeSystem.VoidReference);
             proceed.Parameters.Add(new ParameterDefinition(TypeSystem.ObjectReference));
 
@@ -123,6 +123,6 @@ namespace SoMeta.Fody
 
             return proceedReference;
         }
-        
+
     }
 }

@@ -26,6 +26,8 @@ namespace SoMeta.Fody
                 var injectAccess = interceptorProperty.CustomAttributes.SingleOrDefault(x => x.AttributeType.CompareTo(injectAccessAttribute));
                 if (injectAccess != null)
                 {
+                    var attributeField = CacheAttributeInstance(type, interceptor.AttributeType, attributeIndex, scope);
+
 //                    Debugger.Launch();
                     var methodName = (string)injectAccess.ConstructorArguments.Single().Value;
                     var targetMethod = type.Methods.Single(x => x.Name == methodName);    // Todo: won't work for overloads
@@ -33,7 +35,7 @@ namespace SoMeta.Fody
                     // Generate a private static method that forms the accessor that will be assigned
                     // to this property on the associated interceptor in a static initializer.
                     var accessor = new MethodDefinition($"<>__{methodName}$Accessor", MethodAttributes.Private | MethodAttributes.Static, targetMethod.ReturnType);
-                    accessor.Parameters.Add(new ParameterDefinition(type));
+                    accessor.Parameters.Add(new ParameterDefinition(TypeSystem.ObjectReference));
                     foreach (var parameter in targetMethod.Parameters)
                     {
                         accessor.Parameters.Add(new ParameterDefinition(parameter.ParameterType));
@@ -47,12 +49,14 @@ namespace SoMeta.Fody
                     accessor.Body.Emit(il =>
                     {
                         il.Emit(OpCodes.Ldarg_0);
+                        il.Emit(OpCodes.Castclass, type);
 
-                        for (var i = 1; i < targetMethod.Parameters.Count; i++)
+                        for (var i = 1; i <= targetMethod.Parameters.Count; i++)
                         {
                             il.EmitArgument(accessor, i);
                         }
                         il.EmitCall(targetMethod);
+                        il.Emit(OpCodes.Ret);
                     });
                     type.Methods.Add(accessor);
 
@@ -60,13 +64,14 @@ namespace SoMeta.Fody
                     type.EmitStaticConstructor(il =>
                     {
                         var isVoid = targetMethod.ReturnType.CompareTo(TypeSystem.VoidReference);
-                        var delegateType = (isVoid ? Context.ActionTypes : Context.FuncTypes)[targetMethod.Parameters.Count];
+                        var delegateType = (isVoid ? Context.ActionTypes : Context.FuncTypes)[targetMethod.Parameters.Count + 1];
                         var typeArguments = new List<TypeReference>();
+                        typeArguments.Add(TypeSystem.ObjectReference);
                         typeArguments.AddRange(targetMethod.Parameters.Select(x => x.ParameterType));
                         if (!isVoid)
                             typeArguments.Add(targetMethod.ReturnType);
 
-                        il.EmitGetAttributeByIndex(type, attributeIndex, interceptor.AttributeType);
+                        il.LoadField(attributeField);
                         il.EmitDelegate(accessor, delegateType, typeArguments.ToArray());
                         il.EmitCall(interceptorProperty.SetMethod);
                     });

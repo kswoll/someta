@@ -39,7 +39,11 @@ namespace SoMeta.Fody.Tests
 
             public void SetPropertyValue(PropertyInfo propertyInfo, object instance, object oldValue, object newValue, Action<object> setter)
             {
-                OnPropertyChanged(instance, propertyInfo.Name, oldValue, newValue);
+                if (!Equals(oldValue, newValue))
+                {
+                    setter(newValue);
+                    OnPropertyChanged(instance, propertyInfo.Name, oldValue, newValue);
+                }
             }
         }
     }
