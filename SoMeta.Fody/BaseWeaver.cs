@@ -147,7 +147,7 @@ namespace SoMeta.Fody
                     il.EmitGetAttributeByIndex(declaringType, interceptor.Index, interceptor.AttributeType);
                 else
                     il.EmitGetAttributeByIndex(memberInfoField, interceptor.Index, interceptor.AttributeType);
-                il.Emit(OpCodes.Stsfld, field);
+                il.SaveField(field);
             });
 
             return field;

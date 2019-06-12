@@ -32,6 +32,14 @@ namespace SoMeta.Fody.Tests
             TestClass.StaticAmount.ShouldBe("$200");
         }
 
+        [Test]
+        public void GenericPrependDollarOnGet()
+        {
+            var o = new GenericTestClass<string>();
+            o.Amount = "100";
+            o.Amount.ShouldBe("$100");
+        }
+
 /*
         [Test]
         public void SumMethod()
@@ -76,6 +84,12 @@ namespace SoMeta.Fody.Tests
                 await Task.Delay(1);
                 return StringProperty;
             }
+        }
+
+        private class GenericTestClass<T>
+        {
+            [PrependValueWithDollarOnGet]
+            public T Amount { get; set; }
         }
 
         private class GetOnlyInterceptor : Attribute, IPropertyGetInterceptor

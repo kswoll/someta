@@ -476,9 +476,9 @@ namespace SoMeta.Fody
         }
 */
 
-        public static void EmitGetAttributeByIndex(this ILProcessor il, FieldReference memberInfo, int index, TypeReference attributeType)
+        public static void EmitGetAttributeByIndex(this ILProcessor il, FieldReference field, int index, TypeReference attributeType)
         {
-            il.EmitGetAttributeByIndex(() => il.Emit(OpCodes.Ldsfld, memberInfo), index, attributeType);
+            il.EmitGetAttributeByIndex(() => il.LoadField(field), index, attributeType);
         }
 
         public static void EmitGetAttributeByIndex(this ILProcessor il, TypeDefinition type, int index, TypeReference attributeType)
@@ -556,6 +556,11 @@ namespace SoMeta.Fody
         public static void LoadField(this ILProcessor il, FieldReference field)
         {
             il.Emit(field.Resolve().IsStatic ? OpCodes.Ldsfld : OpCodes.Ldfld, field.Bind());
+        }
+
+        public static void SaveField(this ILProcessor il, FieldReference field)
+        {
+            il.Emit(field.Resolve().IsStatic ? OpCodes.Stsfld : OpCodes.Stfld, field.Bind());
         }
 
         /// <summary>

@@ -41,10 +41,10 @@ namespace SoMeta.Fody
             // void GetPropertyValue(PropertyInfo propertyInfo, object instance, Action<object> getter)
 
             // Get interceptor attribute
-            il.Emit(OpCodes.Ldsfld, attributeField);
+            il.LoadField(attributeField);
 
             // Leave PropertyInfo on the stack as the first argument
-            il.Emit(OpCodes.Ldsfld, propertyInfoField);
+            il.LoadField(propertyInfoField);
 
             // Leave the instance on the stack as the second argument
             EmitInstanceArgument(il, method);
@@ -67,11 +67,13 @@ namespace SoMeta.Fody
             var type = method.DeclaringType;
             var original = method.MoveImplementation(GenerateUniqueName(method, interceptorAttribute, "Original"));
             var proceed = method.CreateSimilarMethod(GenerateUniqueName(method, interceptorAttribute, "Proceed"),
-                MethodAttributes.Private, method.ReturnType);
+                MethodAttributes.Private, TypeSystem.ObjectReference);
 
             MethodReference proceedReference = proceed;
+            TypeReference genericType = type;
             if (type.HasGenericParameters)
             {
+                genericType = type.MakeGenericInstanceType(type.GenericParameters.Concat(method.GenericParameters).ToArray());
                 proceedReference = proceed.Bind(type.MakeGenericInstanceType(type.GenericParameters.Concat(method.GenericParameters).ToArray()));
             }
             proceed.Body.Emit(il =>
@@ -80,7 +82,7 @@ namespace SoMeta.Fody
                 {
                     // Load target for subsequent call
                     il.Emit(OpCodes.Ldarg_0);                    // Load "this"
-                    il.Emit(OpCodes.Castclass, original.DeclaringType);
+                    il.Emit(OpCodes.Castclass, genericType);
                 }
 
                 var genericProceedTargetMethod = original.BindAll(type);
