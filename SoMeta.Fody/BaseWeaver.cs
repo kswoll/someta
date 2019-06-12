@@ -117,16 +117,10 @@ namespace SoMeta.Fody
 
         protected FieldDefinition CacheAttributeInstance(TypeDefinition type, InterceptorAttribute interceptor)
         {
-            return CacheAttributeInstance(type, type, null, interceptor);
+            return CacheAttributeInstance(type, null, interceptor);
         }
 
         protected FieldDefinition CacheAttributeInstance(IMemberDefinition member, FieldDefinition memberInfoField,
-            InterceptorAttribute interceptor)
-        {
-            return CacheAttributeInstance(member.DeclaringType, member, memberInfoField, interceptor);
-        }
-
-        private FieldDefinition CacheAttributeInstance(TypeDefinition type, IMemberDefinition member, FieldDefinition memberInfoField,
             InterceptorAttribute interceptor)
         {
 //            var declaringType = interceptor.Scope == InterceptorScope.Class ? interceptor.DeclaringType : type;
