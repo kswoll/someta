@@ -19,6 +19,7 @@ namespace SoMeta.Fody.Tests
             newValue.ShouldBe("foobar");
         }
 
+        [NotifyPropertyChanged]
         public class TestClass : INotifyPropertyChanged
         {
             public event PropertyChangedEventHandler PropertyChanged;

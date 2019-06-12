@@ -25,6 +25,7 @@ namespace SoMeta.Fody
             CecilExtensions.Initialize(ModuleDefinition, soMeta);
 
             var interceptorInterface = ModuleDefinition.FindType("SoMeta", "IInterceptor", soMeta);
+            var classInterceptorInterface = ModuleDefinition.FindType("SoMeta", "IClassInterceptor", soMeta);
             var propertyGetInterceptorInterface = ModuleDefinition.FindType("SoMeta", "IPropertyGetInterceptor", soMeta);
             var propertySetInterceptorInterface = ModuleDefinition.FindType("SoMeta", "IPropertySetInterceptor", soMeta);
             var methodInterceptorInterface = ModuleDefinition.FindType("SoMeta", "IMethodInterceptor", soMeta);
@@ -54,11 +55,17 @@ namespace SoMeta.Fody
                     .Select(x => (x, type.CustomAttributes.IndexOf(x), InterceptorScope.Class))
                     .ToArray();
 
-                foreach (var (interceptor, index, scope) in classInterceptors.Where(x => ))
+                foreach (var (classInterceptor, classIndex, classScope) in classInterceptors)
                 {
-                    if (classEnhancerInterface.IsAssignableFrom(interceptor.AttributeType))
+                    LogInfo($"Found interceptor {classInterceptor.AttributeType}");
+                    if (classInterceptorInterface.IsAssignableFrom(classInterceptor.AttributeType))
                     {
-                        
+                        LogInfo($"Found class interceptor {classInterceptor.AttributeType}");
+                        if (classEnhancerInterface.IsAssignableFrom(classInterceptor.AttributeType))
+                        {
+                            LogInfo($"Discovered class enhancer {classInterceptor.AttributeType.FullName} at {type.FullName}");
+                            classEnhancers.Add((type, classInterceptor, classIndex, classScope));
+                        }
                     }
                 }
 
@@ -120,6 +127,11 @@ namespace SoMeta.Fody
             foreach (var (method, interceptor, index, scope) in asyncMethodInterceptions)
             {
                 asyncMethodInterceptorWeaver.Weave(method, interceptor, index, scope);
+            }
+
+            foreach (var (type, interceptor, index, scope) in classEnhancers)
+            {
+                classEnhancerWeaver.Weave(type, interceptor, index, scope);
             }
         }
     }

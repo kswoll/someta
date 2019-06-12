@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.Linq;
 using Mono.Cecil;
 using Mono.Cecil.Cil;
@@ -18,19 +19,22 @@ namespace SoMeta.Fody
 
         public void Weave(TypeDefinition type, CustomAttribute interceptor, int attributeIndex, InterceptorScope scope)
         {
+            LogInfo($"Weaving class enhancer {interceptor.AttributeType.FullName} at {type.FullName}");
+
             foreach (var interceptorProperty in interceptor.AttributeType.Resolve().Properties)
             {
                 var injectAccess = interceptorProperty.CustomAttributes.SingleOrDefault(x => x.AttributeType.CompareTo(injectAccessAttribute));
                 if (injectAccess != null)
                 {
-                    var methodName = (string)injectAccess.Properties.SingleOrDefault(x => x.Name == "PropertyName").Argument.Value;
-                    var method = type.Methods.Single(x => x.Name == methodName);    // Todo: won't work for overloads
+//                    Debugger.Launch();
+                    var methodName = (string)injectAccess.ConstructorArguments.Single().Value;
+                    var targetMethod = type.Methods.Single(x => x.Name == methodName);    // Todo: won't work for overloads
 
                     // Generate a private static method that forms the accessor that will be assigned
                     // to this property on the associated interceptor in a static initializer.
-                    var accessor = new MethodDefinition($"<>__{methodName}$Accessor", MethodAttributes.Private | MethodAttributes.Static, method.ReturnType);
+                    var accessor = new MethodDefinition($"<>__{methodName}$Accessor", MethodAttributes.Private | MethodAttributes.Static, targetMethod.ReturnType);
                     accessor.Parameters.Add(new ParameterDefinition(type));
-                    foreach (var parameter in method.Parameters)
+                    foreach (var parameter in targetMethod.Parameters)
                     {
                         accessor.Parameters.Add(new ParameterDefinition(parameter.ParameterType));
                     }
@@ -38,26 +42,29 @@ namespace SoMeta.Fody
 //                    var delegateType = new TypeDefinition(type.Namespace, accessor.Name + "Type", TypeAttributes.NestedPrivate, Context.DelegateType);
 //                    delegateType.Methods.Add(new MethodDefinition("Invoke", MethodAttributes.Public, ))
 
-                    method.Body = new MethodBody(method);
-                    method.Body.InitLocals = true;
-                    method.Body.Emit(il =>
+                    accessor.Body = new MethodBody(accessor);
+                    accessor.Body.InitLocals = true;
+                    accessor.Body.Emit(il =>
                     {
-                        for (var i = 0; i < accessor.Parameters.Count; i++)
+                        il.Emit(OpCodes.Ldarg_0);
+
+                        for (var i = 1; i < targetMethod.Parameters.Count; i++)
                         {
-                            il.EmitArgument(method, i);
+                            il.EmitArgument(accessor, i);
                         }
-                        il.EmitCall(method);
+                        il.EmitCall(targetMethod);
                     });
+                    type.Methods.Add(accessor);
 
                     // Now set up the static initializer to assign this to the interceptor property
                     type.EmitStaticConstructor(il =>
                     {
-                        var isVoid = method.ReturnType.CompareTo(TypeSystem.VoidReference);
-                        var delegateType = (isVoid ? Context.ActionTypes : Context.FuncTypes)[method.Parameters.Count];
+                        var isVoid = targetMethod.ReturnType.CompareTo(TypeSystem.VoidReference);
+                        var delegateType = (isVoid ? Context.ActionTypes : Context.FuncTypes)[targetMethod.Parameters.Count];
                         var typeArguments = new List<TypeReference>();
-                        typeArguments.AddRange(method.Parameters.Select(x => x.ParameterType));
+                        typeArguments.AddRange(targetMethod.Parameters.Select(x => x.ParameterType));
                         if (!isVoid)
-                            typeArguments.Add(method.ReturnType);
+                            typeArguments.Add(targetMethod.ReturnType);
 
                         il.EmitGetAttributeByIndex(type, attributeIndex, interceptor.AttributeType);
                         il.EmitDelegate(accessor, delegateType, typeArguments.ToArray());

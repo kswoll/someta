@@ -25,8 +25,6 @@ namespace SoMeta.Fody
             var propertyInfoField = property.CachePropertyInfo();
             var attributeField = CacheAttributeInstance(property, propertyInfoField, interceptor.AttributeType, attributeIndex, scope);
 
-            LogInfo("Getter is intercepted");
-
             var method = property.GetMethod;
             var proceedReference = ImplementProceedGet(method, interceptor.AttributeType);
 
@@ -68,7 +66,7 @@ namespace SoMeta.Fody
         {
             var type = method.DeclaringType;
             var original = method.MoveImplementation(GenerateUniqueName(method, interceptorAttribute, "Original"));
-            var proceed = method.CreateSimilarMethod(GenerateUniqueName(method, interceptorAttribute, "Proceed"), 
+            var proceed = method.CreateSimilarMethod(GenerateUniqueName(method, interceptorAttribute, "Proceed"),
                 MethodAttributes.Private, method.ReturnType);
 
             MethodReference proceedReference = proceed;
