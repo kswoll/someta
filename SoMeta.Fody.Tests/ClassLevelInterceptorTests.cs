@@ -11,7 +11,7 @@ namespace SoMeta.Fody.Tests
         [Test]
         public void Methods()
         {
-            var o = new TestClass();
+            var o = new MethodClass();
             var s1 = o.Method1();
             var s2 = o.Method2();
 
@@ -19,8 +19,17 @@ namespace SoMeta.Fody.Tests
             s2.ShouldBe(nameof(o.Method2));
         }
 
+        [Test]
+        public void Property()
+        {
+            var o = new PropertyClass();
+            o.Property = "bar";
+            var value = o.Property;
+            value.ShouldBe("barfoo");
+        }
+
         [ReturnMethodName]
-        public class TestClass
+        public class MethodClass
         {
             public string Method1()
             {
@@ -33,11 +42,25 @@ namespace SoMeta.Fody.Tests
             }
         }
 
+        [GetPropertyValue]
+        public class PropertyClass
+        {
+            public string Property { get; set; }
+        }
+
         private class ReturnMethodNameAttribute : MethodInterceptorAttribute
         {
             public override object Invoke(MethodInfo methodInfo, object instance, object[] parameters, Func<object[], object> invoker)
             {
                 return methodInfo.Name;
+            }
+        }
+
+        private class GetPropertyValueAttribute : Attribute, IPropertyGetInterceptor
+        {
+            public object GetPropertyValue(PropertyInfo propertyInfo, object instance, Func<object> getter)
+            {
+                return getter() + "foo";
             }
         }
     }
