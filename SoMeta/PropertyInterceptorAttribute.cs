@@ -11,7 +11,7 @@ namespace SoMeta
             return getter();
         }
 
-        public virtual void SetPropertyValue(PropertyInfo propertyInfo, object instance, object newValue, Action<object> setter)
+        public virtual void SetPropertyValue(PropertyInfo propertyInfo, object instance, object oldValue, object newValue, Action<object> setter)
         {
             setter(newValue);
         }

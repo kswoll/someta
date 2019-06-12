@@ -74,6 +74,7 @@ namespace SoMeta.Fody
             var findProperty = ModuleDefinition.FindMethod(methodFinder, "FindProperty");
             var methodInfoType = ModuleDefinition.ImportReference(typeof(MethodInfo));
             var propertyInfoType = ModuleDefinition.ImportReference(typeof(PropertyInfo));
+            var delegateType = ModuleDefinition.ImportReference(typeof(Delegate));
 
             var context = new WeaverContext
             {
@@ -88,6 +89,7 @@ namespace SoMeta.Fody
                 TaskType = taskType,
                 TaskTType = taskTType,
                 AsyncTaskMethodBuilder = asyncTaskMethodBuilder,
+                DelegateType = delegateType,
                 OriginalMethodAttributeConstructor = originalMethodAttributeConstructor,
                 FindMethod = findMethod,
                 FindProperty = findProperty,
@@ -109,6 +111,17 @@ namespace SoMeta.Fody
         public static void Emit(this MethodBody body, Action<ILProcessor> il)
         {
             il(body.GetILProcessor());
+        }
+
+        public static void EmitStaticConstructor(this TypeDefinition type, Action<ILProcessor> il)
+        {
+            var staticConstructor = type.GetStaticConstructor();
+            if (staticConstructor == null)
+            {
+                staticConstructor = type.CreateStaticConstructor();
+                staticConstructor.Body.GetILProcessor().Emit(OpCodes.Ret);
+            }
+            staticConstructor.Body.EmitBeforeReturn(il);
         }
 
         public static GenericInstanceMethod MakeGenericMethod(this MethodReference method, params TypeReference[] genericArguments)
@@ -392,7 +405,17 @@ namespace SoMeta.Fody
 
         public static void EmitGetAttributeByIndex(this ILProcessor il, FieldReference memberInfo, int index, TypeReference attributeType)
         {
-            il.Emit(OpCodes.Ldsfld, memberInfo);
+            il.EmitGetAttributeByIndex(() => il.Emit(OpCodes.Ldsfld, memberInfo), index, attributeType);
+        }
+
+        public static void EmitGetAttributeByIndex(this ILProcessor il, TypeDefinition type, int index, TypeReference attributeType)
+        {
+            il.EmitGetAttributeByIndex(() => il.LoadType(type), index, attributeType);
+        }
+
+        private static void EmitGetAttributeByIndex(this ILProcessor il, Action emitTarget, int index, TypeReference attributeType)
+        {
+            emitTarget();
             il.Emit(OpCodes.Call, attributeGetCustomAttributes);
             il.Emit(OpCodes.Ldc_I4, index);
             il.Emit(OpCodes.Ldelem_Any, CecilExtensions.attributeType);
@@ -444,6 +467,52 @@ namespace SoMeta.Fody
             // Otherwise, cast it
             else
                 il.Emit(OpCodes.Castclass, type.ResolveGenericParameter(declaringType).Import());
+        }
+
+        public static void EmitThisIfRequired(this ILProcessor il, MethodReference method)
+        {
+            if (!method.Resolve().IsStatic)
+                il.Emit(OpCodes.Ldarg_0);
+        }
+
+        public static void EmitCall(this ILProcessor il, MethodReference method)
+        {
+            il.Emit(method.Resolve().IsStatic ? OpCodes.Call : OpCodes.Callvirt, method);
+        }
+
+        public static void LoadField(this ILProcessor il, FieldReference field)
+        {
+            il.Emit(field.Resolve().IsStatic ? OpCodes.Ldsfld : OpCodes.Ldfld, field);
+        }
+
+        /// <summary>
+        /// Used when you want to get an argument at a specified index irrespective of whether the surrounding
+        /// method is generic or not.
+        /// </summary>
+        public static void EmitArgument(this ILProcessor il, MethodDefinition containingMethod, int argumentIndex)
+        {
+            int index = argumentIndex;
+            if (!containingMethod.IsStatic)
+                index++;
+
+            switch (index)
+            {
+                case 0:
+                    il.Emit(OpCodes.Ldarg_0);
+                    break;
+                case 1:
+                    il.Emit(OpCodes.Ldarg_1);
+                    break;
+                case 2:
+                    il.Emit(OpCodes.Ldarg_2);
+                    break;
+                case 3:
+                    il.Emit(OpCodes.Ldarg_3);
+                    break;
+                default:
+                    il.Emit(OpCodes.Ldarg, index);
+                    break;
+            }
         }
 
         public static MethodReference BindAll(this MethodReference method, TypeDefinition declaringType)

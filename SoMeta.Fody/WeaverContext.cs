@@ -18,6 +18,7 @@ namespace SoMeta.Fody
         public TypeReference TaskType { get; set; }
         public TypeReference TaskTType { get; set; }
         public TypeReference AsyncTaskMethodBuilder { get; set; }
+        public TypeReference DelegateType { get; set; }
 
         public TypeReference MethodFinder { get; set; }
         public MethodReference FindMethod { get; set; }
