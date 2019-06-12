@@ -38,7 +38,9 @@ namespace SoMeta.Fody
         private static MethodReference typeGetMethods;
         private static TypeReference taskTType;
         private static MethodReference taskFromResult;
+        private static TypeReference attributeType;
         private static MethodReference attributeGetCustomAttribute;
+        private static MethodReference attributeGetCustomAttributes;
         private static MethodReference methodBaseGetCurrentMethod;
         private static MethodReference typeGetProperty;
 
@@ -53,9 +55,11 @@ namespace SoMeta.Fody
             typeGetProperty = ModuleDefinition.ImportReference(CaptureFunc<Type, PropertyInfo>(x => x.GetProperty(default, default(BindingFlags))));
             taskTType = ModuleDefinition.ImportReference(typeof(Task<>));
             taskFromResult = ModuleDefinition.ImportReference(taskType.Resolve().Methods.Single(x => x.Name == "FromResult"));
-            var attributeType = ModuleDefinition.ImportReference(typeof(Attribute)).Resolve();
+            attributeType = ModuleDefinition.ImportReference(typeof(Attribute));
+            var attributeTypeDefinition = ModuleDefinition.ImportReference(typeof(Attribute)).Resolve();
             var memberInfoType = ModuleDefinition.ImportReference(typeof(MemberInfo));
-            attributeGetCustomAttribute = ModuleDefinition.ImportReference(attributeType.Methods.Single(x => x.Name == nameof(Attribute.GetCustomAttribute) && x.Parameters.Count == 2 && x.Parameters[0].ParameterType.CompareTo(memberInfoType)));
+            attributeGetCustomAttribute = ModuleDefinition.ImportReference(attributeTypeDefinition.Methods.Single(x => x.Name == nameof(Attribute.GetCustomAttribute) && x.Parameters.Count == 2 && x.Parameters[0].ParameterType.CompareTo(memberInfoType)));
+            attributeGetCustomAttributes = ModuleDefinition.ImportReference(attributeTypeDefinition.Methods.Single(x => x.Name == nameof(Attribute.GetCustomAttributes) && x.Parameters.Count == 1 && x.Parameters[0].ParameterType.CompareTo(memberInfoType)));
             var methodBaseType = ModuleDefinition.ImportReference(typeof(MethodBase));
             methodBaseGetCurrentMethod = ModuleDefinition.FindMethod(methodBaseType, nameof(MethodBase.GetCurrentMethod));
 
@@ -70,6 +74,7 @@ namespace SoMeta.Fody
             var findProperty = ModuleDefinition.FindMethod(methodFinder, "FindProperty");
             var methodInfoType = ModuleDefinition.ImportReference(typeof(MethodInfo));
             var propertyInfoType = ModuleDefinition.ImportReference(typeof(PropertyInfo));
+            var delegateType = ModuleDefinition.ImportReference(typeof(Delegate));
 
             var context = new WeaverContext
             {
@@ -84,6 +89,48 @@ namespace SoMeta.Fody
                 TaskType = taskType,
                 TaskTType = taskTType,
                 AsyncTaskMethodBuilder = asyncTaskMethodBuilder,
+                DelegateType = delegateType,
+                ActionTypes = new List<TypeReference>
+                {
+                    ModuleDefinition.ImportReference(typeof(Action)),
+                    ModuleDefinition.ImportReference(typeof(Action<>)),
+                    ModuleDefinition.ImportReference(typeof(Action<,>)),
+                    ModuleDefinition.ImportReference(typeof(Action<,,>)),
+                    ModuleDefinition.ImportReference(typeof(Action<,,,>)),
+                    ModuleDefinition.ImportReference(typeof(Action<,,,,>)),
+                    ModuleDefinition.ImportReference(typeof(Action<,,,,,>)),
+                    ModuleDefinition.ImportReference(typeof(Action<,,,,,,>)),
+                    ModuleDefinition.ImportReference(typeof(Action<,,,,,,,>)),
+                    ModuleDefinition.ImportReference(typeof(Action<,,,,,,,,>)),
+                    ModuleDefinition.ImportReference(typeof(Action<,,,,,,,,,>)),
+                    ModuleDefinition.ImportReference(typeof(Action<,,,,,,,,,,>)),
+                    ModuleDefinition.ImportReference(typeof(Action<,,,,,,,,,,,>)),
+                    ModuleDefinition.ImportReference(typeof(Action<,,,,,,,,,,,,>)),
+                    ModuleDefinition.ImportReference(typeof(Action<,,,,,,,,,,,,,>)),
+                    ModuleDefinition.ImportReference(typeof(Action<,,,,,,,,,,,,,,>)),
+                    ModuleDefinition.ImportReference(typeof(Action<,,,,,,,,,,,,,,,>)),
+                    ModuleDefinition.ImportReference(typeof(Action<,,,,,,,,,,,,,,,>))
+                },
+                FuncTypes = new List<TypeReference>
+                {
+                    ModuleDefinition.ImportReference(typeof(Func<>)),
+                    ModuleDefinition.ImportReference(typeof(Func<,>)),
+                    ModuleDefinition.ImportReference(typeof(Func<,,>)),
+                    ModuleDefinition.ImportReference(typeof(Func<,,,>)),
+                    ModuleDefinition.ImportReference(typeof(Func<,,,,>)),
+                    ModuleDefinition.ImportReference(typeof(Func<,,,,,>)),
+                    ModuleDefinition.ImportReference(typeof(Func<,,,,,,>)),
+                    ModuleDefinition.ImportReference(typeof(Func<,,,,,,,>)),
+                    ModuleDefinition.ImportReference(typeof(Func<,,,,,,,,>)),
+                    ModuleDefinition.ImportReference(typeof(Func<,,,,,,,,,>)),
+                    ModuleDefinition.ImportReference(typeof(Func<,,,,,,,,,,>)),
+                    ModuleDefinition.ImportReference(typeof(Func<,,,,,,,,,,,>)),
+                    ModuleDefinition.ImportReference(typeof(Func<,,,,,,,,,,,,>)),
+                    ModuleDefinition.ImportReference(typeof(Func<,,,,,,,,,,,,,>)),
+                    ModuleDefinition.ImportReference(typeof(Func<,,,,,,,,,,,,,,>)),
+                    ModuleDefinition.ImportReference(typeof(Func<,,,,,,,,,,,,,,,>)),
+                    ModuleDefinition.ImportReference(typeof(Func<,,,,,,,,,,,,,,,,>))
+                },
                 OriginalMethodAttributeConstructor = originalMethodAttributeConstructor,
                 FindMethod = findMethod,
                 FindProperty = findProperty,
@@ -105,6 +152,17 @@ namespace SoMeta.Fody
         public static void Emit(this MethodBody body, Action<ILProcessor> il)
         {
             il(body.GetILProcessor());
+        }
+
+        public static void EmitStaticConstructor(this TypeDefinition type, Action<ILProcessor> il)
+        {
+            var staticConstructor = type.GetStaticConstructor();
+            if (staticConstructor == null)
+            {
+                staticConstructor = type.CreateStaticConstructor();
+                staticConstructor.Body.GetILProcessor().Emit(OpCodes.Ret);
+            }
+            staticConstructor.Body.EmitBeforeReturn(il);
         }
 
         public static GenericInstanceMethod MakeGenericMethod(this MethodReference method, params TypeReference[] genericArguments)
@@ -189,7 +247,7 @@ namespace SoMeta.Fody
             return module.CustomAttributes.Where(x => x.AttributeType.FullName == attributeType.FullName);
         }
 
-        public static IEnumerable<CustomAttribute> GetCustomAttributesInAncestry(this ModuleDefinition module, TypeReference attributeType)
+        public static IEnumerable<CustomAttribute> GetCustomAttributesIncludingSubtypes(this ModuleDefinition module, TypeReference attributeType)
         {
             return module.CustomAttributes.Where(x => attributeType.IsAssignableFrom(x.AttributeType));
         }
@@ -199,9 +257,17 @@ namespace SoMeta.Fody
             return property.CustomAttributes.Where(x => x.AttributeType.FullName == attributeType.FullName);
         }
 
-        public static IEnumerable<CustomAttribute> GetCustomAttributesInAncestry(this ICustomAttributeProvider member, TypeReference attributeType)
+        public static IEnumerable<CustomAttribute> GetCustomAttributesIncludingSubtypes(this ICustomAttributeProvider member, TypeReference attributeType)
         {
             return member.CustomAttributes.Where(x => attributeType.IsAssignableFrom(x.AttributeType));
+        }
+
+        public static IEnumerable<(TypeDefinition DeclaringType, CustomAttribute Attribute)> GetCustomAttributesInAncestry(this TypeDefinition type, TypeReference attributeType)
+        {
+            var result = type.CustomAttributes.Where(x => attributeType.IsAssignableFrom(x.AttributeType)).Select(x => (type, x));
+            if (type.BaseType != null)
+                result = result.Concat(type.BaseType.Resolve().GetCustomAttributesInAncestry(attributeType));
+            return result;
         }
 
         public static bool IsDefined(this IMemberDefinition member, TypeReference attributeType, bool inherit = false)
@@ -243,6 +309,30 @@ namespace SoMeta.Fody
                 reference.Parameters.Add(new ParameterDefinition(ModuleDefinition.ImportReference(parameter.ParameterType)));
 
             return reference;
+        }
+
+        public static MethodReference Bind(this MethodReference method)
+        {
+            var result = method;
+            if (method.DeclaringType.HasGenericParameters)
+            {
+                var genericType = method.DeclaringType.MakeGenericInstanceType(method.DeclaringType.GenericParameters/*.Concat(method.GenericParameters)*/.ToArray());
+                result = result.Bind(genericType);
+            }
+
+            return result;
+        }
+
+        public static FieldReference Bind(this FieldReference field)
+        {
+            var result = field;
+            if (field.DeclaringType.HasGenericParameters)
+            {
+                var genericType = field.DeclaringType.MakeGenericInstanceType(field.DeclaringType.GenericParameters.ToArray());
+                result = result.Bind(genericType);
+            }
+
+            return result;
         }
 
         public static GenericInstanceType MakeGenericNestedType(this TypeReference self, params TypeReference[] arguments)
@@ -386,6 +476,25 @@ namespace SoMeta.Fody
         }
 */
 
+        public static void EmitGetAttributeByIndex(this ILProcessor il, FieldReference field, int index, TypeReference attributeType)
+        {
+            il.EmitGetAttributeByIndex(() => il.LoadField(field), index, attributeType);
+        }
+
+        public static void EmitGetAttributeByIndex(this ILProcessor il, TypeDefinition type, int index, TypeReference attributeType)
+        {
+            il.EmitGetAttributeByIndex(() => il.LoadType(type), index, attributeType);
+        }
+
+        private static void EmitGetAttributeByIndex(this ILProcessor il, Action emitTarget, int index, TypeReference attributeType)
+        {
+            emitTarget();
+            il.Emit(OpCodes.Call, attributeGetCustomAttributes);
+            il.Emit(OpCodes.Ldc_I4, index);
+            il.Emit(OpCodes.Ldelem_Any, CecilExtensions.attributeType);
+            il.Emit(OpCodes.Castclass, attributeType);
+        }
+
         public static void EmitGetAttribute(this ILProcessor il, FieldReference memberInfo, TypeReference attributeType)
         {
             il.Emit(OpCodes.Ldsfld, memberInfo);
@@ -398,6 +507,15 @@ namespace SoMeta.Fody
         public static void EmitGetAttributeFromCurrentMethod(this ILProcessor il, TypeReference attributeType)
         {
             il.LoadCurrentMethodInfo();
+            il.LoadType(attributeType);
+
+            il.Emit(OpCodes.Call, attributeGetCustomAttribute);
+            il.Emit(OpCodes.Castclass, attributeType);
+        }
+
+        public static void EmitGetAttributeFromClass(this ILProcessor il, TypeDefinition type, TypeReference attributeType)
+        {
+            il.LoadType(type);
             il.LoadType(attributeType);
 
             il.Emit(OpCodes.Call, attributeGetCustomAttribute);
@@ -422,6 +540,57 @@ namespace SoMeta.Fody
             // Otherwise, cast it
             else
                 il.Emit(OpCodes.Castclass, type.ResolveGenericParameter(declaringType).Import());
+        }
+
+        public static void EmitThisIfRequired(this ILProcessor il, MethodReference method)
+        {
+            if (!method.Resolve().IsStatic)
+                il.Emit(OpCodes.Ldarg_0);
+        }
+
+        public static void EmitCall(this ILProcessor il, MethodReference method)
+        {
+            il.Emit(!method.HasThis ? OpCodes.Call : OpCodes.Callvirt, method.Bind());
+        }
+
+        public static void LoadField(this ILProcessor il, FieldReference field)
+        {
+            il.Emit(field.Resolve().IsStatic ? OpCodes.Ldsfld : OpCodes.Ldfld, field.Bind());
+        }
+
+        public static void SaveField(this ILProcessor il, FieldReference field)
+        {
+            il.Emit(field.Resolve().IsStatic ? OpCodes.Stsfld : OpCodes.Stfld, field.Bind());
+        }
+
+        /// <summary>
+        /// Used when you want to get an argument at a specified index irrespective of whether the surrounding
+        /// method is generic or not.
+        /// </summary>
+        public static void EmitArgument(this ILProcessor il, MethodDefinition containingMethod, int argumentIndex)
+        {
+            int index = argumentIndex;
+            if (!containingMethod.IsStatic)
+                index++;
+
+            switch (index)
+            {
+                case 0:
+                    il.Emit(OpCodes.Ldarg_0);
+                    break;
+                case 1:
+                    il.Emit(OpCodes.Ldarg_1);
+                    break;
+                case 2:
+                    il.Emit(OpCodes.Ldarg_2);
+                    break;
+                case 3:
+                    il.Emit(OpCodes.Ldarg_3);
+                    break;
+                default:
+                    il.Emit(OpCodes.Ldarg, index);
+                    break;
+            }
         }
 
         public static MethodReference BindAll(this MethodReference method, TypeDefinition declaringType)
@@ -469,10 +638,15 @@ namespace SoMeta.Fody
         /// </summary>
         public static FieldDefinition CachePropertyInfo(this PropertyDefinition property)
         {
-            // Add static field for property
             var type = property.DeclaringType;
-            var propertyInfoField = new FieldDefinition($"{property.Name}$PropertyInfo", FieldAttributes.Static | FieldAttributes.Private, Context.PropertyInfoType);
-            type.Fields.Add(propertyInfoField);
+            var fieldName = $"<{property.Name}>k__PropertyInfo";
+            var field = type.Fields.SingleOrDefault(x => x.Name == fieldName);
+            if (field != null)
+                return field;
+
+            // Add static field for property
+            field = new FieldDefinition(fieldName, FieldAttributes.Static | FieldAttributes.Private, Context.PropertyInfoType);
+            type.Fields.Add(field);
 
             var staticConstructor = type.GetStaticConstructor();
             if (staticConstructor == null)
@@ -483,10 +657,10 @@ namespace SoMeta.Fody
             staticConstructor.Body.EmitBeforeReturn(il =>
             {
                 il.EmitGetPropertyInfo(property);
-                il.Emit(OpCodes.Stsfld, propertyInfoField);
+                il.Emit(OpCodes.Stsfld, field.Bind());
             });
 
-            return propertyInfoField;
+            return field;
         }
 
         private static string GetMethodSignature(this MethodDefinition method)

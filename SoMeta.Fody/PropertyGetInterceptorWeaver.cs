@@ -17,35 +17,34 @@ namespace SoMeta.Fody
             baseGetPropertyValue = moduleDefinition.FindMethod(propertyInterceptorInterface, "GetPropertyValue");
         }
 
-        public void Weave(PropertyDefinition property, CustomAttribute interceptor)
+        public void Weave(PropertyDefinition property, InterceptorAttribute interceptor)
         {
             var type = property.DeclaringType;
             LogInfo($"Weaving property get interceptor {interceptor.AttributeType.FullName} at {type.FullName}.{property.Name}");
 
             var propertyInfoField = property.CachePropertyInfo();
-
-            LogInfo("Getter is intercepted");
+            var attributeField = CacheAttributeInstance(property, propertyInfoField, interceptor);
 
             var method = property.GetMethod;
-            var proceedReference = ImplementProceedGet(method);
+            var proceedReference = ImplementProceedGet(method, interceptor.AttributeType);
 
             // Re-implement method
             method.Body.Emit(il =>
             {
-                ImplementGetBody(property, propertyInfoField, method, il, proceedReference, interceptor.AttributeType);
+                ImplementGetBody(attributeField, propertyInfoField, method, il, proceedReference);
             });
         }
 
-        private void ImplementGetBody(PropertyDefinition property, FieldDefinition propertyInfoField, MethodDefinition method, ILProcessor il, MethodReference proceed, TypeReference interceptorAttribute)
+        private void ImplementGetBody(FieldDefinition attributeField, FieldDefinition propertyInfoField, MethodDefinition method, ILProcessor il, MethodReference proceed)
         {
             // We want to call the interceptor's setter method:
             // void GetPropertyValue(PropertyInfo propertyInfo, object instance, Action<object> getter)
 
             // Get interceptor attribute
-            il.EmitGetAttribute(propertyInfoField, interceptorAttribute);
+            il.LoadField(attributeField);
 
             // Leave PropertyInfo on the stack as the first argument
-            il.EmitGetPropertyInfo(property);
+            il.LoadField(propertyInfoField);
 
             // Leave the instance on the stack as the second argument
             EmitInstanceArgument(il, method);
@@ -63,15 +62,18 @@ namespace SoMeta.Fody
             il.Emit(OpCodes.Ret);
         }
 
-        private MethodReference ImplementProceedGet(MethodDefinition method)
+        private MethodReference ImplementProceedGet(MethodDefinition method, TypeReference interceptorAttribute)
         {
             var type = method.DeclaringType;
-            var original = method.MoveImplementation($"{method.Name}$Original");
-            var proceed = method.CreateSimilarMethod($"{method.Name}$Proceed", MethodAttributes.Private, method.ReturnType);
+            var original = method.MoveImplementation(GenerateUniqueName(method, interceptorAttribute, "Original"));
+            var proceed = method.CreateSimilarMethod(GenerateUniqueName(method, interceptorAttribute, "Proceed"),
+                MethodAttributes.Private, TypeSystem.ObjectReference);
 
             MethodReference proceedReference = proceed;
+            TypeReference genericType = type;
             if (type.HasGenericParameters)
             {
+                genericType = type.MakeGenericInstanceType(type.GenericParameters.Concat(method.GenericParameters).ToArray());
                 proceedReference = proceed.Bind(type.MakeGenericInstanceType(type.GenericParameters.Concat(method.GenericParameters).ToArray()));
             }
             proceed.Body.Emit(il =>
@@ -80,7 +82,7 @@ namespace SoMeta.Fody
                 {
                     // Load target for subsequent call
                     il.Emit(OpCodes.Ldarg_0);                    // Load "this"
-                    il.Emit(OpCodes.Castclass, original.DeclaringType);
+                    il.Emit(OpCodes.Castclass, genericType);
                 }
 
                 var genericProceedTargetMethod = original.BindAll(type);

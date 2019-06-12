@@ -5,6 +5,6 @@ namespace SoMeta
 {
     public interface IPropertySetInterceptor : IInterceptor
     {
-        void SetPropertyValue(PropertyInfo propertyInfo, object instance, object newValue, Action<object> setter);
+        void SetPropertyValue(PropertyInfo propertyInfo, object instance, object oldValue, object newValue, Action<object> setter);
     }
 }
