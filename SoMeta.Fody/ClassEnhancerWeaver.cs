@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.Linq;
 using Mono.Cecil;
 using Mono.Cecil.Cil;
@@ -34,7 +35,8 @@ namespace SoMeta.Fody
                         accessor.Parameters.Add(new ParameterDefinition(parameter.ParameterType));
                     }
 
-                    var delegateType = new TypeDefinition(type.Namespace, accessor.Name + "Type", TypeAttributes.NestedPrivate, Context.DelegateType);
+//                    var delegateType = new TypeDefinition(type.Namespace, accessor.Name + "Type", TypeAttributes.NestedPrivate, Context.DelegateType);
+//                    delegateType.Methods.Add(new MethodDefinition("Invoke", MethodAttributes.Public, ))
 
                     method.Body = new MethodBody(method);
                     method.Body.InitLocals = true;
@@ -50,11 +52,15 @@ namespace SoMeta.Fody
                     // Now set up the static initializer to assign this to the interceptor property
                     type.EmitStaticConstructor(il =>
                     {
+                        var isVoid = method.ReturnType.CompareTo(TypeSystem.VoidReference);
+                        var delegateType = (isVoid ? Context.ActionTypes : Context.FuncTypes)[method.Parameters.Count];
+                        var typeArguments = new List<TypeReference>();
+                        typeArguments.AddRange(method.Parameters.Select(x => x.ParameterType));
+                        if (!isVoid)
+                            typeArguments.Add(method.ReturnType);
+
                         il.EmitGetAttributeByIndex(type, attributeIndex, interceptor.AttributeType);
-                        il.EmitDelegate(accessor, )
-                        il.Emit(OpCodes.Ldnull);
-                        il.Emit(OpCodes.Ldftn, accessor);
-                        il.Emit(OpCodes.Newobj, );
+                        il.EmitDelegate(accessor, delegateType, typeArguments.ToArray());
                         il.EmitCall(interceptorProperty.SetMethod);
                     });
                 }

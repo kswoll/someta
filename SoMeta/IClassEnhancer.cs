@@ -1,7 +1,6 @@
 ﻿namespace SoMeta
 {
-    public interface IClassEnhancer
+    public interface IClassEnhancer : IClassInterceptor
     {
-        
     }
 }

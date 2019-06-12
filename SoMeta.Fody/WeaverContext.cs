@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections.Generic;
 using Mono.Cecil;
 
 namespace SoMeta.Fody
@@ -19,6 +20,8 @@ namespace SoMeta.Fody
         public TypeReference TaskTType { get; set; }
         public TypeReference AsyncTaskMethodBuilder { get; set; }
         public TypeReference DelegateType { get; set; }
+        public List<TypeReference> ActionTypes  { get; set; }
+        public List<TypeReference> FuncTypes { get; set; }
 
         public TypeReference MethodFinder { get; set; }
         public MethodReference FindMethod { get; set; }

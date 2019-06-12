@@ -29,6 +29,7 @@ namespace SoMeta.Fody
             var propertySetInterceptorInterface = ModuleDefinition.FindType("SoMeta", "IPropertySetInterceptor", soMeta);
             var methodInterceptorInterface = ModuleDefinition.FindType("SoMeta", "IMethodInterceptor", soMeta);
             var asyncMethodInterceptorInterface = ModuleDefinition.FindType("SoMeta", "IAsyncMethodInterceptor", soMeta);
+            var classEnhancerInterface = ModuleDefinition.FindType("SoMeta", "IClassEnhancer", soMeta);
             var asyncInvoker = ModuleDefinition.FindType("SoMeta.Helpers", "AsyncInvoker", soMeta);
             var asyncInvokerWrap = ModuleDefinition.FindMethod(asyncInvoker, "Wrap");
             var asyncInvokerUnwrap = ModuleDefinition.FindMethod(asyncInvoker, "Unwrap");
@@ -37,18 +38,29 @@ namespace SoMeta.Fody
             var propertySetInterceptions = new List<(PropertyDefinition, CustomAttribute, int, InterceptorScope)>();
             var methodInterceptions = new List<(MethodDefinition, CustomAttribute, int, InterceptorScope)>();
             var asyncMethodInterceptions = new List<(MethodDefinition, CustomAttribute, int, InterceptorScope)>();
+            var classEnhancers = new List<(TypeDefinition, CustomAttribute, int, InterceptorScope)>();
 
             var propertyGetInterceptorWeaver = new PropertyGetInterceptorWeaver(ModuleDefinition, CecilExtensions.Context, TypeSystem, LogInfo, LogError, LogWarning, propertyGetInterceptorInterface);
             var propertySetInterceptorWeaver = new PropertySetInterceptorWeaver(ModuleDefinition, CecilExtensions.Context, TypeSystem, LogInfo, LogError, LogWarning, propertySetInterceptorInterface);
             var methodInterceptorWeaver = new MethodInterceptorWeaver(ModuleDefinition, CecilExtensions.Context, TypeSystem, LogInfo, LogError, LogWarning, methodInterceptorInterface);
             var asyncMethodInterceptorWeaver = new AsyncMethodInterceptorWeaver(ModuleDefinition, CecilExtensions.Context, TypeSystem, LogInfo, LogError, LogWarning, asyncMethodInterceptorInterface, asyncInvokerWrap, asyncInvokerUnwrap);
+            var classEnhancerWeaver = new ClassEnhancerWeaver(ModuleDefinition, CecilExtensions.Context, TypeSystem, LogInfo, LogError, LogWarning);
 
             // Inventory candidate classes
             foreach (var type in ModuleDefinition.GetAllTypes())
             {
                 var classInterceptors = type
                     .GetCustomAttributesInAncestry(interceptorInterface)
-                    .Select(x => (x, type.CustomAttributes.IndexOf(x), InterceptorScope.Class));
+                    .Select(x => (x, type.CustomAttributes.IndexOf(x), InterceptorScope.Class))
+                    .ToArray();
+
+                foreach (var (interceptor, index, scope) in classInterceptors.Where(x => ))
+                {
+                    if (classEnhancerInterface.IsAssignableFrom(interceptor.AttributeType))
+                    {
+                        
+                    }
+                }
 
                 foreach (var property in type.Properties)
                 {
