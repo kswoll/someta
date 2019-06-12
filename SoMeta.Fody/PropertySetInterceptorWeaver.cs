@@ -57,10 +57,10 @@ namespace SoMeta.Fody
             // Get the current value of the property as the third argument
             il.EmitThisIfRequired(property.GetMethod);
             il.EmitCall(property.GetMethod);
+            il.EmitBoxIfNeeded(method.Parameters[0].ParameterType);
 
             // Leave the new value on the stack as the fourth argument
             il.EmitArgument(method, 0);
-
             il.EmitBoxIfNeeded(method.Parameters[0].ParameterType);
 
             // Leave the delegate for the proceed implementation on the stack as fifth argument
@@ -79,12 +79,20 @@ namespace SoMeta.Fody
             var original = method.MoveImplementation(GenerateUniqueName(method, interceptorAttribute, "Original"));
             var proceed = method.CreateSimilarMethod(GenerateUniqueName(method, interceptorAttribute, "Proceed"),
                 MethodAttributes.Private, TypeSystem.VoidReference);
+
+//            if (proceed.Name == "<set_Property>k__NotifyPropertyChangedAttributeProceed")
+//            {
+//                Debugger.Launch();
+//            }
+
             proceed.Parameters.Add(new ParameterDefinition(TypeSystem.ObjectReference));
 
             MethodReference proceedReference = proceed;
+            TypeReference genericType = type;
             if (type.HasGenericParameters)
             {
-                proceedReference = proceed.Bind(type.MakeGenericInstanceType(type.GenericParameters.Concat(method.GenericParameters).ToArray()));
+                genericType = type.MakeGenericInstanceType(type.GenericParameters.Concat(method.GenericParameters).ToArray());
+                proceedReference = proceed.Bind((GenericInstanceType)genericType);
             }
             proceed.Body.Emit(il =>
             {
@@ -94,7 +102,7 @@ namespace SoMeta.Fody
                 {
                     // Load target for subsequent call
                     il.Emit(OpCodes.Ldarg_0);                    // Load "this"
-                    il.Emit(OpCodes.Castclass, original.DeclaringType);
+                    il.Emit(OpCodes.Castclass, genericType);
                 }
 
                 var parameterInfo = parameterInfos[0];

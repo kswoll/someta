@@ -19,6 +19,16 @@ namespace SoMeta.Fody.Tests
             newValue.ShouldBe("foobar");
         }
 
+        [Test]
+        public void VerifyChangeNotificationOnGenericClass()
+        {
+            var o = new GenericTestClass<string>();
+            var newValue = "";
+            o.PropertyChanged += (sender, args) => newValue = o.Property;
+            o.Property = "foobar";
+            newValue.ShouldBe("foobar");
+        }
+
         [NotifyPropertyChanged]
         public class BaseClass : INotifyPropertyChanged
         {
@@ -33,6 +43,11 @@ namespace SoMeta.Fody.Tests
         public class TestClass : BaseClass
         {
             public string StringProperty { get; set; }
+        }
+
+        public class GenericTestClass<T> : BaseClass
+        {
+            public T Property { get; set; }
         }
 
         public class NotifyPropertyChangedAttribute : Attribute, IPropertySetInterceptor, IClassEnhancer

@@ -311,6 +311,30 @@ namespace SoMeta.Fody
             return reference;
         }
 
+        public static MethodReference Bind(this MethodReference method)
+        {
+            var result = method;
+            if (method.DeclaringType.HasGenericParameters)
+            {
+                var genericType = method.DeclaringType.MakeGenericInstanceType(method.DeclaringType.GenericParameters/*.Concat(method.GenericParameters)*/.ToArray());
+                result = result.Bind(genericType);
+            }
+
+            return result;
+        }
+
+        public static FieldReference Bind(this FieldReference field)
+        {
+            var result = field;
+            if (field.DeclaringType.HasGenericParameters)
+            {
+                var genericType = field.DeclaringType.MakeGenericInstanceType(field.DeclaringType.GenericParameters.ToArray());
+                result = result.Bind(genericType);
+            }
+
+            return result;
+        }
+
         public static GenericInstanceType MakeGenericNestedType(this TypeReference self, params TypeReference[] arguments)
         {
             if (self == null)
@@ -526,12 +550,12 @@ namespace SoMeta.Fody
 
         public static void EmitCall(this ILProcessor il, MethodReference method)
         {
-            il.Emit(method.Resolve().IsStatic ? OpCodes.Call : OpCodes.Callvirt, method);
+            il.Emit(!method.HasThis ? OpCodes.Call : OpCodes.Callvirt, method.Bind());
         }
 
         public static void LoadField(this ILProcessor il, FieldReference field)
         {
-            il.Emit(field.Resolve().IsStatic ? OpCodes.Ldsfld : OpCodes.Ldfld, field);
+            il.Emit(field.Resolve().IsStatic ? OpCodes.Ldsfld : OpCodes.Ldfld, field.Bind());
         }
 
         /// <summary>
@@ -628,7 +652,7 @@ namespace SoMeta.Fody
             staticConstructor.Body.EmitBeforeReturn(il =>
             {
                 il.EmitGetPropertyInfo(property);
-                il.Emit(OpCodes.Stsfld, field);
+                il.Emit(OpCodes.Stsfld, field.Bind());
             });
 
             return field;
