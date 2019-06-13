@@ -25,7 +25,11 @@ namespace SoMeta.Fody
             CecilExtensions.Initialize(ModuleDefinition, soMeta);
 
             var interceptorInterface = ModuleDefinition.FindType("SoMeta", "IInterceptor", soMeta);
+            var stateInterceptorInterface = ModuleDefinition.FindType("SoMeta", "IStateInterceptor", soMeta);
+            var classStateInterceptorInterface = ModuleDefinition.FindType("SoMeta", "IClassStateInterceptor", soMeta);
+            var propertyStateInterceptorInterface = ModuleDefinition.FindType("SoMeta", "IPropertyStateInterceptor", soMeta);
             var classInterceptorInterface = ModuleDefinition.FindType("SoMeta", "IClassInterceptor", soMeta);
+            var propertyInterceptorInterface = ModuleDefinition.FindType("SoMeta", "IPropertyInterceptor", soMeta);
             var propertyGetInterceptorInterface = ModuleDefinition.FindType("SoMeta", "IPropertyGetInterceptor", soMeta);
             var propertySetInterceptorInterface = ModuleDefinition.FindType("SoMeta", "IPropertySetInterceptor", soMeta);
             var methodInterceptorInterface = ModuleDefinition.FindType("SoMeta", "IMethodInterceptor", soMeta);
@@ -40,12 +44,14 @@ namespace SoMeta.Fody
             var methodInterceptions = new List<(MethodDefinition, InterceptorAttribute)>();
             var asyncMethodInterceptions = new List<(MethodDefinition, InterceptorAttribute)>();
             var classEnhancers = new List<(TypeDefinition, InterceptorAttribute)>();
+            var stateInterceptions = new List<(IMemberDefinition, InterceptorAttribute)>();
 
             var propertyGetInterceptorWeaver = new PropertyGetInterceptorWeaver(ModuleDefinition, CecilExtensions.Context, TypeSystem, LogInfo, LogError, LogWarning, propertyGetInterceptorInterface);
             var propertySetInterceptorWeaver = new PropertySetInterceptorWeaver(ModuleDefinition, CecilExtensions.Context, TypeSystem, LogInfo, LogError, LogWarning, propertySetInterceptorInterface);
             var methodInterceptorWeaver = new MethodInterceptorWeaver(ModuleDefinition, CecilExtensions.Context, TypeSystem, LogInfo, LogError, LogWarning, methodInterceptorInterface);
             var asyncMethodInterceptorWeaver = new AsyncMethodInterceptorWeaver(ModuleDefinition, CecilExtensions.Context, TypeSystem, LogInfo, LogError, LogWarning, asyncMethodInterceptorInterface, asyncInvokerWrap, asyncInvokerUnwrap);
             var classEnhancerWeaver = new ClassEnhancerWeaver(ModuleDefinition, CecilExtensions.Context, TypeSystem, LogInfo, LogError, LogWarning);
+            var stateWeaver = new StateWeaver(ModuleDefinition, CecilExtensions.Context, TypeSystem, LogInfo, LogError, LogWarning);
 
             // Inventory candidate classes
             foreach (var type in ModuleDefinition.GetAllTypes())
@@ -85,6 +91,12 @@ namespace SoMeta.Fody
                         {
                             LogInfo($"Discovered property set interceptor {interceptor.AttributeType.FullName} at {type.FullName}.{property.Name}");
                             propertySetInterceptions.Add((property, interceptor));
+                        }
+
+                        if (propertyStateInterceptorInterface.IsAssignableFrom(interceptor.AttributeType))
+                        {
+                            LogInfo($"Discovered property state interceptor {interceptor.AttributeType.FullName} at {type.FullName}.{property.Name}");
+                            stateInterceptions.Add((property, interceptor));
                         }
                     }
                 }
@@ -132,6 +144,11 @@ namespace SoMeta.Fody
             foreach (var (type, interceptor) in classEnhancers)
             {
                 classEnhancerWeaver.Weave(type, interceptor);
+            }
+
+            foreach (var (member, interceptor) in stateInterceptions)
+            {
+                stateWeaver.Weave(member, interceptor);
             }
         }
     }

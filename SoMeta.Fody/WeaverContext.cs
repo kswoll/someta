@@ -7,6 +7,7 @@ namespace SoMeta.Fody
     public class WeaverContext
     {
         public ModuleDefinition ModuleDefinition { get; set; }
+        public AssemblyNameReference SoMeta { get; set; }
         public Action<string> LogInfo { get; set; }
         public Action<string> LogError { get; set; }
         public Action<string> LogWarning { get; set; }

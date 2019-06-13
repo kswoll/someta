@@ -27,13 +27,14 @@ namespace SoMeta.Fody
             if (type != interceptor.DeclaringType)
                 return;
 
+            var attributeField = CacheAttributeInstance(type, interceptor);
+
             foreach (var interceptorProperty in interceptor.AttributeType.Resolve().Properties)
             {
                 var injectAccess = interceptorProperty.CustomAttributes.SingleOrDefault(x => x.AttributeType.CompareTo(injectAccessAttribute));
                 if (injectAccess != null)
                 {
 //                    Debugger.Launch();
-                    var attributeField = CacheAttributeInstance(type, interceptor);
                     var methodName = (string)injectAccess.ConstructorArguments.Single().Value;
                     var targetMethod = type.Methods.Single(x => x.Name == methodName);    // Todo: won't work for overloads
 

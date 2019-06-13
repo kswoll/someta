@@ -79,6 +79,7 @@ namespace SoMeta.Fody
             var context = new WeaverContext
             {
                 ModuleDefinition = ModuleDefinition,
+                SoMeta = soMeta,
                 LogWarning = LogWarning,
                 LogError = LogError,
                 LogInfo = LogInfo,

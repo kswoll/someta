@@ -18,7 +18,7 @@ namespace SoMeta.Fody
         public Action<string> LogError { get; set; }
         public Action<string> LogWarning { get; set; }
 
-        private readonly Dictionary<(MethodDefinition, string, string), int> uniqueNamesCounter = new Dictionary<(MethodDefinition, string, string), int>();
+        private readonly Dictionary<(string, string, string), int> uniqueNamesCounter = new Dictionary<(string, string, string), int>();
 
         public BaseWeaver(ModuleDefinition moduleDefinition, WeaverContext context, TypeSystem typeSystem, Action<string> logInfo, Action<string> logError, Action<string> logWarning)
         {
@@ -30,9 +30,9 @@ namespace SoMeta.Fody
             LogWarning = logWarning;
         }
 
-        protected string GenerateUniqueName(MethodDefinition method, TypeReference attributeType, string name)
+        protected string GenerateUniqueName(IMemberDefinition member, TypeReference attributeType, string name)
         {
-            var key = (method, attributeType.FullName, name);
+            var key = (member.ToString(), attributeType.FullName, name);
             if (!uniqueNamesCounter.TryGetValue(key, out var counter))
             {
                 counter = 0;
@@ -46,7 +46,7 @@ namespace SoMeta.Fody
                 name += 2;
             }
 
-            return $"<{method.Name}>k__{attributeType.Name}{name}";
+            return $"<{(member is TypeDefinition ? "" : member.Name)}>k__{attributeType.Name}{name}";
         }
 
         protected void EmitInstanceArgument(ILProcessor il, MethodDefinition method)
