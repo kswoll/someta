@@ -3,6 +3,7 @@ using System.Linq;
 using System.Reflection;
 using NUnit.Framework;
 using Shouldly;
+using SoMeta.Reflection;
 
 namespace SoMeta.Fody.Tests
 {

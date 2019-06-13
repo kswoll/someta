@@ -22,25 +22,27 @@ namespace SoMeta.Fody
         {
             LogInfo($"Weaving method interceptor {interceptor.AttributeType.FullName} at {method.Describe()}");
 
+            var methodInfoField = method.CacheMethodInfo();
+            var attributeField = CacheAttributeInstance(method, methodInfoField, interceptor);
             var proceedReference = ImplementProceed(method);
 
             // Re-implement method
             method.Body.Emit(il =>
             {
-                ImplementBody(method, il, proceedReference, interceptor.AttributeType, interceptor.Scope);
+                ImplementBody(method, il, attributeField, methodInfoField, proceedReference);
             });
         }
 
-        private void ImplementBody(MethodDefinition method, ILProcessor il, MethodReference proceed, TypeReference interceptorAttribute, InterceptorScope scope)
+        private void ImplementBody(MethodDefinition method, ILProcessor il, FieldDefinition attributeField, FieldDefinition methodInfoField, MethodReference proceed)
         {
             // We want to call the interceptor's setter method:
             // object InvokeMethod(MethodInfo methodInfo, object instance, object[] parameters, Func<object[], object> invoker)
 
             // Get interceptor attribute
-            EmitAttribute(il, method, interceptorAttribute, scope);
+            il.LoadField(attributeField);
 
             // Leave MethodInfo on the stack as the first argument
-            il.LoadCurrentMethodInfo();
+            il.LoadField(methodInfoField);
 
             // Leave the instance on the stack as the second argument
             EmitInstanceArgument(il, method);
