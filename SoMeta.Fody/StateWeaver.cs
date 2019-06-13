@@ -39,6 +39,12 @@ namespace SoMeta.Fody
                 var propertyInfo = propertyDefinition.CachePropertyInfo();
                 attributeField = CacheAttributeInstance(member, propertyInfo, interceptor);
             }
+            else if (member is MethodDefinition methodDefinition)
+            {
+//                Debugger.Launch();
+                var methodInfo = methodDefinition.CacheMethodInfo();
+                attributeField = CacheAttributeInstance(member, methodInfo, interceptor);
+            }
             else
             {
                 throw new Exception();

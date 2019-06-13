@@ -465,17 +465,20 @@ namespace SoMeta.Fody
             il.Emit(OpCodes.Call, typeGetProperty);
         }
 
-/*
         public static void EmitGetMethodInfo(this ILProcessor il, MethodDefinition method)
         {
-            var bindingFlags = (int)(BindingFlags.Instance | BindingFlags.Static | BindingFlags.Public | BindingFlags.NonPublic);
+            TypeReference genericType = method.DeclaringType;
+            if (genericType.HasGenericParameters)
+            {
+                genericType = genericType.MakeGenericInstanceType(genericType.GenericParameters.ToArray());
+            }
 
-            il.LoadType(method.DeclaringType);
-            il.Emit(OpCodes.Ldstr, property.Name);
-            il.Emit(OpCodes.Ldc_I4, bindingFlags);
-            il.Emit(OpCodes.Call, typeGetMethod);
+            var methodFinder = Context.MethodFinder.MakeGenericInstanceType(genericType);
+            var methodSignature = method.GenerateFullSignature();
+            var findMethod = Context.FindMethod.Bind(methodFinder);
+            il.Emit(OpCodes.Ldstr, methodSignature);
+            il.Emit(OpCodes.Call, findMethod);
         }
-*/
 
         public static void EmitGetAttributeByIndex(this ILProcessor il, FieldReference field, int index, TypeReference attributeType)
         {
@@ -664,9 +667,31 @@ namespace SoMeta.Fody
             return field;
         }
 
-        private static string GetMethodSignature(this MethodDefinition method)
+        /// <summary>
+        /// Declares a static field to store the MethodInfo for the specified MethodDefinition and initializes
+        /// it in the declaring class' static initializer.  If no static initializer currently exists, one will
+        /// be created.
+        /// </summary>
+        public static FieldDefinition CacheMethodInfo(this MethodDefinition method)
         {
-            return $"{method.Name}_{string.Join("_", method.Parameters.Select(x => x.ParameterType.FullName))}";
+            var type = method.DeclaringType;
+            var methodSignature = method.GenerateSignature();
+            var fieldName = $"<{methodSignature}>k__MethodInfo";
+            var field = type.Fields.SingleOrDefault(x => x.Name == fieldName);
+            if (field != null)
+                return field;
+
+            // Add static field for property
+            field = new FieldDefinition(fieldName, FieldAttributes.Static | FieldAttributes.Private, Context.MethodInfoType);
+            type.Fields.Add(field);
+
+            type.EmitStaticConstructor(il =>
+            {
+                il.EmitGetMethodInfo(method);
+                il.Emit(OpCodes.Stsfld, field.Bind());
+            });
+
+            return field;
         }
 
         /// <summary>
@@ -677,10 +702,12 @@ namespace SoMeta.Fody
         public static MethodDefinition MoveImplementation(this MethodDefinition original, string newName)
         {
             var method = new MethodDefinition(newName, MethodAttributes.Private | original.Attributes.GetStatic(), original.ReturnType);
+/*
             method.CustomAttributes.Add(new CustomAttribute(Context.OriginalMethodAttributeConstructor)
             {
                 ConstructorArguments = { new CustomAttributeArgument(TypeSystem.StringReference, method.Name) }
             });
+*/
             original.CopyParameters(method);
             original.CopyGenericParameters(method);
 
@@ -952,8 +979,19 @@ namespace SoMeta.Fody
 
         public static string GenerateSignature(this MethodDefinition method)
         {
-            return $"{method.Name}$$${method.GenericParameters.Count}$$$" +
-                   $"{string.Join("$$", method.Parameters.Select(x => x.ParameterType.FullName.Replace(".", "$")))}";
+            var overloads = method.DeclaringType.Methods.Where(x => x.Name == method.Name).ToList();
+            if (overloads.Count == 1)
+                return method.Name;
+
+            overloads = overloads.OrderBy(x => x.Parameters.Count).ThenBy(x => string.Join("$", x.Parameters.Select(y => y.ParameterType.FullName))).ToList();
+            var index = overloads.IndexOf(method);
+
+            return $"{method.Name}${index}";
+        }
+
+        public static string GenerateFullSignature(this MethodDefinition method)
+        {
+            return $"{method.DeclaringType.FullName}.{method.GenerateSignature()}";
         }
 
         public static void CopyParameters(this MethodDefinition source, MethodDefinition destination)

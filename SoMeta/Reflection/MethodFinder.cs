@@ -12,8 +12,16 @@ namespace SoMeta.Reflection
 
         internal static string GenerateSignature(MethodInfo method)
         {
-            return $"{method.Name}$$${method.GetGenericArguments().Length}$$$" +
-                   $"{string.Join("$$", method.GetParameters().Select(x => GetFriendlyName(x.ParameterType).Replace(".", "$")))}";
+            var overloads = method.DeclaringType.GetMethods().Where(x => x.Name == method.Name).ToList();
+            var name = method.Name;
+            if (overloads.Count > 1)
+            {
+                overloads = overloads.OrderBy(x => x.GetParameters().Length).ThenBy(x => string.Join("$", x.GetParameters().Select(y => y.ParameterType.FullName))).ToList();
+                var index = overloads.IndexOf(method);
+                name = $"{name}${index}";
+            }
+
+            return $"{method.DeclaringType.FullName.Replace("+", "/")}.{name}";
         }
 
         public static string GetFriendlyName(Type type)
@@ -52,13 +60,13 @@ namespace SoMeta.Reflection
             if (type.IsGenericType)
                 type = type.GetGenericTypeDefinition();
 
-            foreach (var item in type.GetMethods(BindingFlags.Instance | BindingFlags.NonPublic | BindingFlags.Public).OrderBy(x => x.MetadataToken).Zip(
-                typeof(T).GetMethods(BindingFlags.Instance | BindingFlags.NonPublic | BindingFlags.Public).OrderBy(x => x.MetadataToken), (baseInfo, realInfo) => new { BaseInfo = baseInfo, RealInfo = realInfo }))
+            foreach (var item in type.GetMethods(BindingFlags.Instance | BindingFlags.Static | BindingFlags.NonPublic | BindingFlags.Public).OrderBy(x => x.MetadataToken).Zip(
+                typeof(T).GetMethods(BindingFlags.Instance | BindingFlags.Static | BindingFlags.NonPublic | BindingFlags.Public).OrderBy(x => x.MetadataToken), (baseInfo, realInfo) => new { BaseInfo = baseInfo, RealInfo = realInfo }))
             {
                 var signature = MethodFinder.GenerateSignature(item.BaseInfo);
                 methodsBySignature[signature] = item.RealInfo;
             }
-            foreach (var item in type.GetProperties(BindingFlags.Instance | BindingFlags.NonPublic | BindingFlags.Public).OrderBy(x => x.MetadataToken).Zip(
+            foreach (var item in type.GetProperties(BindingFlags.Instance | BindingFlags.Static | BindingFlags.NonPublic | BindingFlags.Public).OrderBy(x => x.MetadataToken).Zip(
                 typeof(T).GetProperties(BindingFlags.Instance | BindingFlags.NonPublic | BindingFlags.Public).OrderBy(x => x.MetadataToken), (baseInfo, realInfo) => new { BaseInfo = baseInfo, RealInfo = realInfo }))
             {
                 if (item.RealInfo.GetMethod != null)

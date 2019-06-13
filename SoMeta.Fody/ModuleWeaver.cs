@@ -25,11 +25,10 @@ namespace SoMeta.Fody
             CecilExtensions.Initialize(ModuleDefinition, soMeta);
 
             var interceptorInterface = ModuleDefinition.FindType("SoMeta", "IInterceptor", soMeta);
-            var stateInterceptorInterface = ModuleDefinition.FindType("SoMeta", "IStateInterceptor", soMeta);
             var classStateInterceptorInterface = ModuleDefinition.FindType("SoMeta", "IClassStateInterceptor", soMeta);
             var propertyStateInterceptorInterface = ModuleDefinition.FindType("SoMeta", "IPropertyStateInterceptor", soMeta);
+            var methodStateInterceptorInterface = ModuleDefinition.FindType("SoMeta", "IMethodStateInterceptor", soMeta);
             var classInterceptorInterface = ModuleDefinition.FindType("SoMeta", "IClassInterceptor", soMeta);
-            var propertyInterceptorInterface = ModuleDefinition.FindType("SoMeta", "IPropertyInterceptor", soMeta);
             var propertyGetInterceptorInterface = ModuleDefinition.FindType("SoMeta", "IPropertyGetInterceptor", soMeta);
             var propertySetInterceptorInterface = ModuleDefinition.FindType("SoMeta", "IPropertySetInterceptor", soMeta);
             var methodInterceptorInterface = ModuleDefinition.FindType("SoMeta", "IMethodInterceptor", soMeta);
@@ -72,6 +71,11 @@ namespace SoMeta.Fody
                             LogInfo($"Discovered class enhancer {classInterceptor.AttributeType.FullName} at {type.FullName}");
                             classEnhancers.Add((type, classInterceptor));
                         }
+                        if (classStateInterceptorInterface.IsAssignableFrom(classInterceptor.AttributeType))
+                        {
+                            LogInfo($"Discovered class state interceptor {classInterceptor.AttributeType.FullName} at {type.FullName}");
+                            stateInterceptions.Add((type, classInterceptor));
+                        }
                     }
                 }
 
@@ -92,7 +96,6 @@ namespace SoMeta.Fody
                             LogInfo($"Discovered property set interceptor {interceptor.AttributeType.FullName} at {type.FullName}.{property.Name}");
                             propertySetInterceptions.Add((property, interceptor));
                         }
-
                         if (propertyStateInterceptorInterface.IsAssignableFrom(interceptor.AttributeType))
                         {
                             LogInfo($"Discovered property state interceptor {interceptor.AttributeType.FullName} at {type.FullName}.{property.Name}");
@@ -116,6 +119,11 @@ namespace SoMeta.Fody
                         {
                             LogInfo($"Discovered async method interceptor {interceptor.AttributeType.FullName} at {type.FullName}.{method.Name}");
                             asyncMethodInterceptions.Add((method, interceptor));
+                        }
+                        if (methodStateInterceptorInterface.IsAssignableFrom(interceptor.AttributeType))
+                        {
+                            LogInfo($"Discovered method state interceptor {interceptor.AttributeType.FullName} at {type.FullName}.{method.Name}");
+                            stateInterceptions.Add((method, interceptor));
                         }
                     }
                 }
