@@ -1,7 +1,7 @@
 ﻿using System;
 using Mono.Cecil;
 
-namespace SoMeta.Fody
+namespace Someta.Fody
 {
     public struct InterceptorAttribute
     {

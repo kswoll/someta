@@ -3,14 +3,14 @@ Microsoft Visual Studio Solution File, Format Version 12.00
 # Visual Studio Version 16
 VisualStudioVersion = 16.0.28902.138
 MinimumVisualStudioVersion = 10.0.40219.1
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "SoMeta.Fody.Tests", "SoMeta.Fody.Tests\SoMeta.Fody.Tests.csproj", "{441B37E7-5787-432A-ADCA-19A127CD39FA}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Someta.Fody.Tests", "Someta.Fody.Tests\Someta.Fody.Tests.csproj", "{441B37E7-5787-432A-ADCA-19A127CD39FA}"
 	ProjectSection(ProjectDependencies) = postProject
 		{FBBD3165-8EC7-48A7-9563-51AF7B463BF8} = {FBBD3165-8EC7-48A7-9563-51AF7B463BF8}
 	EndProjectSection
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "SoMeta.Fody", "SoMeta.Fody\SoMeta.Fody.csproj", "{FBBD3165-8EC7-48A7-9563-51AF7B463BF8}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Someta.Fody", "Someta.Fody\Someta.Fody.csproj", "{FBBD3165-8EC7-48A7-9563-51AF7B463BF8}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "SoMeta", "SoMeta\SoMeta.csproj", "{9B731B1C-68B5-42A5-B9FE-D71809D14EF7}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Someta", "Someta\Someta.csproj", "{9B731B1C-68B5-42A5-B9FE-D71809D14EF7}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution

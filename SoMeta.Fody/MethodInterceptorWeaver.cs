@@ -4,7 +4,7 @@ using Mono.Cecil;
 using Mono.Cecil.Cil;
 using TypeSystem = Fody.TypeSystem;
 
-namespace SoMeta.Fody
+namespace Someta.Fody
 {
     public class MethodInterceptorWeaver : BaseWeaver
     {

@@ -1,6 +1,6 @@
 ﻿using System;
 
-namespace SoMeta
+namespace Someta
 {
     [AttributeUsage(AttributeTargets.Property)]
     public class InjectFieldAttribute : Attribute

@@ -8,8 +8,8 @@
     <ProjectGuid>{441B37E7-5787-432A-ADCA-19A127CD39FA}</ProjectGuid>
     <OutputType>Library</OutputType>
     <AppDesignerFolder>Properties</AppDesignerFolder>
-    <RootNamespace>SoMeta.Fody.Tests</RootNamespace>
-    <AssemblyName>SoMeta.Fody.Tests</AssemblyName>
+    <RootNamespace>Someta.Fody.Tests</RootNamespace>
+    <AssemblyName>Someta.Fody.Tests</AssemblyName>
     <TargetFrameworkVersion>v4.7.2</TargetFrameworkVersion>
     <FileAlignment>512</FileAlignment>
     <Deterministic>true</Deterministic>
@@ -34,7 +34,7 @@
     <WarningLevel>4</WarningLevel>
   </PropertyGroup>
   <ItemGroup>
-    <WeaverFiles Include="$(SolutionDir)SoMeta.Fody\bin\$(Configuration)\netstandard2.0\SoMeta.Fody.dll" />
+    <WeaverFiles Include="$(SolutionDir)Someta.Fody\bin\$(Configuration)\netstandard2.0\Someta.Fody.dll" />
     <Content Include="FodyWeavers.xml" />
   </ItemGroup>
   <ItemGroup>
@@ -71,9 +71,9 @@
     <None Include="packages.config" />
   </ItemGroup>
   <ItemGroup>
-    <ProjectReference Include="..\SoMeta\SoMeta.csproj">
+    <ProjectReference Include="..\Someta\Someta.csproj">
       <Project>{9b731b1c-68b5-42a5-b9fe-d71809d14ef7}</Project>
-      <Name>SoMeta</Name>
+      <Name>Someta</Name>
     </ProjectReference>
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />

@@ -1,4 +1,4 @@
-﻿namespace SoMeta
+﻿namespace Someta
 {
     /// <summary>
     /// Base type for all interceptors.

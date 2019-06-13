@@ -4,7 +4,7 @@ using System.Threading.Tasks;
 using NUnit.Framework;
 using Shouldly;
 
-namespace SoMeta.Fody.Tests
+namespace Someta.Fody.Tests
 {
     [TestFixture]
     public class PropertyInterceptorTests

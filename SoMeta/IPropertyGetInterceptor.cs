@@ -1,7 +1,7 @@
 ﻿using System;
 using System.Reflection;
 
-namespace SoMeta
+namespace Someta
 {
     public interface IPropertyGetInterceptor : IPropertyInterceptor
     {

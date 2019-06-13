@@ -1,7 +1,7 @@
 ﻿using System;
 using System.Reflection;
 
-namespace SoMeta.Reflection
+namespace Someta.Reflection
 {
     public static class AttributeFinder
     {

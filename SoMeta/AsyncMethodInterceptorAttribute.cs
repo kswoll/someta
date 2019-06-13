@@ -2,7 +2,7 @@
 using System.Reflection;
 using System.Threading.Tasks;
 
-namespace SoMeta
+namespace Someta
 {
     [AttributeUsage(AttributeTargets.Method, AllowMultiple = true)]
     public abstract class AsyncMethodInterceptorAttribute : InterceptorAttribute, IAsyncMethodInterceptor

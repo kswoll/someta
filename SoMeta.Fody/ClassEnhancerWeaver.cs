@@ -6,7 +6,7 @@ using Mono.Cecil;
 using Mono.Cecil.Cil;
 using TypeSystem = Fody.TypeSystem;
 
-namespace SoMeta.Fody
+namespace Someta.Fody
 {
     public class ClassEnhancerWeaver : BaseWeaver
     {
@@ -15,8 +15,8 @@ namespace SoMeta.Fody
 
         public ClassEnhancerWeaver(ModuleDefinition moduleDefinition, WeaverContext context, TypeSystem typeSystem, Action<string> logInfo, Action<string> logError, Action<string> logWarning) : base(moduleDefinition, context, typeSystem, logInfo, logError, logWarning)
         {
-            injectAccessAttribute = moduleDefinition.FindType("SoMeta", "InjectAccessAttribute");
-            injectTargetAttribute = moduleDefinition.FindType("SoMeta", "InjectTargetAttribute");
+            injectAccessAttribute = moduleDefinition.FindType("Someta", "InjectAccessAttribute");
+            injectTargetAttribute = moduleDefinition.FindType("Someta", "InjectTargetAttribute");
         }
 
         public void Weave(TypeDefinition type, InterceptorAttribute interceptor)

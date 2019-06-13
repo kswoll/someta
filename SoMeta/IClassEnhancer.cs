@@ -1,4 +1,4 @@
-﻿namespace SoMeta
+﻿namespace Someta
 {
     public interface IClassEnhancer : IClassInterceptor
     {

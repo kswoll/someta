@@ -1,6 +1,6 @@
 ﻿using System;
 
-namespace SoMeta
+namespace Someta
 {
     /// <summary>
     /// Injects a lambda into the associated property that can be used to invoke

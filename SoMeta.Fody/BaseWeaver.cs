@@ -7,7 +7,7 @@ using Mono.Cecil.Cil;
 using Mono.Cecil.Rocks;
 using TypeSystem = Fody.TypeSystem;
 
-namespace SoMeta.Fody
+namespace Someta.Fody
 {
     public class BaseWeaver
     {

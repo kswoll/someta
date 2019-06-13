@@ -3,9 +3,9 @@ using System.Reflection;
 using System.Threading.Tasks;
 using NUnit.Framework;
 using Shouldly;
-using SoMeta.Reflection;
+using Someta.Reflection;
 
-namespace SoMeta.Fody.Tests
+namespace Someta.Fody.Tests
 {
     [TestFixture]
     public class StateInterceptorTests

@@ -15,7 +15,7 @@ using ICustomAttributeProvider = Mono.Cecil.ICustomAttributeProvider;
 using MethodAttributes = Mono.Cecil.MethodAttributes;
 using MethodBody = Mono.Cecil.Cil.MethodBody;
 
-namespace SoMeta.Fody
+namespace Someta.Fody
 {
     public static class CecilExtensions
     {
@@ -68,8 +68,8 @@ namespace SoMeta.Fody
             var action1Type = ModuleDefinition.ImportReference(typeof(Action<>));
             var objectArrayType = ModuleDefinition.ImportReference(typeof(object[]));
             var asyncTaskMethodBuilder = ModuleDefinition.ImportReference(typeof(AsyncTaskMethodBuilder<>));
-            var originalMethodAttributeConstructor = ModuleDefinition.FindConstructor(ModuleDefinition.FindType("SoMeta.Reflection", "OriginalMethodAttribute", soMeta));
-            var methodFinder = ModuleDefinition.FindType("SoMeta.Reflection", "MethodFinder`1", soMeta, "T");
+            var originalMethodAttributeConstructor = ModuleDefinition.FindConstructor(ModuleDefinition.FindType("Someta.Reflection", "OriginalMethodAttribute", soMeta));
+            var methodFinder = ModuleDefinition.FindType("Someta.Reflection", "MethodFinder`1", soMeta, "T");
             var findMethod = ModuleDefinition.FindMethod(methodFinder, "FindMethod");
             var findProperty = ModuleDefinition.FindMethod(methodFinder, "FindProperty");
             var methodInfoType = ModuleDefinition.ImportReference(typeof(MethodInfo));
@@ -79,7 +79,7 @@ namespace SoMeta.Fody
             var context = new WeaverContext
             {
                 ModuleDefinition = ModuleDefinition,
-                SoMeta = soMeta,
+                Someta = soMeta,
                 LogWarning = LogWarning,
                 LogError = LogError,
                 LogInfo = LogInfo,

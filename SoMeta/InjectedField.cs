@@ -1,6 +1,6 @@
 ﻿using System;
 
-namespace SoMeta
+namespace Someta
 {
     public class InjectedField<T>
     {

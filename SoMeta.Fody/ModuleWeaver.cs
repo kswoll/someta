@@ -5,7 +5,7 @@ using Fody;
 using Mono.Cecil;
 using Mono.Cecil.Rocks;
 
-namespace SoMeta.Fody
+namespace Someta.Fody
 {
     public class ModuleWeaver : BaseModuleWeaver
     {
@@ -16,7 +16,7 @@ namespace SoMeta.Fody
 
         public override void Execute()
         {
-            var soMeta = ModuleDefinition.FindAssembly("SoMeta");
+            var soMeta = ModuleDefinition.FindAssembly("Someta");
 
             CecilExtensions.LogInfo = LogInfo;
             CecilExtensions.LogWarning = LogWarning;
@@ -24,17 +24,17 @@ namespace SoMeta.Fody
             CecilExtensions.TypeSystem = TypeSystem;
             CecilExtensions.Initialize(ModuleDefinition, soMeta);
 
-            var interceptorInterface = ModuleDefinition.FindType("SoMeta", "IInterceptor", soMeta);
-            var classStateInterceptorInterface = ModuleDefinition.FindType("SoMeta", "IClassStateInterceptor", soMeta);
-            var propertyStateInterceptorInterface = ModuleDefinition.FindType("SoMeta", "IPropertyStateInterceptor", soMeta);
-            var methodStateInterceptorInterface = ModuleDefinition.FindType("SoMeta", "IMethodStateInterceptor", soMeta);
-            var classInterceptorInterface = ModuleDefinition.FindType("SoMeta", "IClassInterceptor", soMeta);
-            var propertyGetInterceptorInterface = ModuleDefinition.FindType("SoMeta", "IPropertyGetInterceptor", soMeta);
-            var propertySetInterceptorInterface = ModuleDefinition.FindType("SoMeta", "IPropertySetInterceptor", soMeta);
-            var methodInterceptorInterface = ModuleDefinition.FindType("SoMeta", "IMethodInterceptor", soMeta);
-            var asyncMethodInterceptorInterface = ModuleDefinition.FindType("SoMeta", "IAsyncMethodInterceptor", soMeta);
-            var classEnhancerInterface = ModuleDefinition.FindType("SoMeta", "IClassEnhancer", soMeta);
-            var asyncInvoker = ModuleDefinition.FindType("SoMeta.Helpers", "AsyncInvoker", soMeta);
+            var interceptorInterface = ModuleDefinition.FindType("Someta", "IInterceptor", soMeta);
+            var classStateInterceptorInterface = ModuleDefinition.FindType("Someta", "IClassStateInterceptor", soMeta);
+            var propertyStateInterceptorInterface = ModuleDefinition.FindType("Someta", "IPropertyStateInterceptor", soMeta);
+            var methodStateInterceptorInterface = ModuleDefinition.FindType("Someta", "IMethodStateInterceptor", soMeta);
+            var classInterceptorInterface = ModuleDefinition.FindType("Someta", "IClassInterceptor", soMeta);
+            var propertyGetInterceptorInterface = ModuleDefinition.FindType("Someta", "IPropertyGetInterceptor", soMeta);
+            var propertySetInterceptorInterface = ModuleDefinition.FindType("Someta", "IPropertySetInterceptor", soMeta);
+            var methodInterceptorInterface = ModuleDefinition.FindType("Someta", "IMethodInterceptor", soMeta);
+            var asyncMethodInterceptorInterface = ModuleDefinition.FindType("Someta", "IAsyncMethodInterceptor", soMeta);
+            var classEnhancerInterface = ModuleDefinition.FindType("Someta", "IClassEnhancer", soMeta);
+            var asyncInvoker = ModuleDefinition.FindType("Someta.Helpers", "AsyncInvoker", soMeta);
             var asyncInvokerWrap = ModuleDefinition.FindMethod(asyncInvoker, "Wrap");
             var asyncInvokerUnwrap = ModuleDefinition.FindMethod(asyncInvoker, "Unwrap");
 

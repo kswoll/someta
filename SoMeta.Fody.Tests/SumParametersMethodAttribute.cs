@@ -2,7 +2,7 @@
 using System.Linq;
 using System.Reflection;
 
-namespace SoMeta.Fody.Tests
+namespace Someta.Fody.Tests
 {
     public class SumParametersMethodAttribute : MethodInterceptorAttribute
     {

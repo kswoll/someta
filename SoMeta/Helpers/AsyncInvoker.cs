@@ -1,6 +1,6 @@
 ﻿using System.Threading.Tasks;
 
-namespace SoMeta.Helpers
+namespace Someta.Helpers
 {
     public static class AsyncInvoker
     {

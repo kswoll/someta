@@ -1,8 +1,8 @@
 ﻿using System;
 using System.Reflection;
-using SoMeta;
+using Someta;
 
-namespace SoMeta.Fody.Tests
+namespace Someta.Fody.Tests
 {
     public class DoubleStringOnSetAttribute : PropertyInterceptorAttribute
     {

@@ -10,7 +10,7 @@ using MethodAttributes = Mono.Cecil.MethodAttributes;
 using MethodBody = Mono.Cecil.Cil.MethodBody;
 using TypeSystem = Fody.TypeSystem;
 
-namespace SoMeta.Fody
+namespace Someta.Fody
 {
     public class StateWeaver : BaseWeaver
     {
@@ -21,8 +21,8 @@ namespace SoMeta.Fody
             : base(moduleDefinition, context, typeSystem, logInfo, logError, logWarning)
         {
 //            Debugger.Launch();
-            injectedFieldType = moduleDefinition.FindType("SoMeta", "InjectedField`1", Context.SoMeta, "T");
-            injectFieldAttributeType = moduleDefinition.FindType("SoMeta", "InjectFieldAttribute", Context.SoMeta);
+            injectedFieldType = moduleDefinition.FindType("Someta", "InjectedField`1", Context.Someta, "T");
+            injectFieldAttributeType = moduleDefinition.FindType("Someta", "InjectFieldAttribute", Context.Someta);
         }
 
         public void Weave(IMemberDefinition member, InterceptorAttribute interceptor)

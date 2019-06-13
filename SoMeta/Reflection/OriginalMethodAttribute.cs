@@ -1,6 +1,6 @@
 ﻿using System;
 
-namespace SoMeta.Reflection
+namespace Someta.Reflection
 {
     [AttributeUsage(AttributeTargets.Method)]
     public class OriginalMethodAttribute : Attribute

@@ -1,7 +1,7 @@
 ﻿using System;
 using System.Reflection;
 
-namespace SoMeta.Fody.Tests
+namespace Someta.Fody.Tests
 {
     public class PrependValueWithDollarOnGetAttribute : PropertyInterceptorAttribute
     {

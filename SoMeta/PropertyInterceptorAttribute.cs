@@ -1,7 +1,7 @@
 ﻿using System;
 using System.Reflection;
 
-namespace SoMeta
+namespace Someta
 {
     [AttributeUsage(AttributeTargets.Property | AttributeTargets.Class, AllowMultiple = true)]
     public abstract class PropertyInterceptorAttribute : InterceptorAttribute, IPropertyGetInterceptor, IPropertySetInterceptor

@@ -1,7 +1,7 @@
 ﻿using System;
 using System.Reflection;
 
-namespace SoMeta
+namespace Someta
 {
     [AttributeUsage(AttributeTargets.Method | AttributeTargets.Class, AllowMultiple = true)]
     public abstract class MethodInterceptorAttribute : InterceptorAttribute, IMethodInterceptor

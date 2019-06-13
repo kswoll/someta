@@ -1,4 +1,4 @@
-﻿namespace SoMeta.Fody
+﻿namespace Someta.Fody
 {
     public enum InterceptorScope
     {
