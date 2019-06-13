@@ -11,11 +11,11 @@ namespace SoMeta
     [AttributeUsage(AttributeTargets.Property)]
     public class InjectAccessAttribute : Attribute
     {
-        public string PropertyName { get; }
+        public string Key { get; }
 
-        public InjectAccessAttribute(string propertyName)
+        public InjectAccessAttribute(string key)
         {
-            PropertyName = propertyName;
+            Key = key;
         }
     }
 }

@@ -44,7 +44,14 @@ namespace SoMeta.Fody.Tests
         {
             public event PropertyChangedEventHandler PropertyChanged;
 
+            [InjectTarget(nameof(OnPropertyChanged))]
             protected virtual void OnPropertyChanged(string propertyName, object oldValue, object newValue)
+            {
+                PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(propertyName));
+            }
+
+            // this is only here to cause an overload situation
+            protected virtual void OnPropertyChanged(string propertyName, object oldValue, string newValue)
             {
                 PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(propertyName));
             }
@@ -62,14 +69,8 @@ namespace SoMeta.Fody.Tests
 
         public class NotifyPropertyChangedAttribute : Attribute, IPropertySetInterceptor, IClassEnhancer
         {
-            private Action<object, string, object, object> onPropertyChanged;
-
             [InjectAccess("OnPropertyChanged")]
-            public Action<object, string, object, object> OnPropertyChanged
-            {
-                get => onPropertyChanged;
-                set => onPropertyChanged = value;
-            }
+            public Action<object, string, object, object> OnPropertyChanged { get; set; }
 
             public void SetPropertyValue(PropertyInfo propertyInfo, object instance, object oldValue, object newValue, Action<object> setter)
             {

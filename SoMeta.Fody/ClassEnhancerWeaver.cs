@@ -10,15 +10,19 @@ namespace SoMeta.Fody
 {
     public class ClassEnhancerWeaver : BaseWeaver
     {
-        private TypeReference injectAccessAttribute;
+        private readonly TypeReference injectAccessAttribute;
+        private readonly TypeReference injectTargetAttribute;
 
         public ClassEnhancerWeaver(ModuleDefinition moduleDefinition, WeaverContext context, TypeSystem typeSystem, Action<string> logInfo, Action<string> logError, Action<string> logWarning) : base(moduleDefinition, context, typeSystem, logInfo, logError, logWarning)
         {
             injectAccessAttribute = moduleDefinition.FindType("SoMeta", "InjectAccessAttribute");
+            injectTargetAttribute = moduleDefinition.FindType("SoMeta", "InjectTargetAttribute");
         }
 
         public void Weave(TypeDefinition type, InterceptorAttribute interceptor)
         {
+//            Debugger.Launch();
+
             LogInfo($"Weaving class enhancer {interceptor.AttributeType.FullName} at {type.FullName}");
 //            interceptor.
 
@@ -35,12 +39,17 @@ namespace SoMeta.Fody
                 if (injectAccess != null)
                 {
 //                    Debugger.Launch();
-                    var methodName = (string)injectAccess.ConstructorArguments.Single().Value;
-                    var targetMethod = type.Methods.Single(x => x.Name == methodName);    // Todo: won't work for overloads
+                    var key = (string)injectAccess.ConstructorArguments.Single().Value;
+
+                    // Find target method.  First try using attributes:
+                    var targetMethod = type.Methods.SingleOrDefault(x => x.CustomAttributes
+                        .Any(y => injectTargetAttribute.IsAssignableFrom(y.AttributeType) && (string)y.ConstructorArguments[0].Value == key));
+                    if (targetMethod == null)
+                        targetMethod = type.Methods.Single(x => x.Name == key);    // Todo: won't work for overloads
 
                     // Generate a private static method that forms the accessor that will be assigned
                     // to this property on the associated interceptor in a static initializer.
-                    var accessor = new MethodDefinition($"<>__{methodName}$Accessor", MethodAttributes.Private | MethodAttributes.Static, targetMethod.ReturnType);
+                    var accessor = new MethodDefinition($"<>__{key}$Accessor", MethodAttributes.Private | MethodAttributes.Static, targetMethod.ReturnType);
                     accessor.Parameters.Add(new ParameterDefinition(TypeSystem.ObjectReference));
                     foreach (var parameter in targetMethod.Parameters)
                     {

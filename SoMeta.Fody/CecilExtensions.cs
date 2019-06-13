@@ -179,10 +179,10 @@ namespace SoMeta.Fody
             if (type.IsGenericParameter)
                 return baseType.CompareTo(type);
 
-            return baseType.Resolve().IsAssignableFrom(type.Resolve(), logger);
+            return baseType.IsAssignableFrom(type.Resolve(), logger);
         }
 
-        public static bool IsAssignableFrom(this TypeDefinition baseType, TypeDefinition type, Action<string> logger = null)
+        public static bool IsAssignableFrom(this TypeReference baseType, TypeDefinition type, Action<string> logger = null)
         {
             logger = logger ?? (x => { });
 
@@ -702,12 +702,10 @@ namespace SoMeta.Fody
         public static MethodDefinition MoveImplementation(this MethodDefinition original, string newName)
         {
             var method = new MethodDefinition(newName, MethodAttributes.Private | original.Attributes.GetStatic(), original.ReturnType);
-/*
             method.CustomAttributes.Add(new CustomAttribute(Context.OriginalMethodAttributeConstructor)
             {
                 ConstructorArguments = { new CustomAttributeArgument(TypeSystem.StringReference, method.Name) }
             });
-*/
             original.CopyParameters(method);
             original.CopyGenericParameters(method);
 
