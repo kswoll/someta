@@ -9,7 +9,7 @@ copy ..\Someta.nuspec .
 mkdir lib
 mkdir lib\netstandard2.0
 
-copy ..\..\Someta\bin\Debug\netstandard2.0\Someta.* lib\net45
+copy ..\..\Someta\bin\Debug\netstandard2.0\Someta.* lib\netstandard2.0
 
 ..\..\Nuget\nuget pack Someta.nuspec
 
@@ -22,8 +22,8 @@ mkdir build
 cd build
 
 copy ..\Someta.Fody.nuspec .
-..\..\..\packages\NugetUtilities.1.0.17\UpdateVersion Someta.Fody.nuspec -SetVersion %APPVEYOR_BUILD_VERSION%
-..\..\..\packages\NugetUtilities.1.0.17\UpdateReleaseNotes Someta.Fody.nuspec "%APPVEYOR_REPO_COMMIT_MESSAGE%"
+..\..\packages\NugetUtilities.1.0.17\UpdateVersion Someta.Fody.nuspec -SetVersion %APPVEYOR_BUILD_VERSION%
+..\..\packages\NugetUtilities.1.0.17\UpdateReleaseNotes Someta.Fody.nuspec "%APPVEYOR_REPO_COMMIT_MESSAGE%"
 
 mkdir build
 mkdir weaver
