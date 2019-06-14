@@ -76,7 +76,7 @@ namespace Someta.Fody
                     type.Methods.Add(accessor);
 
                     // Now set up the static initializer to assign this to the interceptor property
-                    type.EmitStaticConstructor(il =>
+                    type.EmitToStaticConstructor(il =>
                     {
                         var isVoid = targetMethod.ReturnType.CompareTo(TypeSystem.VoidReference);
                         var delegateType = (isVoid ? Context.ActionTypes : Context.FuncTypes)[targetMethod.Parameters.Count + 1];

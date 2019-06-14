@@ -115,6 +115,32 @@ namespace Someta.Fody
             }
         }
 
+        protected FieldDefinition CacheAttributeInstance(IMemberDefinition member, InterceptorAttribute interceptor)
+        {
+            FieldDefinition attributeField;
+            if (member is TypeDefinition typeDefinition)
+            {
+                attributeField = CacheAttributeInstance(typeDefinition, interceptor);
+            }
+            else if (member is PropertyDefinition propertyDefinition)
+            {
+                var propertyInfo = propertyDefinition.CachePropertyInfo();
+                attributeField = CacheAttributeInstance(member, propertyInfo, interceptor);
+            }
+            else if (member is MethodDefinition methodDefinition)
+            {
+                //                Debugger.Launch();
+                var methodInfo = methodDefinition.CacheMethodInfo();
+                attributeField = CacheAttributeInstance(member, methodInfo, interceptor);
+            }
+            else
+            {
+                throw new Exception();
+            }
+
+            return attributeField;
+        }
+
         protected FieldDefinition CacheAttributeInstance(TypeDefinition type, InterceptorAttribute interceptor)
         {
             return CacheAttributeInstance(type, null, interceptor);

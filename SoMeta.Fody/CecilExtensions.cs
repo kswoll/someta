@@ -155,7 +155,7 @@ namespace Someta.Fody
             il(body.GetILProcessor());
         }
 
-        public static void EmitStaticConstructor(this TypeDefinition type, Action<ILProcessor> il)
+        public static void EmitToStaticConstructor(this TypeDefinition type, Action<ILProcessor> il)
         {
             var staticConstructor = type.GetStaticConstructor();
             if (staticConstructor == null)
@@ -164,6 +164,30 @@ namespace Someta.Fody
                 staticConstructor.Body.GetILProcessor().Emit(OpCodes.Ret);
             }
             staticConstructor.Body.EmitBeforeReturn(il);
+        }
+
+        /// <summary>
+        /// Emits to all primary constructors (constructors that do not chain to other constructors of the same class)
+        /// </summary>
+        public static void EmitToConstructor(this TypeDefinition type, Action<ILProcessor> il)
+        {
+            foreach (var constructor in type.GetConstructors().Where(x => !x.IsStatic))
+            {
+                if (constructor.Body.Instructions.Count > 1)
+                {
+                    var potentialConstructorCall = constructor.Body.Instructions[1];    // [0] is loading "this"
+                    if (potentialConstructorCall.Operand is MethodReference)
+                    {
+                        var potentialConstructor = ((MethodReference)potentialConstructorCall.Operand).Resolve();
+                        if (potentialConstructor.Resolve().IsConstructor && potentialConstructor.DeclaringType.CompareTo(type))
+                        {
+                            // This is not a primary constructor, so skip
+                            continue;
+                        }
+                    }
+                }
+                constructor.Body.EmitBeforeReturn(il);
+            }
         }
 
         public static GenericInstanceMethod MakeGenericMethod(this MethodReference method, params TypeReference[] genericArguments)
@@ -685,7 +709,7 @@ namespace Someta.Fody
             field = new FieldDefinition(fieldName, FieldAttributes.Static | FieldAttributes.Private, Context.MethodInfoType);
             type.Fields.Add(field);
 
-            type.EmitStaticConstructor(il =>
+            type.EmitToStaticConstructor(il =>
             {
                 il.EmitGetMethodInfo(method);
                 il.Emit(OpCodes.Stsfld, field.Bind());

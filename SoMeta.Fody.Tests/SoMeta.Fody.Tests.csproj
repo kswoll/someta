@@ -59,6 +59,7 @@
     <Compile Include="ClassLevelInterceptorTests.cs" />
     <Compile Include="DoubleStringOnSetAttribute.cs" />
     <Compile Include="GlobalSuppressions.cs" />
+    <Compile Include="InstanceInitializerTests.cs" />
     <Compile Include="MethodInterceptorTests.cs" />
     <Compile Include="NotifyPropertyChangedSample.cs" />
     <Compile Include="PrependValueWithDollarOnGetAttribute.cs" />

@@ -2,6 +2,5 @@
 {
     public interface IStateInterceptor : IInterceptor
     {
-        
     }
 }

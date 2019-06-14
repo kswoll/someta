@@ -111,20 +111,30 @@ namespace Someta.Fody.Tests
             }
         }
 
-        private class MemoizeAttribute : Attribute, IPropertyStateInterceptor, IPropertyGetInterceptor
+        [AttributeUsage(AttributeTargets.Property)]
+        private class MemoizeAttribute : Attribute, IPropertyStateInterceptor, IPropertyGetInterceptor, IInstanceInitializer
         {
             public InjectedField<object> Field { get; set; }
+            public InjectedField<object> Locker { get; set; }
+
+            public void Initialize(object instance)
+            {
+                Locker.SetValue(instance, new object());
+            }
 
             public object GetPropertyValue(PropertyInfo propertyInfo, object instance, Func<object> getter)
             {
-                var currentValue = Field.GetValue(instance);
-                if (currentValue == null)
+                lock (Locker.GetValue(instance))
                 {
-                    currentValue = getter();
-                    Field.SetValue(instance, currentValue);
-                }
+                    var currentValue = Field.GetValue(instance);
+                    if (currentValue == null)
+                    {
+                        currentValue = getter();
+                        Field.SetValue(instance, currentValue);
+                    }
 
-                return currentValue;
+                    return currentValue;
+                }
             }
         }
 
