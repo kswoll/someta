@@ -130,7 +130,7 @@ namespace Someta.Fody
                             LogInfo($"Discovered property state interceptor {interceptor.AttributeType.FullName} at {type.FullName}.{property.Name}");
                             stateInterceptions.Add((property, interceptor));
                         }
-                        if (instanceInitializerInterface.IsAssignableFrom(interceptor.AttributeType) && (interceptorScope == InterceptorScope.None || interceptorScope == InterceptorScope.Property))
+                        if (instanceInitializerInterface.IsAssignableFrom(interceptor.AttributeType) && (interceptorScope == InterceptorScope.None || interceptorScope.HasFlag(InterceptorScope.Property)))
                         {
                             LogInfo($"Discovered instance initializer {interceptor.AttributeType.FullName} at {type.FullName}");
                             instanceInitializers.Add((property, interceptor));
@@ -162,7 +162,7 @@ namespace Someta.Fody
                             LogInfo($"Discovered method state interceptor {interceptor.AttributeType.FullName} at {type.FullName}.{method.Name}");
                             stateInterceptions.Add((method, interceptor));
                         }
-                        if (instanceInitializerInterface.IsAssignableFrom(interceptor.AttributeType) && (interceptorScope == InterceptorScope.None || interceptorScope == InterceptorScope.Method))
+                        if (instanceInitializerInterface.IsAssignableFrom(interceptor.AttributeType) && (interceptorScope == InterceptorScope.None || interceptorScope.HasFlag(InterceptorScope.Method)))
                         {
                             LogInfo($"Discovered instance initializer {interceptor.AttributeType.FullName} at {type.FullName}");
                             instanceInitializers.Add((method, interceptor));

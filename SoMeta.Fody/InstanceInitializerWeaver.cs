@@ -1,4 +1,5 @@
-﻿using Mono.Cecil;
+﻿using System.Diagnostics;
+using Mono.Cecil;
 using Mono.Cecil.Cil;
 
 namespace Someta.Fody
@@ -25,7 +26,7 @@ namespace Someta.Fody
                 memberInfoField = member.CacheMemberInfo();
 
             var type = member is TypeDefinition definition ? definition : member.DeclaringType;
-            type    .EmitToConstructor(il =>
+            type.EmitToConstructor(il =>
             {
                 il.LoadField(attributeField);
                 il.Emit(OpCodes.Ldarg_0);
