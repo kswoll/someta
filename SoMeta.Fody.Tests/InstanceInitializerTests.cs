@@ -15,6 +15,13 @@ namespace Someta.Fody.Tests
             o.MemberInfo.ShouldBe(typeof(ClassInitializerTestClass));
         }
 
+        [Test]
+        public void PropertyInitializer()
+        {
+            var o = new PropertyInitializerTestClass();
+            o.PropertyInfo.Name.ShouldBe(nameof(o.PropertyInfo));
+        }
+
         [ClassInitializer]
         public class ClassInitializerTestClass
         {
@@ -27,6 +34,21 @@ namespace Someta.Fody.Tests
             public void Initialize(object instance, MemberInfo member)
             {
                 ((ClassInitializerTestClass)instance).MemberInfo = member;
+            }
+        }
+
+        [PropertyInitializer]
+        public class PropertyInitializerTestClass
+        {
+            public PropertyInfo PropertyInfo { get; set; }
+        }
+
+        [InterceptorScope(InterceptorScope.Property)]
+        public class PropertyInitializerAttribute : Attribute, IInstanceInitializer
+        {
+            public void Initialize(object instance, MemberInfo member)
+            {
+                ((PropertyInitializerTestClass)instance).PropertyInfo = (PropertyInfo)member;
             }
         }
     }
