@@ -1,9 +1,7 @@
-﻿using System;
-using System.Linq;
+﻿using System.Linq;
 using Mono.Cecil;
 using Mono.Cecil.Cil;
 using Mono.Cecil.Rocks;
-using TypeSystem = Fody.TypeSystem;
 
 namespace Someta.Fody
 {
@@ -11,10 +9,9 @@ namespace Someta.Fody
     {
         private readonly MethodReference baseGetPropertyValue;
 
-        public PropertyGetInterceptorWeaver(ModuleDefinition moduleDefinition, WeaverContext context, TypeSystem typeSystem, Action<string> logInfo, Action<string> logError, Action<string> logWarning, TypeReference propertyInterceptorInterface) :
-            base(moduleDefinition, context, typeSystem, logInfo, logError, logWarning)
+        public PropertyGetInterceptorWeaver(WeaverContext context, TypeReference propertyInterceptorInterface) : base(context)
         {
-            baseGetPropertyValue = moduleDefinition.FindMethod(propertyInterceptorInterface, "GetPropertyValue");
+            baseGetPropertyValue = ModuleDefinition.FindMethod(propertyInterceptorInterface, "GetPropertyValue");
         }
 
         public void Weave(PropertyDefinition property, InterceptorAttribute interceptor)

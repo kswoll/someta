@@ -21,5 +21,10 @@ namespace Someta.Fody
             Index = index;
             Scope = scope;
         }
+
+        public override string ToString()
+        {
+            return AttributeType.FullName;
+        }
     }
 }

@@ -1,25 +1,32 @@
-﻿using NUnit.Framework;
+﻿using System;
+using System.Reflection;
+using NUnit.Framework;
+using Shouldly;
 
 namespace Someta.Fody.Tests
 {
     [TestFixture]
     public class InstanceInitializerTests
     {
-
-        public class TestClass
+        [Test]
+        public void ClassInitializer()
         {
-            public object field = new object();
+            var o = new ClassInitializerTestClass();
+            o.MemberInfo.ShouldBe(typeof(ClassInitializerTestClass));
+        }
 
-            public TestClass()
-            {
-            }
+        [ClassInitializer]
+        public class ClassInitializerTestClass
+        {
+            public MemberInfo MemberInfo { get; set; }
+        }
 
-            public TestClass(object _)
+        [InterceptorScope(InterceptorScope.Class)]
+        public class ClassInitializerAttribute : Attribute, IInstanceInitializer
+        {
+            public void Initialize(object instance, MemberInfo member)
             {
-            }
-
-            public TestClass(object _, object __) : this()
-            {
+                ((ClassInitializerTestClass)instance).MemberInfo = member;
             }
         }
     }

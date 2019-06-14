@@ -14,6 +14,7 @@ using FieldAttributes = Mono.Cecil.FieldAttributes;
 using ICustomAttributeProvider = Mono.Cecil.ICustomAttributeProvider;
 using MethodAttributes = Mono.Cecil.MethodAttributes;
 using MethodBody = Mono.Cecil.Cil.MethodBody;
+using TypeSystem = Fody.TypeSystem;
 
 namespace Someta.Fody
 {
@@ -44,9 +45,10 @@ namespace Someta.Fody
         private static MethodReference methodBaseGetCurrentMethod;
         private static MethodReference typeGetProperty;
 
-        internal static void Initialize(ModuleDefinition moduleDefinition, AssemblyNameReference soMeta)
+        internal static void Initialize(ModuleDefinition moduleDefinition, TypeSystem typeSystem, AssemblyNameReference soMeta)
         {
             ModuleDefinition = moduleDefinition;
+            TypeSystem = typeSystem;
             typeType = ModuleDefinition.ImportReference(typeof(Type)).Resolve();
             taskType = ModuleDefinition.ImportReference(typeof(Task));
             getTypeFromRuntimeHandleMethod = ModuleDefinition.ImportReference(typeType.Methods.Single(x => x.Name == "GetTypeFromHandle"));
@@ -79,6 +81,7 @@ namespace Someta.Fody
             var context = new WeaverContext
             {
                 ModuleDefinition = ModuleDefinition,
+                TypeSystem = typeSystem,
                 Someta = soMeta,
                 LogWarning = LogWarning,
                 LogError = LogError,
@@ -254,6 +257,16 @@ namespace Someta.Fody
         {
             var typeIsDefined = assembly.HasCustomAttributes && assembly.CustomAttributes.Any(x => x.AttributeType.FullName == attributeType.FullName);
             return typeIsDefined;
+        }
+
+        public static T GetCustomAttributeConstructorValue<T>(this ICustomAttributeProvider declaration, TypeReference attributeType, int argumentIndex)
+        {
+            var attribute = declaration.CustomAttributes.SingleOrDefault(x => attributeType.IsAssignableFrom(x.AttributeType));
+            if (attribute == null)
+                return default;
+
+            var value = attribute.ConstructorArguments[argumentIndex].Value;
+            return (T)value;
         }
 
         public static IEnumerable<CustomAttribute> GetCustomAttributes(this AssemblyDefinition assembly, TypeReference attributeType)

@@ -1,9 +1,6 @@
-﻿using System;
-using System.Diagnostics;
-using System.Linq;
+﻿using System.Linq;
 using Mono.Cecil;
 using Mono.Cecil.Cil;
-using TypeSystem = Fody.TypeSystem;
 
 namespace Someta.Fody
 {
@@ -12,13 +9,11 @@ namespace Someta.Fody
         private readonly MethodReference baseInvoke;
         private readonly TypeReference asyncMethodInterceptorInterface;
 
-        public MethodInterceptorWeaver(ModuleDefinition moduleDefinition, WeaverContext context, TypeSystem typeSystem,
-            Action<string> logInfo, Action<string> logError, Action<string> logWarning,
-            TypeReference methodInterceptorInterface, TypeReference asyncMethodInterceptorInterface)
-            : base(moduleDefinition, context, typeSystem, logInfo, logError, logWarning)
+        public MethodInterceptorWeaver(WeaverContext context, TypeReference methodInterceptorInterface, TypeReference asyncMethodInterceptorInterface)
+            : base(context)
         {
             this.asyncMethodInterceptorInterface = asyncMethodInterceptorInterface;
-            baseInvoke = moduleDefinition.FindMethod(methodInterceptorInterface, "Invoke");
+            baseInvoke = ModuleDefinition.FindMethod(methodInterceptorInterface, "Invoke");
         }
 
         public void Weave(MethodDefinition method, InterceptorAttribute interceptor)

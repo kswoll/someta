@@ -1,12 +1,14 @@
 ﻿using System;
 using System.Collections.Generic;
 using Mono.Cecil;
+using TypeSystem = Fody.TypeSystem;
 
 namespace Someta.Fody
 {
     public class WeaverContext
     {
         public ModuleDefinition ModuleDefinition { get; set; }
+        public TypeSystem TypeSystem { get; set; }
         public AssemblyNameReference Someta { get; set; }
         public Action<string> LogInfo { get; set; }
         public Action<string> LogError { get; set; }

@@ -14,12 +14,11 @@ namespace Someta.Fody
         private MethodReference asyncInvokerUnwrap;
         private MethodReference asyncInvokerWrap;
 
-        public AsyncMethodInterceptorWeaver(ModuleDefinition moduleDefinition, WeaverContext context, TypeSystem typeSystem,
-            Action<string> logInfo, Action<string> logError, Action<string> logWarning, TypeReference methodInterceptorInterface,
+        public AsyncMethodInterceptorWeaver(WeaverContext context, TypeReference methodInterceptorInterface,
             MethodReference asyncInvokerWrap, MethodReference asyncInvokerUnwrap)
-            : base(moduleDefinition, context, typeSystem, logInfo, logError, logWarning)
+            : base(context)
         {
-            baseInvoke = moduleDefinition.FindMethod(methodInterceptorInterface, "InvokeAsync");
+            baseInvoke = ModuleDefinition.FindMethod(methodInterceptorInterface, "InvokeAsync");
             this.asyncInvokerWrap = asyncInvokerWrap;
             this.asyncInvokerUnwrap = asyncInvokerUnwrap;
         }

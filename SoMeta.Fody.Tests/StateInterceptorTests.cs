@@ -3,7 +3,6 @@ using System.Reflection;
 using System.Threading.Tasks;
 using NUnit.Framework;
 using Shouldly;
-using Someta.Reflection;
 
 namespace Someta.Fody.Tests
 {
@@ -73,7 +72,8 @@ namespace Someta.Fody.Tests
             public string Property { get; set; }
         }
 
-        private class PropertySetCounterAttribute : Attribute, IPropertyStateInterceptor, IPropertySetInterceptor
+        [InterceptorScope(InterceptorScope.Property)]
+        private class PropertySetCounterAttribute : Attribute, IPropertySetInterceptor, IStateInterceptor
         {
             public InjectedField<int> Field { get; set; }
 
@@ -112,7 +112,8 @@ namespace Someta.Fody.Tests
         }
 
         [AttributeUsage(AttributeTargets.Property)]
-        private class MemoizeAttribute : Attribute, IPropertyStateInterceptor, IPropertyGetInterceptor, IInstanceInitializer
+        [InterceptorScope(InterceptorScope.Property)]
+        private class MemoizeAttribute : Attribute, IPropertyGetInterceptor, IInstanceInitializer, IStateInterceptor
         {
             public InjectedField<object> Field { get; set; }
             public InjectedField<object> Locker { get; set; }
@@ -146,7 +147,8 @@ namespace Someta.Fody.Tests
             public string Property2 { get; set; }
         }
 
-        private class ClassStateAttribute : Attribute, IClassStateInterceptor, IPropertySetInterceptor
+        [InterceptorScope(InterceptorScope.Class)]
+        private class ClassStateAttribute : Attribute, IPropertySetInterceptor, IClassInterceptor, IStateInterceptor
         {
             public InjectedField<string> Field { get; set; }
 
@@ -177,7 +179,8 @@ namespace Someta.Fody.Tests
             }
         }
 
-        private class MethodMemoizeAttribute : Attribute, IMethodStateInterceptor, IAsyncMethodInterceptor
+        [InterceptorScope(InterceptorScope.Method)]
+        private class MethodMemoizeAttribute : Attribute, IAsyncMethodInterceptor, IStateInterceptor
         {
             private InjectedField<object> field;
 
