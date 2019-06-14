@@ -26,6 +26,14 @@ namespace Someta.Fody
 
         public void Weave(MethodDefinition method, InterceptorAttribute interceptor)
         {
+            if (!Context.TaskType.IsAssignableFrom(method.ReturnType))
+            {
+//                Debugger.Launch();
+                return;
+            }
+
+//            Debugger.Launch();
+
             LogInfo($"Weaving async method interceptor {interceptor.AttributeType.FullName} at {method.Describe()}");
 
             var methodInfoField = method.CacheMethodInfo();

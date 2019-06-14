@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Diagnostics;
 using System.Linq;
 using Mono.Cecil;
 using Mono.Cecil.Cil;
@@ -9,17 +10,26 @@ namespace Someta.Fody
     public class MethodInterceptorWeaver : BaseWeaver
     {
         private readonly MethodReference baseInvoke;
+        private readonly TypeReference asyncMethodInterceptorInterface;
 
         public MethodInterceptorWeaver(ModuleDefinition moduleDefinition, WeaverContext context, TypeSystem typeSystem,
             Action<string> logInfo, Action<string> logError, Action<string> logWarning,
-            TypeReference methodInterceptorInterface)
+            TypeReference methodInterceptorInterface, TypeReference asyncMethodInterceptorInterface)
             : base(moduleDefinition, context, typeSystem, logInfo, logError, logWarning)
         {
+            this.asyncMethodInterceptorInterface = asyncMethodInterceptorInterface;
             baseInvoke = moduleDefinition.FindMethod(methodInterceptorInterface, "Invoke");
         }
 
         public void Weave(MethodDefinition method, InterceptorAttribute interceptor)
         {
+            // We don't want to intercept both async and non-async when the interceptor implements both interfaces
+            if (Context.TaskType.IsAssignableFrom(method.ReturnType) && asyncMethodInterceptorInterface.IsAssignableFrom(interceptor.AttributeType))
+            {
+//                Debugger.Launch();
+                return;
+            }
+
             LogInfo($"Weaving method interceptor {interceptor.AttributeType.FullName} at {method.Describe()}");
 
             var methodInfoField = method.CacheMethodInfo();
