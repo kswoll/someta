@@ -659,6 +659,22 @@ namespace Someta.Fody
             il.Emit(OpCodes.Newobj, proceedDelegateTypeConstructor);
         }
 
+        public static FieldDefinition CacheMemberInfo(this IMemberDefinition memberDefinition)
+        {
+            if (memberDefinition is MethodDefinition methodDefinition)
+            {
+                return CacheMethodInfo(methodDefinition);
+            }
+            else if (memberDefinition is PropertyDefinition propertyDefinition)
+            {
+                return CachePropertyInfo(propertyDefinition);
+            }
+            else
+            {
+                throw new Exception();
+            }
+        }
+
         /// <summary>
         /// Declares a static field to store the PropertyInfo for the specified PropertyDefinition and initializes
         /// it in the declaring class' static initializer.  If no static initializer currently exists, one will

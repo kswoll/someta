@@ -21,11 +21,13 @@ namespace Someta.Fody
 //            Debugger.Launch();
 
             var attributeField = CacheAttributeInstance(member, interceptor);
+            var memberInfoField = member.CacheMemberInfo();
 
             member.DeclaringType.EmitToConstructor(il =>
             {
                 il.LoadField(attributeField);
                 il.Emit(OpCodes.Ldarg_0);
+                il.LoadField(memberInfoField);
                 il.EmitCall(instanceInitializerInitialize);
             });
         }

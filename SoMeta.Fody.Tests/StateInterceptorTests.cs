@@ -117,7 +117,7 @@ namespace Someta.Fody.Tests
             public InjectedField<object> Field { get; set; }
             public InjectedField<object> Locker { get; set; }
 
-            public void Initialize(object instance)
+            public void Initialize(object instance, MemberInfo memberInfo)
             {
                 Locker.SetValue(instance, new object());
             }

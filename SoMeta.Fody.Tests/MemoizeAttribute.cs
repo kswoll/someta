@@ -11,12 +11,13 @@ namespace Someta.Fody.Tests
     {
         public InjectedField<object> Field { get; set; }
         public InjectedField<object> Locker { get; set; }
-        public InjectedField<AsyncLock> AsyncLocker { get; set; }
 
-        public void Initialize(object instance)
+        public void Initialize(object instance, MemberInfo member)
         {
-            Locker.SetValue(instance, new object());
-            AsyncLocker.SetValue(instance, new AsyncLock());
+            if (member is MethodInfo methodInfo && typeof(Task).IsAssignableFrom(methodInfo.ReturnType))
+                Locker.SetValue(instance, new AsyncLock());
+            else
+                Locker.SetValue(instance, new object());
         }
 
         public object GetPropertyValue(PropertyInfo propertyInfo, object instance, Func<object> getter)
@@ -51,7 +52,7 @@ namespace Someta.Fody.Tests
 
         public async Task<object> InvokeAsync(MethodInfo methodInfo, object instance, object[] arguments, Func<object[], Task<object>> invoker)
         {
-            using (await AsyncLocker.GetValue(instance).LockAsync())
+            using (await ((AsyncLock)Locker.GetValue(instance)).LockAsync())
             {
                 var currentValue = Field.GetValue(instance);
                 if (currentValue == null)

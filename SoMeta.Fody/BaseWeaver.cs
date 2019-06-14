@@ -100,6 +100,7 @@ namespace Someta.Fody
             }
         }
 
+/*
         protected void EmitAttribute(ILProcessor il, MethodDefinition method, TypeReference interceptorAttribute, InterceptorScope scope)
         {
             switch (scope)
@@ -114,6 +115,7 @@ namespace Someta.Fody
                     throw new InvalidOperationException();
             }
         }
+*/
 
         protected FieldDefinition CacheAttributeInstance(IMemberDefinition member, InterceptorAttribute interceptor)
         {
