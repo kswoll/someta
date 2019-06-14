@@ -37,6 +37,7 @@ namespace Someta.Fody
             var asyncInvoker = ModuleDefinition.FindType("Someta.Helpers", "AsyncInvoker", soMeta);
             var asyncInvokerWrap = ModuleDefinition.FindMethod(asyncInvoker, "Wrap");
             var asyncInvokerUnwrap = ModuleDefinition.FindMethod(asyncInvoker, "Unwrap");
+            var instanceInitializerInterface = ModuleDefinition.FindType("Someta", "IInstanceInitializer", soMeta);
 
             var propertyGetInterceptions = new List<(PropertyDefinition, InterceptorAttribute)>();
             var propertySetInterceptions = new List<(PropertyDefinition, InterceptorAttribute)>();
@@ -44,6 +45,7 @@ namespace Someta.Fody
             var asyncMethodInterceptions = new List<(MethodDefinition, InterceptorAttribute)>();
             var classEnhancers = new List<(TypeDefinition, InterceptorAttribute)>();
             var stateInterceptions = new List<(IMemberDefinition, InterceptorAttribute)>();
+            var instanceInitializers = new List<(IMemberDefinition, InterceptorAttribute)>();
 
             var propertyGetInterceptorWeaver = new PropertyGetInterceptorWeaver(ModuleDefinition, CecilExtensions.Context, TypeSystem, LogInfo, LogError, LogWarning, propertyGetInterceptorInterface);
             var propertySetInterceptorWeaver = new PropertySetInterceptorWeaver(ModuleDefinition, CecilExtensions.Context, TypeSystem, LogInfo, LogError, LogWarning, propertySetInterceptorInterface);
@@ -51,6 +53,7 @@ namespace Someta.Fody
             var asyncMethodInterceptorWeaver = new AsyncMethodInterceptorWeaver(ModuleDefinition, CecilExtensions.Context, TypeSystem, LogInfo, LogError, LogWarning, asyncMethodInterceptorInterface, asyncInvokerWrap, asyncInvokerUnwrap);
             var classEnhancerWeaver = new ClassEnhancerWeaver(ModuleDefinition, CecilExtensions.Context, TypeSystem, LogInfo, LogError, LogWarning);
             var stateWeaver = new StateWeaver(ModuleDefinition, CecilExtensions.Context, TypeSystem, LogInfo, LogError, LogWarning);
+            var instanceInitializerWeaver = new InstanceInitializerWeaver(ModuleDefinition, CecilExtensions.Context, TypeSystem, LogInfo, LogError, LogWarning);
 
             // Inventory candidate classes
             foreach (var type in ModuleDefinition.GetAllTypes())
@@ -75,6 +78,11 @@ namespace Someta.Fody
                         {
                             LogInfo($"Discovered class state interceptor {classInterceptor.AttributeType.FullName} at {type.FullName}");
                             stateInterceptions.Add((type, classInterceptor));
+                        }
+                        if (instanceInitializerInterface.IsAssignableFrom(classInterceptor.AttributeType))
+                        {
+                            LogInfo($"Discovered instance initializer {classInterceptor.AttributeType.FullName} at {type.FullName}");
+                            instanceInitializers.Add((type, classInterceptor));
                         }
                     }
                 }
@@ -101,6 +109,11 @@ namespace Someta.Fody
                             LogInfo($"Discovered property state interceptor {interceptor.AttributeType.FullName} at {type.FullName}.{property.Name}");
                             stateInterceptions.Add((property, interceptor));
                         }
+                        if (instanceInitializerInterface.IsAssignableFrom(interceptor.AttributeType))
+                        {
+                            LogInfo($"Discovered instance initializer {interceptor.AttributeType.FullName} at {type.FullName}");
+                            instanceInitializers.Add((property, interceptor));
+                        }
                     }
                 }
                 foreach (var method in type.Methods.Where(x => !x.IsConstructor))
@@ -124,6 +137,11 @@ namespace Someta.Fody
                         {
                             LogInfo($"Discovered method state interceptor {interceptor.AttributeType.FullName} at {type.FullName}.{method.Name}");
                             stateInterceptions.Add((method, interceptor));
+                        }
+                        if (instanceInitializerInterface.IsAssignableFrom(interceptor.AttributeType))
+                        {
+                            LogInfo($"Discovered instance initializer {interceptor.AttributeType.FullName} at {type.FullName}");
+                            instanceInitializers.Add((method, interceptor));
                         }
                     }
                 }
@@ -157,6 +175,11 @@ namespace Someta.Fody
             foreach (var (member, interceptor) in stateInterceptions)
             {
                 stateWeaver.Weave(member, interceptor);
+            }
+
+            foreach (var (type, interceptor) in instanceInitializers)
+            {
+                instanceInitializerWeaver.Weave(type, interceptor);
             }
         }
     }

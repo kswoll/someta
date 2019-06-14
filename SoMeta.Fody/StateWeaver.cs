@@ -28,27 +28,7 @@ namespace Someta.Fody
         public void Weave(IMemberDefinition member, InterceptorAttribute interceptor)
         {
             var type = member is TypeDefinition definition ? definition : member.DeclaringType;
-
-            FieldDefinition attributeField;
-            if (member is TypeDefinition)
-            {
-                attributeField = CacheAttributeInstance(type, interceptor);
-            }
-            else if (member is PropertyDefinition propertyDefinition)
-            {
-                var propertyInfo = propertyDefinition.CachePropertyInfo();
-                attributeField = CacheAttributeInstance(member, propertyInfo, interceptor);
-            }
-            else if (member is MethodDefinition methodDefinition)
-            {
-//                Debugger.Launch();
-                var methodInfo = methodDefinition.CacheMethodInfo();
-                attributeField = CacheAttributeInstance(member, methodInfo, interceptor);
-            }
-            else
-            {
-                throw new Exception();
-            }
+            var attributeField = CacheAttributeInstance(member, interceptor);
 
             var attributeType = interceptor.AttributeType.Resolve();
             foreach (var property in attributeType.Properties)
@@ -102,7 +82,7 @@ namespace Someta.Fody
                     });
                     type.Methods.Add(setMethod);
 
-                    type.EmitStaticConstructor(il =>
+                    type.EmitToStaticConstructor(il =>
                     {
                         var genericInjectedFieldType = injectedFieldType.MakeGenericInstanceType(propertyType);
                         var injectedFieldConstructor = ModuleDefinition.FindConstructor(genericInjectedFieldType).Bind(genericInjectedFieldType);
