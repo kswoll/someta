@@ -1,0 +1,19 @@
+
+<package>
+  <metadata>
+    <id>Someta.Fody</id>
+    <version>1.0.0</version>
+    <authors>kirk</authors>
+    <owners>kirk</owners>
+    <projectUrl>https://github.com/kswoll/Someta</projectUrl>
+    <licenseUrl>http://www.opensource.org/licenses/mit-license.php</licenseUrl>
+	  <releaseNotes>Initial Release.</releaseNotes>
+    <requireLicenseAcceptance>false</requireLicenseAcceptance>
+    <description>Meta programming framework</description>
+    <copyright>Copyright 2019</copyright>
+    <tags>fody metaprogramming</tags>
+    <dependencies>
+      <dependency id="Fody" version="5.0.6" />
+    </dependencies>
+  </metadata>
+</package>
