@@ -14,16 +14,16 @@ namespace Someta.Fody
             baseGetPropertyValue = ModuleDefinition.FindMethod(propertyInterceptorInterface, "GetPropertyValue");
         }
 
-        public void Weave(PropertyDefinition property, InterceptorAttribute interceptor)
+        public void Weave(PropertyDefinition property, ExtensionPointAttribute extensionPoint)
         {
             var type = property.DeclaringType;
-            LogInfo($"Weaving property get interceptor {interceptor.AttributeType.FullName} at {type.FullName}.{property.Name}");
+            LogInfo($"Weaving property get interceptor {extensionPoint.AttributeType.FullName} at {type.FullName}.{property.Name}");
 
             var propertyInfoField = property.CachePropertyInfo();
-            var attributeField = CacheAttributeInstance(property, propertyInfoField, interceptor);
+            var attributeField = CacheAttributeInstance(property, propertyInfoField, extensionPoint);
 
             var method = property.GetMethod;
-            var proceedReference = ImplementProceedGet(method, interceptor.AttributeType);
+            var proceedReference = ImplementProceedGet(method, extensionPoint.AttributeType);
 
             // Re-implement method
             method.Body.Emit(il =>

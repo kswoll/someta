@@ -4,7 +4,7 @@ using System.Reflection;
 namespace Someta
 {
     [AttributeUsage(AttributeTargets.Property | AttributeTargets.Class, AllowMultiple = true)]
-    public abstract class PropertyInterceptorAttribute : InterceptorAttribute, IPropertyGetInterceptor, IPropertySetInterceptor
+    public abstract class PropertyInterceptorAttribute : ExtensionPointAttribute, IPropertyGetInterceptor, IPropertySetInterceptor
     {
         public virtual object GetPropertyValue(PropertyInfo propertyInfo, object instance, Func<object> getter)
         {

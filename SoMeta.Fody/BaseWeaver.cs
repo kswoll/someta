@@ -127,23 +127,23 @@ namespace Someta.Fody
         }
 */
 
-        protected FieldDefinition CacheAttributeInstance(IMemberDefinition member, InterceptorAttribute interceptor)
+        protected FieldDefinition CacheAttributeInstance(IMemberDefinition member, ExtensionPointAttribute extensionPoint)
         {
             FieldDefinition attributeField;
             if (member is TypeDefinition typeDefinition)
             {
-                attributeField = CacheAttributeInstance(typeDefinition, interceptor);
+                attributeField = CacheAttributeInstance(typeDefinition, extensionPoint);
             }
             else if (member is PropertyDefinition propertyDefinition)
             {
                 var propertyInfo = propertyDefinition.CachePropertyInfo();
-                attributeField = CacheAttributeInstance(member, propertyInfo, interceptor);
+                attributeField = CacheAttributeInstance(member, propertyInfo, extensionPoint);
             }
             else if (member is MethodDefinition methodDefinition)
             {
                 //                Debugger.Launch();
                 var methodInfo = methodDefinition.CacheMethodInfo();
-                attributeField = CacheAttributeInstance(member, methodInfo, interceptor);
+                attributeField = CacheAttributeInstance(member, methodInfo, extensionPoint);
             }
             else
             {
@@ -153,24 +153,24 @@ namespace Someta.Fody
             return attributeField;
         }
 
-        protected FieldDefinition CacheAttributeInstance(TypeDefinition type, InterceptorAttribute interceptor)
+        protected FieldDefinition CacheAttributeInstance(TypeDefinition type, ExtensionPointAttribute extensionPoint)
         {
-            return CacheAttributeInstance(type, null, interceptor);
+            return CacheAttributeInstance(type, null, extensionPoint);
         }
 
         protected FieldDefinition CacheAttributeInstance(IMemberDefinition member, FieldDefinition memberInfoField,
-            InterceptorAttribute interceptor)
+            ExtensionPointAttribute extensionPoint)
         {
 //            var declaringType = interceptor.Scope == InterceptorScope.Class ? interceptor.DeclaringType : type;
-            var declaringType = interceptor.DeclaringType;
-            var declaration = interceptor.Scope == InterceptorScope.Class ? declaringType : member;
-            var fieldName = $"<{declaration.Name}>k__{interceptor.AttributeType.Name}${interceptor.Index}";
+            var declaringType = extensionPoint.DeclaringType;
+            var declaration = extensionPoint.Scope == ExtensionPointScope.Class ? declaringType : member;
+            var fieldName = $"<{declaration.Name}>k__{extensionPoint.AttributeType.Name}${extensionPoint.Index}";
             var field = declaringType.Fields.SingleOrDefault(x => x.Name == fieldName);
             if (field != null)
                 return field;
 
             // Add static field for property
-            field = new FieldDefinition(fieldName, FieldAttributes.Static | FieldAttributes.Public, interceptor.AttributeType);
+            field = new FieldDefinition(fieldName, FieldAttributes.Static | FieldAttributes.Public, extensionPoint.AttributeType);
             declaringType.Fields.Add(field);
 
             var staticConstructor = declaringType.GetStaticConstructor();
@@ -181,10 +181,10 @@ namespace Someta.Fody
             }
             staticConstructor.Body.EmitBeforeReturn(il =>
             {
-                if (interceptor.Scope == InterceptorScope.Class)
-                    il.EmitGetAttributeByIndex(declaringType, interceptor.Index, interceptor.AttributeType);
+                if (extensionPoint.Scope == ExtensionPointScope.Class)
+                    il.EmitGetAttributeByIndex(declaringType, extensionPoint.Index, extensionPoint.AttributeType);
                 else
-                    il.EmitGetAttributeByIndex(memberInfoField, interceptor.Index, interceptor.AttributeType);
+                    il.EmitGetAttributeByIndex(memberInfoField, extensionPoint.Index, extensionPoint.AttributeType);
                 il.SaveField(field);
             });
 

@@ -16,21 +16,21 @@ namespace Someta.Fody
             injectTargetAttribute = ModuleDefinition.FindType("Someta", "InjectTargetAttribute");
         }
 
-        public void Weave(TypeDefinition type, InterceptorAttribute interceptor)
+        public void Weave(TypeDefinition type, ExtensionPointAttribute extensionPoint)
         {
 //            Debugger.Launch();
 
-            LogInfo($"Weaving class enhancer {interceptor.AttributeType.FullName} at {type.FullName}");
+            LogInfo($"Weaving class enhancer {extensionPoint.AttributeType.FullName} at {type.FullName}");
 //            interceptor.
 
             // For now, we don't want to impact subclasses since there's no current use case for that.  If that changes,
             // we'll revisit.
-            if (type != interceptor.DeclaringType)
+            if (type != extensionPoint.DeclaringType)
                 return;
 
-            var attributeField = CacheAttributeInstance(type, interceptor);
+            var attributeField = CacheAttributeInstance(type, extensionPoint);
 
-            foreach (var interceptorProperty in interceptor.AttributeType.Resolve().Properties)
+            foreach (var interceptorProperty in extensionPoint.AttributeType.Resolve().Properties)
             {
                 var injectAccess = interceptorProperty.CustomAttributes.SingleOrDefault(x => x.AttributeType.CompareTo(injectAccessAttribute));
                 if (injectAccess != null)

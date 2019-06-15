@@ -4,7 +4,7 @@
     {
     }
 
-    public interface IStateInterceptor<T> : IStateInterceptor where T : InterceptorScopes.Scope
+    public interface IStateInterceptor<T> : IStateInterceptor where T : ExtensionPointScopes.Scope
     {
     }
 }

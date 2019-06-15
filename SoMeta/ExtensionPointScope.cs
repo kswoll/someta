@@ -1,8 +1,6 @@
-﻿using System;
-
-namespace Someta.Fody
+﻿namespace Someta
 {
-    public enum InterceptorScope
+    public enum ExtensionPointScope
     {
         None,
         Property,

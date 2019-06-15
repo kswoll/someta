@@ -1,6 +1,6 @@
 ﻿namespace Someta
 {
-    public interface IPropertyInterceptor : IInterceptor
+    public interface IPropertyInterceptor : IExtensionPoint
     {
         
     }

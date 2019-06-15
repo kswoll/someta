@@ -14,11 +14,11 @@ namespace Someta.Fody
             instanceInitializerInitialize = FindMethod(instanceInitializerInterface, "Initialize");
         }
 
-        public void Weave(IMemberDefinition member, InterceptorAttribute interceptor)
+        public void Weave(IMemberDefinition member, ExtensionPointAttribute extensionPoint)
         {
 //            Debugger.Launch();
 
-            var attributeField = CacheAttributeInstance(member, interceptor);
+            var attributeField = CacheAttributeInstance(member, extensionPoint);
             FieldDefinition memberInfoField;
             if (member is TypeDefinition)
                 memberInfoField = null;

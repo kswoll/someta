@@ -23,7 +23,7 @@ namespace Someta.Fody
             this.asyncInvokerUnwrap = asyncInvokerUnwrap;
         }
 
-        public void Weave(MethodDefinition method, InterceptorAttribute interceptor)
+        public void Weave(MethodDefinition method, ExtensionPointAttribute extensionPoint)
         {
             if (!Context.TaskType.IsAssignableFrom(method.ReturnType))
             {
@@ -33,10 +33,10 @@ namespace Someta.Fody
 
 //            Debugger.Launch();
 
-            LogInfo($"Weaving async method interceptor {interceptor.AttributeType.FullName} at {method.Describe()}");
+            LogInfo($"Weaving async method interceptor {extensionPoint.AttributeType.FullName} at {method.Describe()}");
 
             var methodInfoField = method.CacheMethodInfo();
-            var attributeField = CacheAttributeInstance(method, methodInfoField, interceptor);
+            var attributeField = CacheAttributeInstance(method, methodInfoField, extensionPoint);
             var proceedReference = ImplementProceed(method);
 
             // Re-implement method

@@ -18,12 +18,12 @@ namespace Someta.Fody
             injectFieldAttributeType = ModuleDefinition.FindType("Someta", "InjectFieldAttribute", Context.Someta);
         }
 
-        public void Weave(IMemberDefinition member, InterceptorAttribute interceptor)
+        public void Weave(IMemberDefinition member, ExtensionPointAttribute extensionPoint)
         {
             var type = member is TypeDefinition definition ? definition : member.DeclaringType;
-            var attributeField = CacheAttributeInstance(member, interceptor);
+            var attributeField = CacheAttributeInstance(member, extensionPoint);
 
-            var attributeType = interceptor.AttributeType.Resolve();
+            var attributeType = extensionPoint.AttributeType.Resolve();
             foreach (var property in attributeType.Properties)
             {
                 if (property.PropertyType.IsGenericInstance && property.PropertyType.GetElementType().CompareTo(injectedFieldType))

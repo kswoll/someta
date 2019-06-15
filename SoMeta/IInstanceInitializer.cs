@@ -2,12 +2,12 @@
 
 namespace Someta
 {
-    public interface IInstanceInitializer : IClassInterceptor
+    public interface IInstanceInitializer : IClassExtensionPoint
     {
         void Initialize(object instance, MemberInfo member);
     }
 
-    public interface IInstanceInitializer<T> : IInstanceInitializer where T : InterceptorScopes.Scope
+    public interface IInstanceInitializer<T> : IInstanceInitializer where T : ExtensionPointScopes.Scope
     {
     }
 }

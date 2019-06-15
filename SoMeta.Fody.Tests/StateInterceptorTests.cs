@@ -72,7 +72,7 @@ namespace Someta.Fody.Tests
             public string Property { get; set; }
         }
 
-        private class PropertySetCounterAttribute : Attribute, IPropertySetInterceptor, IStateInterceptor<InterceptorScopes.Property>
+        private class PropertySetCounterAttribute : Attribute, IPropertySetInterceptor, IStateInterceptor<ExtensionPointScopes.Property>
         {
             public InjectedField<int> Field { get; set; }
 
@@ -111,7 +111,7 @@ namespace Someta.Fody.Tests
         }
 
         [AttributeUsage(AttributeTargets.Property)]
-        private class MemoizeAttribute : Attribute, IPropertyGetInterceptor, IInstanceInitializer<InterceptorScopes.Property>, IStateInterceptor<InterceptorScopes.Property>
+        private class MemoizeAttribute : Attribute, IPropertyGetInterceptor, IInstanceInitializer<ExtensionPointScopes.Property>, IStateInterceptor<ExtensionPointScopes.Property>
         {
             public InjectedField<object> Field { get; set; }
             public InjectedField<object> Locker { get; set; }
@@ -145,7 +145,7 @@ namespace Someta.Fody.Tests
             public string Property2 { get; set; }
         }
 
-        private class ClassStateAttribute : Attribute, IPropertySetInterceptor, IClassInterceptor, IStateInterceptor
+        private class ClassStateAttribute : Attribute, IPropertySetInterceptor, IClassExtensionPoint, IStateInterceptor
         {
             public InjectedField<string> Field { get; set; }
 
@@ -176,7 +176,7 @@ namespace Someta.Fody.Tests
             }
         }
 
-        private class MethodMemoizeAttribute : Attribute, IAsyncMethodInterceptor, IStateInterceptor<InterceptorScopes.Method>
+        private class MethodMemoizeAttribute : Attribute, IAsyncMethodInterceptor, IStateInterceptor<ExtensionPointScopes.Method>
         {
             private InjectedField<object> field;
 

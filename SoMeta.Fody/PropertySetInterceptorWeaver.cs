@@ -14,20 +14,20 @@ namespace Someta.Fody
             baseSetPropertyValue = ModuleDefinition.FindMethod(propertyInterceptorInterface, "SetPropertyValue");
         }
 
-        public void Weave(PropertyDefinition property, InterceptorAttribute interceptor)
+        public void Weave(PropertyDefinition property, ExtensionPointAttribute extensionPoint)
         {
 //            if (property.DeclaringType != interceptor.DeclaringType)
 //                Debugger.Launch();
             var type = property.DeclaringType;
-            LogInfo($"Weaving property interceptor {interceptor.AttributeType.FullName} at {type.FullName}.{property.Name}");
+            LogInfo($"Weaving property interceptor {extensionPoint.AttributeType.FullName} at {type.FullName}.{property.Name}");
 
             var propertyInfoField = property.CachePropertyInfo();
-            var attributeField = CacheAttributeInstance(property, propertyInfoField, interceptor);
+            var attributeField = CacheAttributeInstance(property, propertyInfoField, extensionPoint);
 
             LogInfo("Setter is intercepted");
 
             var method = property.SetMethod;
-            var proceedReference = ImplementProceedSet(method, interceptor.AttributeType);
+            var proceedReference = ImplementProceedSet(method, extensionPoint.AttributeType);
 
             // Re-implement method
             method.Body.Emit(il =>

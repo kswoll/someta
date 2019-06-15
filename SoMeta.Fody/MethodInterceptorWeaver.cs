@@ -16,19 +16,19 @@ namespace Someta.Fody
             baseInvoke = ModuleDefinition.FindMethod(methodInterceptorInterface, "Invoke");
         }
 
-        public void Weave(MethodDefinition method, InterceptorAttribute interceptor)
+        public void Weave(MethodDefinition method, ExtensionPointAttribute extensionPoint)
         {
             // We don't want to intercept both async and non-async when the interceptor implements both interfaces
-            if (Context.TaskType.IsAssignableFrom(method.ReturnType) && asyncMethodInterceptorInterface.IsAssignableFrom(interceptor.AttributeType))
+            if (Context.TaskType.IsAssignableFrom(method.ReturnType) && asyncMethodInterceptorInterface.IsAssignableFrom(extensionPoint.AttributeType))
             {
 //                Debugger.Launch();
                 return;
             }
 
-            LogInfo($"Weaving method interceptor {interceptor.AttributeType.FullName} at {method.Describe()}");
+            LogInfo($"Weaving method interceptor {extensionPoint.AttributeType.FullName} at {method.Describe()}");
 
             var methodInfoField = method.CacheMethodInfo();
-            var attributeField = CacheAttributeInstance(method, methodInfoField, interceptor);
+            var attributeField = CacheAttributeInstance(method, methodInfoField, extensionPoint);
             var proceedReference = ImplementProceed(method);
 
             // Re-implement method

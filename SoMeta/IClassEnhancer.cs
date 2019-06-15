@@ -1,6 +1,6 @@
 ﻿namespace Someta
 {
-    public interface IClassEnhancer : IClassInterceptor
+    public interface IClassEnhancer : IClassExtensionPoint
     {
     }
 }

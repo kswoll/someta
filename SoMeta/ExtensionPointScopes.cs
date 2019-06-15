@@ -1,6 +1,6 @@
 ﻿namespace Someta
 {
-    public class InterceptorScopes
+    public class ExtensionPointScopes
     {
         public interface Scope
         {
