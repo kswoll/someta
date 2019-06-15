@@ -10,8 +10,8 @@ namespace Someta.Fody
 
         public InstanceInitializerWeaver(WeaverContext context) : base(context)
         {
-            var instanceInitializerInterface = ModuleDefinition.FindType("Someta", "IInstanceInitializer", Context.Someta);
-            instanceInitializerInitialize = ModuleDefinition.FindMethod(instanceInitializerInterface, "Initialize");
+            var instanceInitializerInterface = FindType("Someta", "IInstanceInitializer");
+            instanceInitializerInitialize = FindMethod(instanceInitializerInterface, "Initialize");
         }
 
         public void Weave(IMemberDefinition member, InterceptorAttribute interceptor)

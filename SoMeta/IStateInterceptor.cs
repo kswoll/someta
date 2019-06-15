@@ -1,6 +1,6 @@
 ﻿namespace Someta
 {
-    public interface IStateInterceptor : IRequireScopeInterceptor
+    public interface IStateInterceptor<T> where T : InterceptorScopes.Scope
     {
     }
 }

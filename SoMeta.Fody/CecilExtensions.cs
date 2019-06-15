@@ -201,20 +201,26 @@ namespace Someta.Fody
             return result;
         }
 
-        public static bool IsAssignableFrom(this TypeReference baseType, TypeReference type, Action<string> logger = null)
+        public static IEnumerable<GenericInstanceType> FindGenericInterfaces(this TypeReference type, TypeReference interfaceType)
         {
-            if (type.IsGenericParameter)
-                return baseType.CompareTo(type);
-
-            return baseType.IsAssignableFrom(type.Resolve(), logger);
+            foreach (var current in type.Resolve().Interfaces)
+            {
+                if (current.InterfaceType is GenericInstanceType genericType && current.InterfaceType.Resolve().CompareTo(interfaceType))
+                    yield return genericType;
+            }
         }
 
-        public static bool IsAssignableFrom(this TypeReference baseType, TypeDefinition type, Action<string> logger = null)
+        public static bool IsAssignableFrom(this TypeReference baseType, TypeReference type, Action<string> logger = null)
         {
             logger = logger ?? (x => { });
 
-            var queue = new Queue<TypeDefinition>();
+            if (type.IsGenericParameter)
+                return baseType.CompareTo(type);
+
+            var queue = new Queue<TypeReference>();
             queue.Enqueue(type);
+
+            var checkedTypes = new HashSet<string>();
 
             while (queue.Any())
             {
@@ -224,12 +230,28 @@ namespace Someta.Fody
                 if (baseType.FullName == current.FullName)
                     return true;
 
-                if (current.BaseType != null)
-                    queue.Enqueue(current.BaseType.Resolve());
-
-                foreach (var @interface in current.Interfaces)
+                if (current is GenericInstanceType)
                 {
-                    queue.Enqueue(@interface.InterfaceType.Resolve());
+                    queue.Enqueue(current.GetElementType());
+                }
+
+                var currentTypeDefinition = current.Resolve();
+                if (currentTypeDefinition.BaseType != null)
+                {
+                    if (!checkedTypes.Contains(currentTypeDefinition.BaseType.FullName))
+                    {
+                        queue.Enqueue(currentTypeDefinition.BaseType);
+                        checkedTypes.Add(currentTypeDefinition.BaseType.FullName);
+                    }
+                }
+
+                foreach (var @interface in currentTypeDefinition.Interfaces)
+                {
+                    if (!checkedTypes.Contains(@interface.InterfaceType.FullName))
+                    {
+                        queue.Enqueue(@interface.InterfaceType);
+                        checkedTypes.Add(@interface.InterfaceType.FullName);
+                    }
                 }
             }
 

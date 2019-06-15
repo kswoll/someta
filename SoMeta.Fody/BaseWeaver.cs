@@ -30,6 +30,16 @@ namespace Someta.Fody
             LogWarning = context.LogWarning;
         }
 
+        protected TypeReference FindType(string ns, string name, params string[] typeParameters)
+        {
+            return ModuleDefinition.FindType(ns, name, Context.Someta, typeParameters);
+        }
+
+        protected MethodReference FindMethod(TypeReference type, string name)
+        {
+            return ModuleDefinition.FindMethod(type, name);
+        }
+
         protected string GenerateUniqueName(IMemberDefinition member, TypeReference attributeType, string name)
         {
             var key = (member.ToString(), attributeType.FullName, name);

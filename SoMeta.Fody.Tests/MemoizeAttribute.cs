@@ -7,8 +7,9 @@ using Someta;
 namespace Someta.Fody.Tests
 {
     [AttributeUsage(AttributeTargets.Method | AttributeTargets.Property)]
-    [InterceptorScope(InterceptorScope.Method | InterceptorScope.Property)]
-    public class MemoizeAttribute : Attribute, IPropertyGetInterceptor, IMethodInterceptor, IAsyncMethodInterceptor, IInstanceInitializer, IStateInterceptor
+    public class MemoizeAttribute : Attribute, IPropertyGetInterceptor, IMethodInterceptor, IAsyncMethodInterceptor,
+        IInstanceInitializer<InterceptorScopes.Property>, IInstanceInitializer<InterceptorScopes.Method>,
+        IStateInterceptor<InterceptorScopes.Property>, IStateInterceptor<InterceptorScopes.Method>
     {
         public InjectedField<object> Field { get; set; }
         public InjectedField<object> Locker { get; set; }

@@ -16,6 +16,8 @@ namespace Someta.Fody
 
         public override void Execute()
         {
+//            Debugger.Launch();
+
             var soMeta = ModuleDefinition.FindAssembly("Someta");
 
             CecilExtensions.LogInfo = LogInfo;
@@ -24,7 +26,7 @@ namespace Someta.Fody
             CecilExtensions.Initialize(ModuleDefinition, TypeSystem, soMeta);
 
             var interceptorInterface = ModuleDefinition.FindType("Someta", "IInterceptor", soMeta);
-            var stateInterceptorInterface = ModuleDefinition.FindType("Someta", "IStateInterceptor", soMeta);
+            var stateInterceptorInterface = ModuleDefinition.FindType("Someta", "IStateInterceptor`1", soMeta, "T");
             var classInterceptorInterface = ModuleDefinition.FindType("Someta", "IClassInterceptor", soMeta);
             var propertyGetInterceptorInterface = ModuleDefinition.FindType("Someta", "IPropertyGetInterceptor", soMeta);
             var propertySetInterceptorInterface = ModuleDefinition.FindType("Someta", "IPropertySetInterceptor", soMeta);
@@ -34,9 +36,17 @@ namespace Someta.Fody
             var asyncInvoker = ModuleDefinition.FindType("Someta.Helpers", "AsyncInvoker", soMeta);
             var asyncInvokerWrap = ModuleDefinition.FindMethod(asyncInvoker, "Wrap");
             var asyncInvokerUnwrap = ModuleDefinition.FindMethod(asyncInvoker, "Unwrap");
-            var instanceInitializerInterface = ModuleDefinition.FindType("Someta", "IInstanceInitializer", soMeta);
-            var interceptorScopeAttribute = ModuleDefinition.FindType("Someta", "InterceptorScopeAttribute", soMeta);
-            var requireScopeInterceptorInterface = ModuleDefinition.FindType("Someta", "IRequireScopeInterceptor", soMeta);
+            var instanceInitializerInterfaceBase = ModuleDefinition.FindType("Someta", "IInstanceInitializer", soMeta);
+            var instanceInitializerInterface = ModuleDefinition.FindType("Someta", "IInstanceInitializer`1", soMeta, "T");
+//            var interceptorScopeAttribute = ModuleDefinition.FindType("Someta", "InterceptorScopeAttribute", soMeta);
+//            var requireScopeInterceptorInterface = ModuleDefinition.FindType("Someta", "IRequireScopeInterceptor", soMeta);
+
+            var interceptorScopesClass = ModuleDefinition.FindType("Someta", "InterceptorScopes", soMeta);
+            var interceptorScopesClassDefinition = interceptorScopesClass.Resolve();
+//            var interceptorScopeInterface = interceptorScopesClassDefinition.NestedTypes.Single(x => x.Name == "Scope");
+            var interceptorScopePropertyInterface = interceptorScopesClassDefinition.NestedTypes.Single(x => x.Name == "Property");
+            var interceptorScopeMethodInterface = interceptorScopesClassDefinition.NestedTypes.Single(x => x.Name == "Method");
+            var interceptorScopeClassInterface = interceptorScopesClassDefinition.NestedTypes.Single(x => x.Name == "Class");
 
             var propertyGetInterceptions = new List<(PropertyDefinition, InterceptorAttribute)>();
             var propertySetInterceptions = new List<(PropertyDefinition, InterceptorAttribute)>();
@@ -54,24 +64,39 @@ namespace Someta.Fody
             var stateWeaver = new StateWeaver(CecilExtensions.Context);
             var instanceInitializerWeaver = new InstanceInitializerWeaver(CecilExtensions.Context);
 
-            bool IsMissingScope(InterceptorAttribute interceptor, out InterceptorScope interceptorScope)
+            // unscopedInterface: If present, and if genericTypes is empty (meaning no specific scope was specified),
+            // unscopedInterface will be checked as a fallback.
+            bool HasScope(InterceptorAttribute interceptor, TypeReference interfaceType, InterceptorScope scope, TypeReference unscopedInterface = null)
             {
-                interceptorScope = interceptor.AttributeType.Resolve().GetCustomAttributeConstructorValue<InterceptorScope>(interceptorScopeAttribute, 0);
-                if (requireScopeInterceptorInterface.IsAssignableFrom(interceptor.AttributeType) && interceptorScope == InterceptorScope.None)
+                var genericTypes = interceptor.AttributeType.FindGenericInterfaces(interfaceType).ToArray();
+                foreach (var genericType in genericTypes)
                 {
-                    LogError($"Found an interceptor {interceptor.AttributeType.FullName} at {interceptor.DeclaringType.FullName} that requires scope without an [InterceptorScope] defined");
-                    return true;
+                    var argument = genericType.GenericArguments[0];
+                    TypeReference scopeInterface = null;
+                    switch (scope)
+                    {
+                        case InterceptorScope.Class:
+                            scopeInterface = interceptorScopeClassInterface;
+                            break;
+                        case InterceptorScope.Property:
+                            scopeInterface = interceptorScopePropertyInterface;
+                            break;
+                        case InterceptorScope.Method:
+                            scopeInterface = interceptorScopeMethodInterface;
+                            break;
+                    }
+
+                    if (argument.CompareTo(scopeInterface))
+                        return true;
                 }
-                else
-                {
-                    return false;
-                }
+
+                // If no scope was specified, we consider the scope satisfied if an unscoped version is satisfied
+                return unscopedInterface != null && genericTypes.Length == 0 && unscopedInterface.IsAssignableFrom(interceptor.AttributeType);
             }
 
-//            Debugger.Launch();
-
             // Inventory candidate classes
-            foreach (var type in ModuleDefinition.GetAllTypes())
+            var allTypes = ModuleDefinition.GetAllTypes();
+            foreach (var type in allTypes)
             {
                 var classInterceptors = type
                     .GetCustomAttributesInAncestry(interceptorInterface)
@@ -80,9 +105,6 @@ namespace Someta.Fody
 
                 foreach (var classInterceptor in classInterceptors)
                 {
-                    if (IsMissingScope(classInterceptor, out var interceptorScope))
-                        continue;
-
                     LogInfo($"Found interceptor {classInterceptor.AttributeType}");
                     if (classInterceptorInterface.IsAssignableFrom(classInterceptor.AttributeType))
                     {
@@ -92,12 +114,12 @@ namespace Someta.Fody
                             LogInfo($"Discovered class enhancer {classInterceptor.AttributeType.FullName} at {type.FullName}");
                             classEnhancers.Add((type, classInterceptor));
                         }
-                        if (stateInterceptorInterface.IsAssignableFrom(classInterceptor.AttributeType) && interceptorScope.HasFlag(InterceptorScope.Class))
+                        if (HasScope(classInterceptor, stateInterceptorInterface, InterceptorScope.Class))
                         {
                             LogInfo($"Discovered class state interceptor {classInterceptor.AttributeType.FullName} at {type.FullName}");
                             stateInterceptions.Add((type, classInterceptor));
                         }
-                        if (instanceInitializerInterface.IsAssignableFrom(classInterceptor.AttributeType) && (interceptorScope == InterceptorScope.None || interceptorScope == InterceptorScope.Class))
+                        if (HasScope(classInterceptor, instanceInitializerInterface, InterceptorScope.Class, instanceInitializerInterfaceBase))
                         {
                             LogInfo($"Discovered instance initializer {classInterceptor.AttributeType.FullName} at {type.FullName}");
                             instanceInitializers.Add((type, classInterceptor));
@@ -112,9 +134,6 @@ namespace Someta.Fody
                         .Concat(classInterceptors);
                     foreach (var interceptor in interceptors)
                     {
-                        if (IsMissingScope(interceptor, out var interceptorScope))
-                            continue;
-
                         if (propertyGetInterceptorInterface.IsAssignableFrom(interceptor.AttributeType))
                         {
                             LogInfo($"Discovered property get interceptor {interceptor.AttributeType.FullName} at {type.FullName}.{property.Name}");
@@ -125,12 +144,12 @@ namespace Someta.Fody
                             LogInfo($"Discovered property set interceptor {interceptor.AttributeType.FullName} at {type.FullName}.{property.Name}");
                             propertySetInterceptions.Add((property, interceptor));
                         }
-                        if (stateInterceptorInterface.IsAssignableFrom(interceptor.AttributeType) && interceptorScope.HasFlag(InterceptorScope.Property))
+                        if (HasScope(interceptor, stateInterceptorInterface, InterceptorScope.Property))
                         {
                             LogInfo($"Discovered property state interceptor {interceptor.AttributeType.FullName} at {type.FullName}.{property.Name}");
                             stateInterceptions.Add((property, interceptor));
                         }
-                        if (instanceInitializerInterface.IsAssignableFrom(interceptor.AttributeType) && (interceptorScope == InterceptorScope.None || interceptorScope.HasFlag(InterceptorScope.Property)))
+                        if (HasScope(interceptor, instanceInitializerInterface, InterceptorScope.Property, instanceInitializerInterfaceBase))
                         {
                             LogInfo($"Discovered instance initializer {interceptor.AttributeType.FullName} at {type.FullName}");
                             instanceInitializers.Add((property, interceptor));
@@ -144,9 +163,6 @@ namespace Someta.Fody
                         .Concat(classInterceptors);
                     foreach (var interceptor in interceptors)
                     {
-                        if (IsMissingScope(interceptor, out var interceptorScope))
-                            continue;
-
                         if (methodInterceptorInterface.IsAssignableFrom(interceptor.AttributeType))
                         {
                             LogInfo($"Discovered method interceptor {interceptor.AttributeType.FullName} at {type.FullName}.{method.Name}");
@@ -157,12 +173,12 @@ namespace Someta.Fody
                             LogInfo($"Discovered async method interceptor {interceptor.AttributeType.FullName} at {type.FullName}.{method.Name}");
                             asyncMethodInterceptions.Add((method, interceptor));
                         }
-                        if (stateInterceptorInterface.IsAssignableFrom(interceptor.AttributeType) && interceptorScope.HasFlag(InterceptorScope.Method))
+                        if (HasScope(interceptor, stateInterceptorInterface, InterceptorScope.Method))
                         {
                             LogInfo($"Discovered method state interceptor {interceptor.AttributeType.FullName} at {type.FullName}.{method.Name}");
                             stateInterceptions.Add((method, interceptor));
                         }
-                        if (instanceInitializerInterface.IsAssignableFrom(interceptor.AttributeType) && (interceptorScope == InterceptorScope.None || interceptorScope.HasFlag(InterceptorScope.Method)))
+                        if (HasScope(interceptor, instanceInitializerInterface, InterceptorScope.Method, instanceInitializerInterfaceBase))
                         {
                             LogInfo($"Discovered instance initializer {interceptor.AttributeType.FullName} at {type.FullName}");
                             instanceInitializers.Add((method, interceptor));
