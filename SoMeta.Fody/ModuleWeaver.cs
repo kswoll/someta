@@ -31,6 +31,8 @@ namespace Someta.Fody
             var classExtensionPointInterface = ModuleDefinition.FindType("Someta", "IClassExtensionPoint", soMeta);
             var propertyGetInterceptorInterface = ModuleDefinition.FindType("Someta", "IPropertyGetInterceptor", soMeta);
             var propertySetInterceptorInterface = ModuleDefinition.FindType("Someta", "IPropertySetInterceptor", soMeta);
+            var eventAddInterceptorInterface = ModuleDefinition.FindType("Someta", "IEventAddInterceptor", soMeta);
+            var eventRemoveInterceptorInterface = ModuleDefinition.FindType("Someta", "IEventRemoveInterceptor", soMeta);
             var methodInterceptorInterface = ModuleDefinition.FindType("Someta", "IMethodInterceptor", soMeta);
             var asyncMethodInterceptorInterface = ModuleDefinition.FindType("Someta", "IAsyncMethodInterceptor", soMeta);
             var classEnhancerInterface = ModuleDefinition.FindType("Someta", "IClassEnhancer", soMeta);
@@ -51,6 +53,8 @@ namespace Someta.Fody
 
             var propertyGetInterceptions = new List<(PropertyDefinition, ExtensionPointAttribute)>();
             var propertySetInterceptions = new List<(PropertyDefinition, ExtensionPointAttribute)>();
+            var eventAddInterceptions = new List<(EventDefinition, ExtensionPointAttribute)>();
+            var eventRemoveInterceptions = new List<(EventDefinition, ExtensionPointAttribute)>();
             var methodInterceptions = new List<(MethodDefinition, ExtensionPointAttribute)>();
             var asyncMethodInterceptions = new List<(MethodDefinition, ExtensionPointAttribute)>();
             var classEnhancers = new List<(TypeDefinition, ExtensionPointAttribute)>();
@@ -59,6 +63,7 @@ namespace Someta.Fody
 
             var propertyGetInterceptorWeaver = new PropertyGetInterceptorWeaver(CecilExtensions.Context, propertyGetInterceptorInterface);
             var propertySetInterceptorWeaver = new PropertySetInterceptorWeaver(CecilExtensions.Context, propertySetInterceptorInterface);
+            var eventInterceptorWeaver = new EventInterceptorWeaver(CecilExtensions.Context);
             var methodInterceptorWeaver = new MethodInterceptorWeaver(CecilExtensions.Context, methodInterceptorInterface, asyncMethodInterceptorInterface);
             var asyncMethodInterceptorWeaver = new AsyncMethodInterceptorWeaver(CecilExtensions.Context, asyncMethodInterceptorInterface, asyncInvokerWrap, asyncInvokerUnwrap);
             var classEnhancerWeaver = new ClassEnhancerWeaver(CecilExtensions.Context);
@@ -159,6 +164,29 @@ namespace Someta.Fody
                         }
                     }
                 }
+
+                foreach (var @event in type.Events)
+                {
+//                    Debugger.Launch();
+                    var interceptors = @event.GetCustomAttributesIncludingSubtypes(extensionPointInterface)
+                        .Select(x => new ExtensionPointAttribute(type, @event, x, @event.CustomAttributes.IndexOf(x), ExtensionPointScope.Event))
+                        .Concat(classInterceptors);
+
+                    foreach (var interceptor in interceptors)
+                    {
+                        if (eventAddInterceptorInterface.IsAssignableFrom(interceptor.AttributeType))
+                        {
+                            LogInfo($"Discovered event add interceptor {interceptor.AttributeType.FullName} at {type.FullName}.{@event.Name}");
+                            eventAddInterceptions.Add((@event, interceptor));
+                        }
+                        if (eventRemoveInterceptorInterface.IsAssignableFrom(interceptor.AttributeType))
+                        {
+                            LogInfo($"Discovered event remove interceptor {interceptor.AttributeType.FullName} at {type.FullName}.{@event.Name}");
+                            eventRemoveInterceptions.Add((@event, interceptor));
+                        }
+                    }
+                }
+
                 foreach (var method in type.Methods.Where(x => !x.IsConstructor))
                 {
                     var interceptors = method.GetCustomAttributesIncludingSubtypes(extensionPointInterface)
@@ -198,6 +226,16 @@ namespace Someta.Fody
             foreach (var (property, interceptor) in propertySetInterceptions)
             {
                 propertySetInterceptorWeaver.Weave(property, interceptor);
+            }
+
+            foreach (var (@event, interceptor) in eventAddInterceptions)
+            {
+                eventInterceptorWeaver.Weave(@event, interceptor, isAdd: true);
+            }
+
+            foreach (var (@event, interceptor) in eventRemoveInterceptions)
+            {
+                eventInterceptorWeaver.Weave(@event, interceptor, isAdd: false);
             }
 
             foreach (var (method, interceptor) in methodInterceptions)

@@ -145,6 +145,11 @@ namespace Someta.Fody
                 var methodInfo = methodDefinition.CacheMethodInfo();
                 attributeField = CacheAttributeInstance(member, methodInfo, extensionPoint);
             }
+            else if (member is EventDefinition eventDefinition)
+            {
+                var eventInfo = eventDefinition.CacheEventInfo();
+                attributeField = CacheAttributeInstance(member, eventInfo, extensionPoint);
+            }
             else
             {
                 throw new Exception();

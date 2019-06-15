@@ -14,6 +14,10 @@
         {
         }
 
+        public interface Event : Scope
+        {
+        }
+
         public interface Class : Scope
         {
         }

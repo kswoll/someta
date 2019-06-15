@@ -44,6 +44,7 @@ namespace Someta.Fody
         private static MethodReference attributeGetCustomAttributes;
         private static MethodReference methodBaseGetCurrentMethod;
         private static MethodReference typeGetProperty;
+        private static MethodReference typeGetEvent;
 
         internal static void Initialize(ModuleDefinition moduleDefinition, TypeSystem typeSystem, AssemblyNameReference soMeta)
         {
@@ -55,6 +56,7 @@ namespace Someta.Fody
             typeGetMethods = ModuleDefinition.ImportReference(CaptureFunc<Type, MethodInfo[]>(x => x.GetMethods(default)));
             typeGetMethod = ModuleDefinition.ImportReference(typeType.Methods.Single(x => x.Name == "GetMethod" && x.Parameters.Count == 5));
             typeGetProperty = ModuleDefinition.ImportReference(CaptureFunc<Type, PropertyInfo>(x => x.GetProperty(default, default(BindingFlags))));
+            typeGetEvent = ModuleDefinition.ImportReference(CaptureFunc<Type, EventInfo>(x => x.GetEvent(default, default)));
             taskTType = ModuleDefinition.ImportReference(typeof(Task<>));
             taskFromResult = ModuleDefinition.ImportReference(taskType.Resolve().Methods.Single(x => x.Name == "FromResult"));
             attributeType = ModuleDefinition.ImportReference(typeof(Attribute));
@@ -76,6 +78,7 @@ namespace Someta.Fody
             var findProperty = ModuleDefinition.FindMethod(methodFinder, "FindProperty");
             var methodInfoType = ModuleDefinition.ImportReference(typeof(MethodInfo));
             var propertyInfoType = ModuleDefinition.ImportReference(typeof(PropertyInfo));
+            var eventInfoType = ModuleDefinition.ImportReference(typeof(EventInfo));
             var delegateType = ModuleDefinition.ImportReference(typeof(Delegate));
 
             var context = new WeaverContext
@@ -140,7 +143,8 @@ namespace Someta.Fody
                 FindProperty = findProperty,
                 MethodFinder = methodFinder,
                 MethodInfoType = methodInfoType,
-                PropertyInfoType = propertyInfoType
+                PropertyInfoType = propertyInfoType,
+                EventInfoType = eventInfoType
             };
             Context = context;
         }
@@ -521,7 +525,17 @@ namespace Someta.Fody
             il.LoadType(property.DeclaringType);
             il.Emit(OpCodes.Ldstr, property.Name);
             il.Emit(OpCodes.Ldc_I4, bindingFlags);
-            il.Emit(OpCodes.Call, typeGetProperty);
+            il.EmitCall(typeGetProperty);
+        }
+
+        public static void EmitGetEventInfo(this ILProcessor il, EventDefinition @event)
+        {
+            var bindingFlags = (int)(BindingFlags.Instance | BindingFlags.Static | BindingFlags.Public | BindingFlags.NonPublic);
+
+            il.LoadType(@event.DeclaringType);
+            il.Emit(OpCodes.Ldstr, @event.Name);
+            il.Emit(OpCodes.Ldc_I4, bindingFlags);
+            il.EmitCall(typeGetEvent);
         }
 
         public static void EmitGetMethodInfo(this ILProcessor il, MethodDefinition method)
@@ -628,7 +642,7 @@ namespace Someta.Fody
 
         /// <summary>
         /// Used when you want to get an argument at a specified index irrespective of whether the surrounding
-        /// method is generic or not.
+        /// method is static or not.
         /// </summary>
         public static void EmitArgument(this ILProcessor il, MethodDefinition containingMethod, int argumentIndex)
         {
@@ -704,6 +718,10 @@ namespace Someta.Fody
             {
                 return CachePropertyInfo(propertyDefinition);
             }
+            else if (memberDefinition is EventDefinition eventDefinition)
+            {
+                return CacheEventInfo(eventDefinition);
+            }
             else
             {
                 throw new Exception();
@@ -736,6 +754,38 @@ namespace Someta.Fody
             staticConstructor.Body.EmitBeforeReturn(il =>
             {
                 il.EmitGetPropertyInfo(property);
+                il.Emit(OpCodes.Stsfld, field.Bind());
+            });
+
+            return field;
+        }
+
+        /// <summary>
+        /// Declares a static field to store the EventInfo for the specified EventDefinition and initializes
+        /// it in the declaring class' static initializer.  If no static initializer currently exists, one will
+        /// be created.
+        /// </summary>
+        public static FieldDefinition CacheEventInfo(this EventDefinition @event)
+        {
+            var type = @event.DeclaringType;
+            var fieldName = $"<{@event.Name}>k__EventInfo";
+            var field = type.Fields.SingleOrDefault(x => x.Name == fieldName);
+            if (field != null)
+                return field;
+
+            // Add static field for property
+            field = new FieldDefinition(fieldName, FieldAttributes.Static | FieldAttributes.Private, Context.EventInfoType);
+            type.Fields.Add(field);
+
+            var staticConstructor = type.GetStaticConstructor();
+            if (staticConstructor == null)
+            {
+                staticConstructor = type.CreateStaticConstructor();
+                staticConstructor.Body.GetILProcessor().Emit(OpCodes.Ret);
+            }
+            staticConstructor.Body.EmitBeforeReturn(il =>
+            {
+                il.EmitGetEventInfo(@event);
                 il.Emit(OpCodes.Stsfld, field.Bind());
             });
 

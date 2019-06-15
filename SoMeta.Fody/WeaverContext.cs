@@ -15,6 +15,7 @@ namespace Someta.Fody
         public Action<string> LogWarning { get; set; }
         public TypeReference MethodInfoType { get; set; }
         public TypeReference PropertyInfoType { get; set; }
+        public TypeReference EventInfoType { get; set; }
         public TypeReference Func1Type { get; set; }
         public TypeReference Func2Type { get; set; }
         public TypeReference Action1Type { get; set; }

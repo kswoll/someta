@@ -1,69 +1,68 @@
-﻿using System.Linq;
+﻿using System.Diagnostics;
+using System.Linq;
 using Mono.Cecil;
 using Mono.Cecil.Cil;
 using Mono.Cecil.Rocks;
 
 namespace Someta.Fody
 {
-    public class PropertySetInterceptorWeaver : BaseWeaver
+    public class EventInterceptorWeaver : BaseWeaver
     {
-        private readonly MethodReference setPropertyValue;
+        private readonly MethodReference addEventHandler;
+        private readonly MethodReference removeEventHandler;
 
-        public PropertySetInterceptorWeaver(WeaverContext context, TypeReference propertyInterceptorInterface) : base(context)
+        public EventInterceptorWeaver(WeaverContext context) : base(context)
         {
-            setPropertyValue = ModuleDefinition.FindMethod(propertyInterceptorInterface, "SetPropertyValue");
+            var eventAddInterceptorInterface = FindType("Someta", "IEventAddInterceptor");
+            var eventRemoveInterceptorInterface = FindType("Someta", "IEventRemoveInterceptor");
+            addEventHandler = ModuleDefinition.FindMethod(eventAddInterceptorInterface, "AddEventHandler");
+            removeEventHandler = ModuleDefinition.FindMethod(eventRemoveInterceptorInterface, "RemoveEventHandler");
         }
 
-        public void Weave(PropertyDefinition property, ExtensionPointAttribute extensionPoint)
+        public void Weave(EventDefinition @event, ExtensionPointAttribute extensionPoint, bool isAdd)
         {
-//            if (property.DeclaringType != interceptor.DeclaringType)
-//                Debugger.Launch();
-            var type = property.DeclaringType;
-            LogInfo($"Weaving property interceptor {extensionPoint.AttributeType.FullName} at {type.FullName}.{property.Name}");
+            var type = @event.DeclaringType;
+            LogInfo($"Weaving event add interceptor {extensionPoint.AttributeType.FullName} at {type.FullName}.{@event.Name}");
 
-            var propertyInfoField = property.CachePropertyInfo();
-            var attributeField = CacheAttributeInstance(property, propertyInfoField, extensionPoint);
+            var eventInfoField = @event.CacheEventInfo();
+            var attributeField = CacheAttributeInstance(@event, eventInfoField, extensionPoint);
 
             LogInfo("Setter is intercepted");
 
-            var method = property.SetMethod;
+            var method = isAdd ? @event.AddMethod : @event.RemoveMethod;
             var proceedReference = ImplementProceedSet(method, extensionPoint.AttributeType);
 
             // Re-implement method
             method.Body.Emit(il =>
             {
-                ImplementSetBody(property, attributeField, propertyInfoField, method, il, proceedReference);
+                ImplementBody(@event, attributeField, eventInfoField, method, il, proceedReference, isAdd ? addEventHandler : removeEventHandler);
             });
         }
 
-        private void ImplementSetBody(PropertyDefinition property, FieldDefinition attributeField, FieldDefinition propertyInfoField, MethodDefinition method, ILProcessor il, MethodReference proceed)
+        private void ImplementBody(EventDefinition @event, FieldDefinition attributeField, FieldDefinition eventInfoField,
+            MethodDefinition method, ILProcessor il, MethodReference proceed, MethodReference addOrRemoveHandler)
         {
-            // We want to call the interceptor's setter method:
-            // void SetPropertyValue(PropertyInfo propertyInfo, object instance, object oldValue, object newValue, Action<object> setter)
+            // We want to call the interceptor's AddEventHandler method:
+            // void AddEventHandler(EventInfo eventInfo, object instance, Delegate handler, Action<Delegate> proceed)
 
             // Get interceptor attribute
             il.LoadField(attributeField);
 
-            // Leave PropertyInfo on the stack as the first argument
-            il.LoadField(propertyInfoField);
+            // Leave EventInfo on the stack as the first argument
+            il.LoadField(eventInfoField);
 
             // Leave the instance on the stack as the second argument
             EmitInstanceArgument(il, method);
 
-            // Get the current value of the property as the third argument
-            il.EmitThisIfRequired(property.GetMethod);
-            il.EmitCall(property.GetMethod);
-            il.EmitBoxIfNeeded(method.Parameters[0].ParameterType);
-
-            // Leave the new value on the stack as the fourth argument
+            // Leave the handler on the stack as the third argument
             il.EmitArgument(method, 0);
             il.EmitBoxIfNeeded(method.Parameters[0].ParameterType);
 
-            // Leave the delegate for the proceed implementation on the stack as fifth argument
-            il.EmitDelegate(proceed, Context.Action1Type, TypeSystem.ObjectReference);
+            // Leave the delegate for the proceed implementation on the stack as fourth argument
+            il.EmitDelegate(proceed, Context.Action1Type, Context.DelegateType);
 
             // Finally, we emit the call to the interceptor
-            il.Emit(OpCodes.Callvirt, setPropertyValue);
+            il.Emit(OpCodes.Callvirt, addOrRemoveHandler);
 
             // Return
             il.Emit(OpCodes.Ret);
