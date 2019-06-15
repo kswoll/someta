@@ -91,7 +91,23 @@ namespace Someta.Fody
                 }
 
                 // If no scope was specified, we consider the scope satisfied if an unscoped version is satisfied
-                return unscopedInterface != null && genericTypes.Length == 0 && unscopedInterface.IsAssignableFrom(interceptor.AttributeType);
+                // Furthermore, the scope must match the member type.
+                bool isScopeMatchedWithMember = interceptor.Scope == scope;
+/*
+                switch (interceptor.Scope)
+                {
+                    case InterceptorScope.Class:
+                        isScopeMatchedWithMember = interceptor.DeclaringMember is TypeDefinition;
+                        break;
+                    case InterceptorScope.Property:
+                        isScopeMatchedWithMember = interceptor.DeclaringMember is PropertyDefinition;
+                        break;
+                    case InterceptorScope.Method:
+                        isScopeMatchedWithMember = interceptor.DeclaringMember is MethodDefinition;
+                        break;
+                }
+*/
+                return unscopedInterface != null && genericTypes.Length == 0 && unscopedInterface.IsAssignableFrom(interceptor.AttributeType) && isScopeMatchedWithMember;
             }
 
             // Inventory candidate classes
@@ -100,7 +116,7 @@ namespace Someta.Fody
             {
                 var classInterceptors = type
                     .GetCustomAttributesInAncestry(interceptorInterface)
-                    .Select(x => new InterceptorAttribute(x.DeclaringType, x.Attribute, x.DeclaringType.CustomAttributes.IndexOf(x.Attribute), InterceptorScope.Class))
+                    .Select(x => new InterceptorAttribute(x.DeclaringType, x.DeclaringType, x.Attribute, x.DeclaringType.CustomAttributes.IndexOf(x.Attribute), InterceptorScope.Class))
                     .ToArray();
 
                 foreach (var classInterceptor in classInterceptors)
@@ -130,7 +146,7 @@ namespace Someta.Fody
                 foreach (var property in type.Properties)
                 {
                     var interceptors = property.GetCustomAttributesIncludingSubtypes(interceptorInterface)
-                        .Select(x => new InterceptorAttribute(type, x, property.CustomAttributes.IndexOf(x), InterceptorScope.Property))
+                        .Select(x => new InterceptorAttribute(type, property, x, property.CustomAttributes.IndexOf(x), InterceptorScope.Property))
                         .Concat(classInterceptors);
                     foreach (var interceptor in interceptors)
                     {
@@ -159,7 +175,7 @@ namespace Someta.Fody
                 foreach (var method in type.Methods.Where(x => !x.IsConstructor))
                 {
                     var interceptors = method.GetCustomAttributesIncludingSubtypes(interceptorInterface)
-                        .Select(x => new InterceptorAttribute(type, x, method.CustomAttributes.IndexOf(x), InterceptorScope.Method))
+                        .Select(x => new InterceptorAttribute(type, method, x, method.CustomAttributes.IndexOf(x), InterceptorScope.Method))
                         .Concat(classInterceptors);
                     foreach (var interceptor in interceptors)
                     {

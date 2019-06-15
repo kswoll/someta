@@ -28,7 +28,7 @@ namespace Someta.Fody.Tests
             public MemberInfo MemberInfo { get; set; }
         }
 
-        public class ClassInitializerAttribute : Attribute, IInstanceInitializer<InterceptorScopes.Class>
+        public class ClassInitializerAttribute : Attribute, IInstanceInitializer
         {
             public void Initialize(object instance, MemberInfo member)
             {
@@ -36,13 +36,13 @@ namespace Someta.Fody.Tests
             }
         }
 
-        [PropertyInitializer]
         public class PropertyInitializerTestClass
         {
+            [PropertyInitializer]
             public PropertyInfo PropertyInfo { get; set; }
         }
 
-        public class PropertyInitializerAttribute : Attribute, IInstanceInitializer<InterceptorScopes.Property>
+        public class PropertyInitializerAttribute : Attribute, IInstanceInitializer
         {
             public void Initialize(object instance, MemberInfo member)
             {
