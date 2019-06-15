@@ -67,7 +67,7 @@ namespace Someta.Fody.Tests
             public T Property { get; set; }
         }
 
-        public class NotifyPropertyChangedAttribute : Attribute, IPropertySetInterceptor, IClassEnhancer
+        public class NotifyPropertyChangedAttribute : Attribute, IPropertySetInterceptor, INonPublicAccess
         {
             [InjectAccess("OnPropertyChanged")]
             public Action<object, string, object, object> OnPropertyChanged { get; set; }

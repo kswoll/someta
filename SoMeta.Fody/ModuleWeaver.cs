@@ -35,7 +35,7 @@ namespace Someta.Fody
             var eventRemoveInterceptorInterface = ModuleDefinition.FindType("Someta", "IEventRemoveInterceptor", soMeta);
             var methodInterceptorInterface = ModuleDefinition.FindType("Someta", "IMethodInterceptor", soMeta);
             var asyncMethodInterceptorInterface = ModuleDefinition.FindType("Someta", "IAsyncMethodInterceptor", soMeta);
-            var classEnhancerInterface = ModuleDefinition.FindType("Someta", "IClassEnhancer", soMeta);
+            var nonPublicAccessInterface = ModuleDefinition.FindType("Someta", "INonPublicAccess", soMeta);
             var asyncInvoker = ModuleDefinition.FindType("Someta.Helpers", "AsyncInvoker", soMeta);
             var asyncInvokerWrap = ModuleDefinition.FindMethod(asyncInvoker, "Wrap");
             var asyncInvokerUnwrap = ModuleDefinition.FindMethod(asyncInvoker, "Unwrap");
@@ -117,7 +117,7 @@ namespace Someta.Fody
                     if (classExtensionPointInterface.IsAssignableFrom(classInterceptor.AttributeType))
                     {
                         LogInfo($"Found class interceptor {classInterceptor.AttributeType}");
-                        if (classEnhancerInterface.IsAssignableFrom(classInterceptor.AttributeType))
+                        if (nonPublicAccessInterface.IsAssignableFrom(classInterceptor.AttributeType))
                         {
                             LogInfo($"Discovered class enhancer {classInterceptor.AttributeType.FullName} at {type.FullName}");
                             classEnhancers.Add((type, classInterceptor));
