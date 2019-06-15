@@ -20,14 +20,24 @@ namespace Someta.Fody
 
         private readonly Dictionary<(string, string, string), int> uniqueNamesCounter = new Dictionary<(string, string, string), int>();
 
-        public BaseWeaver(ModuleDefinition moduleDefinition, WeaverContext context, TypeSystem typeSystem, Action<string> logInfo, Action<string> logError, Action<string> logWarning)
+        public BaseWeaver(WeaverContext context)
         {
-            ModuleDefinition = moduleDefinition;
+            ModuleDefinition = context.ModuleDefinition;
             Context = context;
-            TypeSystem = typeSystem;
-            LogInfo = logInfo;
-            LogError = logError;
-            LogWarning = logWarning;
+            TypeSystem = context.TypeSystem;
+            LogInfo = context.LogInfo;
+            LogError = context.LogError;
+            LogWarning = context.LogWarning;
+        }
+
+        protected TypeReference FindType(string ns, string name, params string[] typeParameters)
+        {
+            return ModuleDefinition.FindType(ns, name, Context.Someta, typeParameters);
+        }
+
+        protected MethodReference FindMethod(TypeReference type, string name)
+        {
+            return ModuleDefinition.FindMethod(type, name);
         }
 
         protected string GenerateUniqueName(IMemberDefinition member, TypeReference attributeType, string name)
@@ -160,7 +170,7 @@ namespace Someta.Fody
                 return field;
 
             // Add static field for property
-            field = new FieldDefinition(fieldName, FieldAttributes.Static | FieldAttributes.Family, interceptor.AttributeType);
+            field = new FieldDefinition(fieldName, FieldAttributes.Static | FieldAttributes.Public, interceptor.AttributeType);
             declaringType.Fields.Add(field);
 
             var staticConstructor = declaringType.GetStaticConstructor();

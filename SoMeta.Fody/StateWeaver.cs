@@ -1,14 +1,8 @@
-﻿using System;
-using System.Diagnostics;
+﻿using System.Diagnostics;
 using System.Linq;
-using System.Reflection;
 using Mono.Cecil;
 using Mono.Cecil.Cil;
 using Mono.Cecil.Rocks;
-using FieldAttributes = Mono.Cecil.FieldAttributes;
-using MethodAttributes = Mono.Cecil.MethodAttributes;
-using MethodBody = Mono.Cecil.Cil.MethodBody;
-using TypeSystem = Fody.TypeSystem;
 
 namespace Someta.Fody
 {
@@ -17,12 +11,11 @@ namespace Someta.Fody
         private readonly TypeReference injectedFieldType;
         private readonly TypeReference injectFieldAttributeType;
 
-        public StateWeaver(ModuleDefinition moduleDefinition, WeaverContext context, TypeSystem typeSystem, Action<string> logInfo, Action<string> logError, Action<string> logWarning)
-            : base(moduleDefinition, context, typeSystem, logInfo, logError, logWarning)
+        public StateWeaver(WeaverContext context) : base(context)
         {
 //            Debugger.Launch();
-            injectedFieldType = moduleDefinition.FindType("Someta", "InjectedField`1", Context.Someta, "T");
-            injectFieldAttributeType = moduleDefinition.FindType("Someta", "InjectFieldAttribute", Context.Someta);
+            injectedFieldType = ModuleDefinition.FindType("Someta", "InjectedField`1", Context.Someta, "T");
+            injectFieldAttributeType = ModuleDefinition.FindType("Someta", "InjectFieldAttribute", Context.Someta);
         }
 
         public void Weave(IMemberDefinition member, InterceptorAttribute interceptor)

@@ -1,6 +1,6 @@
 ﻿using System;
 
-namespace Someta.Fody
+namespace Someta
 {
     public enum InterceptorScope
     {

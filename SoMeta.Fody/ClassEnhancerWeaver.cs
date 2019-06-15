@@ -1,10 +1,7 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Diagnostics;
+﻿using System.Collections.Generic;
 using System.Linq;
 using Mono.Cecil;
 using Mono.Cecil.Cil;
-using TypeSystem = Fody.TypeSystem;
 
 namespace Someta.Fody
 {
@@ -13,10 +10,10 @@ namespace Someta.Fody
         private readonly TypeReference injectAccessAttribute;
         private readonly TypeReference injectTargetAttribute;
 
-        public ClassEnhancerWeaver(ModuleDefinition moduleDefinition, WeaverContext context, TypeSystem typeSystem, Action<string> logInfo, Action<string> logError, Action<string> logWarning) : base(moduleDefinition, context, typeSystem, logInfo, logError, logWarning)
+        public ClassEnhancerWeaver(WeaverContext context) : base(context)
         {
-            injectAccessAttribute = moduleDefinition.FindType("Someta", "InjectAccessAttribute");
-            injectTargetAttribute = moduleDefinition.FindType("Someta", "InjectTargetAttribute");
+            injectAccessAttribute = ModuleDefinition.FindType("Someta", "InjectAccessAttribute");
+            injectTargetAttribute = ModuleDefinition.FindType("Someta", "InjectTargetAttribute");
         }
 
         public void Weave(TypeDefinition type, InterceptorAttribute interceptor)

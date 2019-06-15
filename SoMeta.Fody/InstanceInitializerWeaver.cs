@@ -1,8 +1,6 @@
-﻿using System;
-using System.Diagnostics;
+﻿using System.Diagnostics;
 using Mono.Cecil;
 using Mono.Cecil.Cil;
-using TypeSystem = Fody.TypeSystem;
 
 namespace Someta.Fody
 {
@@ -10,10 +8,10 @@ namespace Someta.Fody
     {
         private readonly MethodReference instanceInitializerInitialize;
 
-        public InstanceInitializerWeaver(ModuleDefinition moduleDefinition, WeaverContext context, TypeSystem typeSystem, Action<string> logInfo, Action<string> logError, Action<string> logWarning) : base(moduleDefinition, context, typeSystem, logInfo, logError, logWarning)
+        public InstanceInitializerWeaver(WeaverContext context) : base(context)
         {
-            var instanceInitializerInterface = ModuleDefinition.FindType("Someta", "IInstanceInitializer", Context.Someta);
-            instanceInitializerInitialize = ModuleDefinition.FindMethod(instanceInitializerInterface, "Initialize");
+            var instanceInitializerInterface = FindType("Someta", "IInstanceInitializer");
+            instanceInitializerInitialize = FindMethod(instanceInitializerInterface, "Initialize");
         }
 
         public void Weave(IMemberDefinition member, InterceptorAttribute interceptor)
@@ -21,13 +19,21 @@ namespace Someta.Fody
 //            Debugger.Launch();
 
             var attributeField = CacheAttributeInstance(member, interceptor);
-            var memberInfoField = member.CacheMemberInfo();
+            FieldDefinition memberInfoField;
+            if (member is TypeDefinition)
+                memberInfoField = null;
+            else
+                memberInfoField = member.CacheMemberInfo();
 
-            member.DeclaringType.EmitToConstructor(il =>
+            var type = member is TypeDefinition definition ? definition : member.DeclaringType;
+            type.EmitToConstructor(il =>
             {
                 il.LoadField(attributeField);
                 il.Emit(OpCodes.Ldarg_0);
-                il.LoadField(memberInfoField);
+                if (member is TypeDefinition)
+                    il.LoadType(type);
+                else
+                    il.LoadField(memberInfoField);
                 il.EmitCall(instanceInitializerInitialize);
             });
         }

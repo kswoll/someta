@@ -2,12 +2,13 @@
 using System.Reflection;
 using System.Threading.Tasks;
 using Nito.AsyncEx;
+using Someta;
 
 namespace Someta.Fody.Tests
 {
     [AttributeUsage(AttributeTargets.Method | AttributeTargets.Property)]
-    public class MemoizeAttribute : Attribute, IPropertyStateInterceptor, IPropertyGetInterceptor,
-        IMethodStateInterceptor, IMethodInterceptor, IAsyncMethodInterceptor, IInstanceInitializer
+    public class MemoizeAttribute : Attribute, IPropertyGetInterceptor, IMethodInterceptor, IAsyncMethodInterceptor,
+        IInstanceInitializer, IStateInterceptor
     {
         public InjectedField<object> Field { get; set; }
         public InjectedField<object> Locker { get; set; }
