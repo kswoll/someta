@@ -145,7 +145,7 @@ namespace Someta.Fody.Tests
             public string Property2 { get; set; }
         }
 
-        private class ClassStateAttribute : Attribute, IPropertySetInterceptor, IClassInterceptor, IStateInterceptor<InterceptorScopes.Class>
+        private class ClassStateAttribute : Attribute, IPropertySetInterceptor, IClassInterceptor, IStateInterceptor
         {
             public InjectedField<string> Field { get; set; }
 

@@ -27,6 +27,7 @@ namespace Someta.Fody
 
             var interceptorInterface = ModuleDefinition.FindType("Someta", "IInterceptor", soMeta);
             var stateInterceptorInterface = ModuleDefinition.FindType("Someta", "IStateInterceptor`1", soMeta, "T");
+            var stateInterceptorInterfaceBase = ModuleDefinition.FindType("Someta", "IStateInterceptor", soMeta);
             var classInterceptorInterface = ModuleDefinition.FindType("Someta", "IClassInterceptor", soMeta);
             var propertyGetInterceptorInterface = ModuleDefinition.FindType("Someta", "IPropertyGetInterceptor", soMeta);
             var propertySetInterceptorInterface = ModuleDefinition.FindType("Someta", "IPropertySetInterceptor", soMeta);
@@ -92,21 +93,7 @@ namespace Someta.Fody
 
                 // If no scope was specified, we consider the scope satisfied if an unscoped version is satisfied
                 // Furthermore, the scope must match the member type.
-                bool isScopeMatchedWithMember = interceptor.Scope == scope;
-/*
-                switch (interceptor.Scope)
-                {
-                    case InterceptorScope.Class:
-                        isScopeMatchedWithMember = interceptor.DeclaringMember is TypeDefinition;
-                        break;
-                    case InterceptorScope.Property:
-                        isScopeMatchedWithMember = interceptor.DeclaringMember is PropertyDefinition;
-                        break;
-                    case InterceptorScope.Method:
-                        isScopeMatchedWithMember = interceptor.DeclaringMember is MethodDefinition;
-                        break;
-                }
-*/
+                var isScopeMatchedWithMember = interceptor.Scope == scope;
                 return unscopedInterface != null && genericTypes.Length == 0 && unscopedInterface.IsAssignableFrom(interceptor.AttributeType) && isScopeMatchedWithMember;
             }
 
@@ -130,7 +117,7 @@ namespace Someta.Fody
                             LogInfo($"Discovered class enhancer {classInterceptor.AttributeType.FullName} at {type.FullName}");
                             classEnhancers.Add((type, classInterceptor));
                         }
-                        if (HasScope(classInterceptor, stateInterceptorInterface, InterceptorScope.Class))
+                        if (HasScope(classInterceptor, stateInterceptorInterface, InterceptorScope.Class, stateInterceptorInterfaceBase))
                         {
                             LogInfo($"Discovered class state interceptor {classInterceptor.AttributeType.FullName} at {type.FullName}");
                             stateInterceptions.Add((type, classInterceptor));
@@ -160,7 +147,7 @@ namespace Someta.Fody
                             LogInfo($"Discovered property set interceptor {interceptor.AttributeType.FullName} at {type.FullName}.{property.Name}");
                             propertySetInterceptions.Add((property, interceptor));
                         }
-                        if (HasScope(interceptor, stateInterceptorInterface, InterceptorScope.Property))
+                        if (HasScope(interceptor, stateInterceptorInterface, InterceptorScope.Property, stateInterceptorInterfaceBase))
                         {
                             LogInfo($"Discovered property state interceptor {interceptor.AttributeType.FullName} at {type.FullName}.{property.Name}");
                             stateInterceptions.Add((property, interceptor));
@@ -189,7 +176,7 @@ namespace Someta.Fody
                             LogInfo($"Discovered async method interceptor {interceptor.AttributeType.FullName} at {type.FullName}.{method.Name}");
                             asyncMethodInterceptions.Add((method, interceptor));
                         }
-                        if (HasScope(interceptor, stateInterceptorInterface, InterceptorScope.Method))
+                        if (HasScope(interceptor, stateInterceptorInterface, InterceptorScope.Method, stateInterceptorInterfaceBase))
                         {
                             LogInfo($"Discovered method state interceptor {interceptor.AttributeType.FullName} at {type.FullName}.{method.Name}");
                             stateInterceptions.Add((method, interceptor));
