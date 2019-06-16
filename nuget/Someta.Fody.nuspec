@@ -14,7 +14,6 @@
     <tags>fody metaprogramming</tags>
     <dependencies>
       <dependency id="Fody" version="5.0.6" />
-      <dependency id="Someta" version="1.0" />
     </dependencies>
   </metadata>
 </package>

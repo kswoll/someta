@@ -56,6 +56,17 @@ namespace Someta.Fody.Tests
         }
 
         [Test]
+        public void StaticClassState()
+        {
+            StaticClassStateTestClass.Property1 = "foo";
+            StaticClassStateTestClass.PreviousPropertySet.ShouldBe(null);
+            StaticClassStateTestClass.Property2 = "bar";
+            StaticClassStateTestClass.PreviousPropertySet.ShouldBe(nameof(StaticClassStateTestClass.Property1));
+            StaticClassStateTestClass.Property1 = "foo";
+            StaticClassStateTestClass.PreviousPropertySet.ShouldBe(nameof(StaticClassStateTestClass.Property2));
+        }
+
+        [Test]
         public async Task MethodMemoize()
         {
             var o = new MethodMemoizeTestClass();
@@ -163,6 +174,33 @@ namespace Someta.Fody.Tests
             }
         }
 
+        [StaticClassState]
+        private static class StaticClassStateTestClass
+        {
+            public static string PreviousPropertySet { get; set; }
+            public static string Property1 { get; set; }
+            public static string Property2 { get; set; }
+        }
+
+        private class StaticClassStateAttribute : Attribute, IPropertySetInterceptor, IStateExtensionPoint
+        {
+            [InjectField(isStatic: true)]
+            public InjectedField<string> Field { get; set; }
+
+            public void SetPropertyValue(PropertyInfo propertyInfo, object instance, object oldValue, object newValue, Action<object> setter)
+            {
+                if (propertyInfo.Name == nameof(StaticClassStateTestClass.PreviousPropertySet))
+                {
+                    setter(newValue);
+                    return;
+                }
+
+                StaticClassStateTestClass.PreviousPropertySet = Field.GetValue(instance);
+                setter(newValue);
+                Field.SetValue(instance, propertyInfo.Name);
+            }
+        }
+
         private class MethodMemoizeTestClass
         {
             public int InvocationCount { get; set; }
@@ -178,13 +216,7 @@ namespace Someta.Fody.Tests
 
         private class MethodMemoizeAttribute : Attribute, IAsyncMethodInterceptor, IStateExtensionPoint<ExtensionPointScopes.Method>
         {
-            private InjectedField<object> field;
-
-            public InjectedField<object> Field
-            {
-                get => field;
-                set => field = value;
-            }
+            public InjectedField<object> Field { get; set; }
 
             public async Task<object> InvokeAsync(MethodInfo methodInfo, object instance, object[] arguments, Func<object[], Task<object>> invoker)
             {
