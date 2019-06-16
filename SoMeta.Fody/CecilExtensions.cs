@@ -988,6 +988,21 @@ namespace Someta.Fody
             return localParameter ?? genericParameter;
         }
 
+        public static TypeReference ResolveGenericParameter2(this TypeReference genericParameter, TypeDefinition typeContext, MethodDefinition method, MethodDefinition method2)
+        {
+            if (!genericParameter.IsGenericParameter)
+                return genericParameter;
+
+            var name = genericParameter.Name;
+            var localParameter = typeContext?.GenericParameters.SingleOrDefault(x => x.Name == name);
+            var localMethodParameter = method.GenericParameters.SingleOrDefault(x => x.Name == name);
+            if (localMethodParameter != null)
+            {
+                localParameter = method2.GenericParameters[method.GenericParameters.IndexOf(localMethodParameter)];
+            }
+            return localParameter ?? genericParameter;
+        }
+
         public static void CreateDefaultMethodImplementation(MethodDefinition methodInfo, ILProcessor il)
         {
             if (taskType.IsAssignableFrom(methodInfo.ReturnType))

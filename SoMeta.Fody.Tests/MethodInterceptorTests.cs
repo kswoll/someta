@@ -73,7 +73,7 @@ namespace Someta.Fody.Tests
         {
             public override object Invoke(MethodInfo methodInfo, object instance, object[] parameters, Func<object[], object> invoker)
             {
-                return parameters.Select(x => x.GetType()).ToArray();
+                return ((Type[])invoker(parameters)).Concat(parameters.Select(x => x.GetType())).ToArray();
             }
         }
 
@@ -126,13 +126,18 @@ namespace Someta.Fody.Tests
             [ConcatParameterTypes]
             public Type[] ConcatTypes1(T a)
             {
-                return null;
+                return new Type[0];
+            }
+
+            public void ConcatTypesWrapper()
+            {
+                ConcatTypes1(default);
             }
 
             [ConcatParameterTypes]
             public Type[] WithGenericParameters<U, V>(T a, U u, V v)
             {
-                return null;
+                return new Type[0];
             }
 
             private void GenericWrapper<U2, V2>(T a, U2 u, V2 v)
