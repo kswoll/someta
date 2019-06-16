@@ -2,7 +2,7 @@
 
 namespace Someta
 {
-    public interface IInstanceInitializer : IClassExtensionPoint
+    public interface IInstanceInitializer : IExtensionPoint
     {
         void Initialize(object instance, MemberInfo member);
     }

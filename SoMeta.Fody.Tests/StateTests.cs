@@ -7,7 +7,7 @@ using Shouldly;
 namespace Someta.Fody.Tests
 {
     [TestFixture]
-    public class StateInterceptorTests
+    public class StateTests
     {
         [Test]
         public void PropertyState()
@@ -72,7 +72,7 @@ namespace Someta.Fody.Tests
             public string Property { get; set; }
         }
 
-        private class PropertySetCounterAttribute : Attribute, IPropertySetInterceptor, IStateInterceptor<ExtensionPointScopes.Property>
+        private class PropertySetCounterAttribute : Attribute, IPropertySetInterceptor, IStateExtensionPoint<ExtensionPointScopes.Property>
         {
             public InjectedField<int> Field { get; set; }
 
@@ -111,7 +111,7 @@ namespace Someta.Fody.Tests
         }
 
         [AttributeUsage(AttributeTargets.Property)]
-        private class MemoizeAttribute : Attribute, IPropertyGetInterceptor, IInstanceInitializer<ExtensionPointScopes.Property>, IStateInterceptor<ExtensionPointScopes.Property>
+        private class MemoizeAttribute : Attribute, IPropertyGetInterceptor, IInstanceInitializer<ExtensionPointScopes.Property>, IStateExtensionPoint<ExtensionPointScopes.Property>
         {
             public InjectedField<object> Field { get; set; }
             public InjectedField<object> Locker { get; set; }
@@ -145,7 +145,7 @@ namespace Someta.Fody.Tests
             public string Property2 { get; set; }
         }
 
-        private class ClassStateAttribute : Attribute, IPropertySetInterceptor, IClassExtensionPoint, IStateInterceptor
+        private class ClassStateAttribute : Attribute, IPropertySetInterceptor, IStateExtensionPoint
         {
             public InjectedField<string> Field { get; set; }
 
@@ -176,7 +176,7 @@ namespace Someta.Fody.Tests
             }
         }
 
-        private class MethodMemoizeAttribute : Attribute, IAsyncMethodInterceptor, IStateInterceptor<ExtensionPointScopes.Method>
+        private class MethodMemoizeAttribute : Attribute, IAsyncMethodInterceptor, IStateExtensionPoint<ExtensionPointScopes.Method>
         {
             private InjectedField<object> field;
 

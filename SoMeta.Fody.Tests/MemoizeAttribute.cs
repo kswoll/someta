@@ -8,7 +8,7 @@ namespace Someta.Fody.Tests
 {
     [AttributeUsage(AttributeTargets.Method | AttributeTargets.Property)]
     public class MemoizeAttribute : Attribute, IPropertyGetInterceptor, IMethodInterceptor, IAsyncMethodInterceptor,
-        IInstanceInitializer, IStateInterceptor
+        IInstanceInitializer, IStateExtensionPoint
     {
         public InjectedField<object> Field { get; set; }
         public InjectedField<object> Locker { get; set; }

@@ -26,9 +26,8 @@ namespace Someta.Fody
             CecilExtensions.Initialize(ModuleDefinition, TypeSystem, soMeta);
 
             var extensionPointInterface = ModuleDefinition.FindType("Someta", "IExtensionPoint", soMeta);
-            var stateInterceptorInterface = ModuleDefinition.FindType("Someta", "IStateInterceptor`1", soMeta, "T");
-            var stateInterceptorInterfaceBase = ModuleDefinition.FindType("Someta", "IStateInterceptor", soMeta);
-            var classExtensionPointInterface = ModuleDefinition.FindType("Someta", "IClassExtensionPoint", soMeta);
+            var stateExtensionPointInterface = ModuleDefinition.FindType("Someta", "IStateExtensionPoint`1", soMeta, "T");
+            var stateExtensionPointInterfaceBase = ModuleDefinition.FindType("Someta", "IStateExtensionPoint", soMeta);
             var propertyGetInterceptorInterface = ModuleDefinition.FindType("Someta", "IPropertyGetInterceptor", soMeta);
             var propertySetInterceptorInterface = ModuleDefinition.FindType("Someta", "IPropertySetInterceptor", soMeta);
             var eventAddInterceptorInterface = ModuleDefinition.FindType("Someta", "IEventAddInterceptor", soMeta);
@@ -113,25 +112,21 @@ namespace Someta.Fody
 
                 foreach (var classInterceptor in classInterceptors)
                 {
-                    LogInfo($"Found interceptor {classInterceptor.AttributeType}");
-                    if (classExtensionPointInterface.IsAssignableFrom(classInterceptor.AttributeType))
+                    LogInfo($"Found class interceptor {classInterceptor.AttributeType}");
+                    if (nonPublicAccessInterface.IsAssignableFrom(classInterceptor.AttributeType))
                     {
-                        LogInfo($"Found class interceptor {classInterceptor.AttributeType}");
-                        if (nonPublicAccessInterface.IsAssignableFrom(classInterceptor.AttributeType))
-                        {
-                            LogInfo($"Discovered class enhancer {classInterceptor.AttributeType.FullName} at {type.FullName}");
-                            classEnhancers.Add((type, classInterceptor));
-                        }
-                        if (HasScope(classInterceptor, stateInterceptorInterface, ExtensionPointScope.Class, stateInterceptorInterfaceBase))
-                        {
-                            LogInfo($"Discovered class state interceptor {classInterceptor.AttributeType.FullName} at {type.FullName}");
-                            stateInterceptions.Add((type, classInterceptor));
-                        }
-                        if (HasScope(classInterceptor, instanceInitializerInterface, ExtensionPointScope.Class, instanceInitializerInterfaceBase))
-                        {
-                            LogInfo($"Discovered instance initializer {classInterceptor.AttributeType.FullName} at {type.FullName}");
-                            instanceInitializers.Add((type, classInterceptor));
-                        }
+                        LogInfo($"Discovered class enhancer {classInterceptor.AttributeType.FullName} at {type.FullName}");
+                        classEnhancers.Add((type, classInterceptor));
+                    }
+                    if (HasScope(classInterceptor, stateExtensionPointInterface, ExtensionPointScope.Class, stateExtensionPointInterfaceBase))
+                    {
+                        LogInfo($"Discovered class state interceptor {classInterceptor.AttributeType.FullName} at {type.FullName}");
+                        stateInterceptions.Add((type, classInterceptor));
+                    }
+                    if (HasScope(classInterceptor, instanceInitializerInterface, ExtensionPointScope.Class, instanceInitializerInterfaceBase))
+                    {
+                        LogInfo($"Discovered instance initializer {classInterceptor.AttributeType.FullName} at {type.FullName}");
+                        instanceInitializers.Add((type, classInterceptor));
                     }
                 }
 
@@ -152,7 +147,7 @@ namespace Someta.Fody
                             LogInfo($"Discovered property set interceptor {interceptor.AttributeType.FullName} at {type.FullName}.{property.Name}");
                             propertySetInterceptions.Add((property, interceptor));
                         }
-                        if (HasScope(interceptor, stateInterceptorInterface, ExtensionPointScope.Property, stateInterceptorInterfaceBase))
+                        if (HasScope(interceptor, stateExtensionPointInterface, ExtensionPointScope.Property, stateExtensionPointInterfaceBase))
                         {
                             LogInfo($"Discovered property state interceptor {interceptor.AttributeType.FullName} at {type.FullName}.{property.Name}");
                             stateInterceptions.Add((property, interceptor));
@@ -204,7 +199,7 @@ namespace Someta.Fody
                             LogInfo($"Discovered async method interceptor {interceptor.AttributeType.FullName} at {type.FullName}.{method.Name}");
                             asyncMethodInterceptions.Add((method, interceptor));
                         }
-                        if (HasScope(interceptor, stateInterceptorInterface, ExtensionPointScope.Method, stateInterceptorInterfaceBase))
+                        if (HasScope(interceptor, stateExtensionPointInterface, ExtensionPointScope.Method, stateExtensionPointInterfaceBase))
                         {
                             LogInfo($"Discovered method state interceptor {interceptor.AttributeType.FullName} at {type.FullName}.{method.Name}");
                             stateInterceptions.Add((method, interceptor));
