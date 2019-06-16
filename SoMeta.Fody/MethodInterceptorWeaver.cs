@@ -1,6 +1,7 @@
 ﻿using System.Linq;
 using Mono.Cecil;
 using Mono.Cecil.Cil;
+using Mono.Cecil.Rocks;
 
 namespace Someta.Fody
 {
@@ -91,6 +92,11 @@ namespace Someta.Fody
             proceed.Parameters.Add(new ParameterDefinition(Context.ObjectArrayType));
 
             MethodReference proceedReference = proceed;
+            TypeReference genericType = type;
+            if (type.HasGenericParameters)
+            {
+                genericType = type.MakeGenericInstanceType(type.GenericParameters.ToArray());
+            }
             if (method.HasGenericParameters)
             {
                 proceedReference = proceedReference.MakeGenericMethod(method.GenericParameters.Select(x => x.ResolveGenericParameter(null)).ToArray());
@@ -102,12 +108,19 @@ namespace Someta.Fody
                 {
                     // Load target for subsequent call
                     il.Emit(OpCodes.Ldarg_0);                    // Load "this"
+                    il.Emit(OpCodes.Castclass, genericType);
                 }
 
                 DecomposeArrayIntoArguments(il, method);
 
-                var genericProceedTargetMethod = original.BindAll(type, proceed);
-                il.Emit(method.IsStatic ? OpCodes.Call : OpCodes.Callvirt, genericProceedTargetMethod);
+                MethodReference genericProceedTargetMethod = original;//.BindAll(type, proceed);
+
+                if (type.HasGenericParameters)
+                {
+                    genericProceedTargetMethod = genericProceedTargetMethod.Bind((GenericInstanceType)genericType);
+                }
+
+                il.EmitCall(genericProceedTargetMethod);
 
                 if (method.ReturnType.CompareTo(TypeSystem.VoidReference))
                 {
