@@ -96,13 +96,14 @@ namespace Someta.Fody
             if (type.HasGenericParameters)
             {
                 genericType = type.MakeGenericInstanceType(type.GenericParameters.ToArray());
+                proceedReference = proceed.Bind((GenericInstanceType)genericType);
             }
-/*
-            if (method.HasGenericParameters)
-            {
-                proceedReference = proceedReference.MakeGenericMethod(method.GenericParameters.Select(x => x.ResolveGenericParameter(null)).ToArray());
-            }
-*/
+            /*
+                        if (method.HasGenericParameters)
+                        {
+                            proceedReference = proceedReference.MakeGenericMethod(method.GenericParameters.Select(x => x.ResolveGenericParameter(null)).ToArray());
+                        }
+            */
 
             proceed.Body.Emit(il =>
             {
