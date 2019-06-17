@@ -49,6 +49,7 @@ namespace Someta.Fody.Tests
             var types = o.ConcatTypes1(1.1f);
             types[0].ShouldBe(typeof(float));
         }
+/*
 
         [Test]
         public void GenericConcatParameterTypesTest()
@@ -59,6 +60,7 @@ namespace Someta.Fody.Tests
             types[1].ShouldBe(typeof(long));
             types[2].ShouldBe(typeof(double));
         }
+*/
 
         public class LogInterceptorAttribute : MethodInterceptorAttribute
         {
@@ -134,6 +136,7 @@ namespace Someta.Fody.Tests
                 ConcatTypes1(default);
             }
 
+/*
             [ConcatParameterTypes]
             public Type[] WithGenericParameters<U, V>(T a, U u, V v)
             {
@@ -144,6 +147,7 @@ namespace Someta.Fody.Tests
             {
                 WithGenericParameters<U2, V2>(a, u, v);
             }
+*/
         }
     }
 }

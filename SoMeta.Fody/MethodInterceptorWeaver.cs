@@ -97,10 +97,12 @@ namespace Someta.Fody
             {
                 genericType = type.MakeGenericInstanceType(type.GenericParameters.ToArray());
             }
+/*
             if (method.HasGenericParameters)
             {
                 proceedReference = proceedReference.MakeGenericMethod(method.GenericParameters.Select(x => x.ResolveGenericParameter(null)).ToArray());
             }
+*/
 
             proceed.Body.Emit(il =>
             {
@@ -120,7 +122,7 @@ namespace Someta.Fody
                     genericProceedTargetMethod = genericProceedTargetMethod.Bind((GenericInstanceType)genericType);
                 }
 
-                il.EmitCall(genericProceedTargetMethod);
+                il.Emit(OpCodes.Call, genericProceedTargetMethod);
 
                 if (method.ReturnType.CompareTo(TypeSystem.VoidReference))
                 {
