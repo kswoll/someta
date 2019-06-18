@@ -376,7 +376,7 @@ namespace Someta.Fody
             return reference;
         }
 
-        public static MethodReference Bind2(this MethodReference method, TypeReference genericType)
+        public static MethodReference Bind2(this MethodReference method, TypeReference genericType, TypeReference[] genericArguments)
         {
             var reference = new MethodReference(method.Name, method.ReturnType, genericType);
             reference.HasThis = method.HasThis;
@@ -384,7 +384,20 @@ namespace Someta.Fody
             reference.CallingConvention = method.CallingConvention;
 
             foreach (var parameter in method.Parameters)
-                reference.Parameters.Add(new ParameterDefinition(ModuleDefinition.ImportReference(parameter.ParameterType.ResolveGenericParameter(genericType))));
+                reference.Parameters.Add(new ParameterDefinition(ModuleDefinition.ImportReference(parameter.ParameterType.ResolveGenericParameter2(genericType, method, genericArguments))));
+
+            if (method.HasGenericParameters)
+            {
+                foreach (var parameter in method.GenericParameters)
+                {
+                    reference.GenericParameters.Add(new GenericParameter(parameter.Name, method));
+                }
+
+                var result = new GenericInstanceMethod(reference);
+                foreach (var argument in genericArguments)
+                    result.GenericArguments.Add(argument);
+                reference = result;
+            }
 
             return reference;
         }
@@ -623,7 +636,7 @@ namespace Someta.Fody
                 il.Emit(OpCodes.Box, Import(type));
         }
 
-        public static void EmitUnboxIfNeeded(this ILProcessor il, TypeReference type, TypeDefinition declaringType)
+        public static void EmitUnboxIfNeeded(this ILProcessor il, TypeReference type, TypeReference declaringType)
         {
             // If it's a value type, unbox it
             if (type.IsValueType || type.IsGenericParameter)
@@ -1026,17 +1039,17 @@ namespace Someta.Fody
             return localParameter ?? genericParameter;
         }
 
-        public static TypeReference ResolveGenericParameter2(this TypeReference genericParameter, TypeDefinition typeContext, MethodDefinition method, MethodDefinition method2)
+        public static TypeReference ResolveGenericParameter2(this TypeReference genericParameter, TypeReference typeContext, MethodReference method, TypeReference[] genericMethodParameters)
         {
             if (!genericParameter.IsGenericParameter)
                 return genericParameter;
 
             var name = genericParameter.Name;
-            var localParameter = typeContext?.GenericParameters.SingleOrDefault(x => x.Name == name);
+            TypeReference localParameter = typeContext?.GenericParameters.SingleOrDefault(x => x.Name == name);
             var localMethodParameter = method.GenericParameters.SingleOrDefault(x => x.Name == name);
             if (localMethodParameter != null)
             {
-                localParameter = method2.GenericParameters[method.GenericParameters.IndexOf(localMethodParameter)];
+                localParameter = genericMethodParameters[method.GenericParameters.IndexOf(localMethodParameter)];
             }
             return localParameter ?? genericParameter;
         }

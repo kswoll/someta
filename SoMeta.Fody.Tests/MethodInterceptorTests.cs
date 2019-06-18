@@ -136,7 +136,6 @@ namespace Someta.Fody.Tests
                 ConcatTypes1(default);
             }
 
-/*
             [ConcatParameterTypes]
             public Type[] WithGenericParameters<U, V>(T a, U u, V v)
             {
@@ -147,7 +146,15 @@ namespace Someta.Fody.Tests
             {
                 WithGenericParameters<U2, V2>(a, u, v);
             }
-*/
+        }
+
+        public class ClassWithMethodWithGenericParameters
+        {
+            [ConcatParameterTypes]
+            public Type[] WithGenericParameters<U, V>(U u, V v)
+            {
+                return new Type[0];
+            }
         }
     }
 }

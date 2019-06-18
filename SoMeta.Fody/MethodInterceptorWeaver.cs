@@ -87,7 +87,7 @@ namespace Someta.Fody
 
             LogInfo($"ImplementProceed: {method.ReturnType}");
 
-            if (method.DeclaringType.HasGenericParameters)
+            if (method.HasGenericParameters)
             {
                 Debugger.Launch();
             }
@@ -96,7 +96,7 @@ namespace Someta.Fody
             TypeReference genericType = type;
             if (type.HasGenericParameters)
             {
-                genericType = type.MakeGenericInstanceType(type.GenericParameters.Concat(method.GenericParameters).ToArray());
+                genericType = type.MakeGenericInstanceType(type.GenericParameters.ToArray());
             }
 
             var proceedClassName = GenerateUniqueName(method, extensionPoint.AttributeType, "Proceed");
@@ -163,14 +163,21 @@ namespace Someta.Fody
 //                    il.Emit(OpCodes.Castclass, genericProceedType);
                 }
 
-                DecomposeArrayIntoArguments(il, method, isStatic: false);
-
                 MethodReference genericProceedTargetMethod = original;
 
-                if (type.HasGenericParameters)
+                if (type.HasGenericParameters || method.HasGenericParameters)
                 {
-                    genericProceedTargetMethod = genericProceedTargetMethod.Bind2(genericType);//.Bind((GenericInstanceType)genericProceedType);
+                    genericProceedTargetMethod = genericProceedTargetMethod.Bind2(genericType,
+                        ((GenericInstanceType)genericProceedType).GenericArguments.Skip(type.GenericParameters.Count).ToArray());//.Bind((GenericInstanceType)genericProceedType);
                 }
+
+                if (method.HasGenericParameters)
+                {
+//                    genericProceedTargetMethod = genericProceedTargetMethod.MakeGenericMethod(((GenericInstanceType)genericProceedType).GenericArguments.Skip(type.GenericParameters.Count).ToArray());
+                }
+
+                DecomposeArrayIntoArguments(il, genericProceedTargetMethod, isStatic: false);
+
 
 /*                if (method.HasGenericParameters)
                 {

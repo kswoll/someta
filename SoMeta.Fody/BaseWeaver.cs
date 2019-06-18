@@ -97,10 +97,10 @@ namespace Someta.Fody
             }
         }
 
-        protected void DecomposeArrayIntoArguments(ILProcessor il, MethodDefinition method, bool? isStatic = null)
+        protected void DecomposeArrayIntoArguments(ILProcessor il, MethodReference method, bool? isStatic = null)
         {
             // Decompose array into arguments
-            isStatic = isStatic ?? method.IsStatic;
+            isStatic = isStatic ?? !method.HasThis;
             for (var i = 0; i < method.Parameters.Count; i++)
             {
                 var parameterInfo = method.Parameters[i];
