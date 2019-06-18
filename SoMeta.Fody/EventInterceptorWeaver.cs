@@ -59,7 +59,7 @@ namespace Someta.Fody
             il.EmitBoxIfNeeded(method.Parameters[0].ParameterType);
 
             // Leave the delegate for the proceed implementation on the stack as fourth argument
-            il.EmitDelegate(proceed, Context.Action1Type, Context.DelegateType);
+            il.EmitLocalMethodDelegate(proceed, Context.Action1Type, Context.DelegateType);
 
             // Finally, we emit the call to the interceptor
             il.Emit(OpCodes.Callvirt, addOrRemoveHandler);

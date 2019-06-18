@@ -47,7 +47,7 @@ namespace Someta.Fody
             EmitInstanceArgument(il, method);
 
             // Leave the delegate for the proceed implementation on the stack as the third argument
-            il.EmitDelegate(proceed, Context.Func1Type, TypeSystem.ObjectReference);
+            il.EmitLocalMethodDelegate(proceed, Context.Func1Type, TypeSystem.ObjectReference);
 
             // Finally, we emit the call to the interceptor
             il.Emit(OpCodes.Callvirt, baseGetPropertyValue);

@@ -641,20 +641,23 @@ namespace Someta.Fody
             il.Emit(field.Resolve().IsStatic ? OpCodes.Stsfld : OpCodes.Stfld, field.Bind());
         }
 
-        public static void EmitStruct(this ILProcessor il, TypeReference type, MethodDefinition constructor = null, Action emitArgs)
+        public static void EmitStruct(this ILProcessor il, TypeReference type, MethodDefinition constructor = null, Action emitArgs = null)
         {
 //            type = type.Import();
-            var local = new VariableDefinition(type);
-            il.Body.Variables.Add(local);
-            il.Emit(OpCodes.Ldloca_S, local);
             if (constructor == null)
+            {
+                var local = new VariableDefinition(type);
+                il.Body.Variables.Add(local);
+                il.Emit(OpCodes.Ldloca_S, local);
                 il.Emit(OpCodes.Initobj, type);
+                il.Emit(OpCodes.Ldloc, local);
+            }
             else
             {
+//                il.Emit(OpCodes.Ldloc, local);
                 emitArgs();
-                il.Emit(OpCodes.Call, constructor);
+                il.Emit(OpCodes.Newobj, constructor);
             }
-            il.Emit(OpCodes.Ldloc, local);
         }
 
         /// <summary>
@@ -717,12 +720,17 @@ namespace Someta.Fody
         {
             var proceedDelegateType = delegateType.MakeGenericInstanceType(typeArguments);
             var proceedDelegateTypeConstructor = delegateType.Resolve().GetConstructors().First().Bind(proceedDelegateType);
+            il.Emit(OpCodes.Ldftn, handler);
+            il.Emit(OpCodes.Newobj, proceedDelegateTypeConstructor);
+        }
+
+        public static void EmitLocalMethodDelegate(this ILProcessor il, MethodReference handler, TypeReference delegateType, params TypeReference[] typeArguments)
+        {
             if (handler.HasThis)
                 il.Emit(OpCodes.Ldarg_0);
             else
                 il.Emit(OpCodes.Ldnull);
-            il.Emit(OpCodes.Ldftn, handler);
-            il.Emit(OpCodes.Newobj, proceedDelegateTypeConstructor);
+            il.EmitDelegate(handler, delegateType, typeArguments);
         }
 
         public static FieldDefinition CacheMemberInfo(this IMemberDefinition memberDefinition)
