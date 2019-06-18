@@ -1,4 +1,5 @@
-﻿using System.Linq;
+﻿using System.Diagnostics;
+using System.Linq;
 using Mono.Cecil;
 using Mono.Cecil.Cil;
 using Mono.Cecil.Rocks;
@@ -19,10 +20,11 @@ namespace Someta.Fody
 
         public void Weave(MethodDefinition method, ExtensionPointAttribute extensionPoint)
         {
+            Debugger.Launch();
+
             // We don't want to intercept both async and non-async when the interceptor implements both interfaces
             if (Context.TaskType.IsAssignableFrom(method.ReturnType) && asyncMethodInterceptorInterface.IsAssignableFrom(extensionPoint.AttributeType))
             {
-//                Debugger.Launch();
                 return;
             }
 
@@ -30,16 +32,16 @@ namespace Someta.Fody
 
             var methodInfoField = method.CacheMethodInfo();
             var attributeField = CacheAttributeInstance(method, methodInfoField, extensionPoint);
-            var proceedReference = ImplementProceed(method);
+            var proceedReference = ImplementProceed(method, extensionPoint, out var proceedStruct, out var proceedStructConstructor);
 
             // Re-implement method
             method.Body.Emit(il =>
             {
-                ImplementBody(method, il, attributeField, methodInfoField, proceedReference);
+                ImplementBody(method, il, attributeField, methodInfoField, proceedReference, proceedStruct, proceedStructConstructor);
             });
         }
 
-        private void ImplementBody(MethodDefinition method, ILProcessor il, FieldDefinition attributeField, FieldDefinition methodInfoField, MethodReference proceed)
+        private void ImplementBody(MethodDefinition method, ILProcessor il, FieldDefinition attributeField, FieldDefinition methodInfoField, MethodReference proceed, TypeDefinition proceedStruct, MethodDefinition proceedStructConstructor)
         {
             // We want to call the interceptor's setter method:
             // object InvokeMethod(MethodInfo methodInfo, object instance, object[] parameters, Func<object[], object> invoker)
@@ -57,6 +59,11 @@ namespace Someta.Fody
             ComposeArgumentsIntoArray(il, method);
 
             // Leave the delegate for the proceed implementation on the stack as the fourth argument
+            il.EmitStruct(proceedStruct, proceedStructConstructor, () =>
+            {
+                if (proceedStructConstructor != null)
+                    il.Emit(OpCodes.Ldarg_0);
+            });
             il.EmitDelegate(proceed, Context.Func2Type, Context.ObjectArrayType, TypeSystem.ObjectReference);
 
             // Finally, we emit the call to the interceptor
@@ -76,41 +83,67 @@ namespace Someta.Fody
             il.Emit(OpCodes.Ret);
         }
 
-        private MethodReference ImplementProceed(MethodDefinition method)
+        private MethodReference ImplementProceed(MethodDefinition method, ExtensionPointAttribute extensionPoint, out TypeDefinition proceedStruct, out MethodDefinition proceedStructConstructor)
         {
+            LogInfo($"ImplementProceed: {method.ReturnType}");
+
             if (method.HasGenericParameters)
             {
-//                Debugger.Launch();
+                Debugger.Launch();
             }
 
-            var type = method.DeclaringType;
-            var original = method.MoveImplementation($"{method.Name}$Original");
-            var proceed = method.CreateSimilarMethod($"{method.Name}$Proceed", MethodAttributes.Private, TypeSystem.ObjectReference);
-            method.CopyGenericParameters(proceed, x => $"{x}_Proceed");
+            var type = method.DeclaringType;//.Import();
+            
+            var proceedClassName = GenerateUniqueName(method, extensionPoint.AttributeType, "Proceed");
+            proceedStruct = new TypeDefinition(method.DeclaringType.Namespace, proceedClassName, TypeAttributes.NestedPrivate | WeaverContext.Struct, Context.ValueType);
+            FieldDefinition instanceField = null;
+            if (!method.IsStatic)
+            {
+                instanceField = new FieldDefinition("$this", FieldAttributes.Private, method.DeclaringType);
+                proceedStruct.Fields.Add(instanceField);
 
-            LogInfo($"ImplementProceed: {method.ReturnType}");
+                proceedStructConstructor = new MethodDefinition(".ctor", WeaverContext.Constructor, TypeSystem.VoidReference);
+                proceedStructConstructor.Parameters.Add(new ParameterDefinition(method.DeclaringType));
+                proceedStructConstructor.Body = new MethodBody(proceedStructConstructor);
+                proceedStructConstructor.Body.InitLocals = true;
+                proceedStructConstructor.Body.Emit(il =>
+                {
+                    il.Emit(OpCodes.Ldarg_0);
+                    il.Emit(OpCodes.Ldarg_1);
+                    il.Emit(OpCodes.Stfld, instanceField);
+                    il.Emit(OpCodes.Ret);
+                });
+                proceedStruct.Methods.Add(proceedStructConstructor);
+            }
+            else
+            {
+                proceedStructConstructor = null;
+            }
+
+            method.DeclaringType.CopyGenericParameters(proceedStruct);
+            method.CopyGenericParameters(proceedStruct);
+            method.DeclaringType.NestedTypes.Add(proceedStruct);
+
+            var original = method.MoveImplementation($"{method.Name}$Original");
+
+            var proceed = new MethodDefinition("Proceed", MethodAttributes.Public | MethodAttributes.Static, TypeSystem.ObjectReference);
             proceed.Parameters.Add(new ParameterDefinition(Context.ObjectArrayType));
+            proceedStruct.Methods.Add(proceed);
 
             MethodReference proceedReference = proceed;
-            TypeReference genericType = type;
-            if (type.HasGenericParameters)
+            TypeReference genericType = proceedStruct;
+            if (type.HasGenericParameters || method.HasGenericParameters)
             {
-                genericType = type.MakeGenericInstanceType(type.GenericParameters.ToArray());
+                genericType = proceedStruct.MakeGenericInstanceType(type.GenericParameters.Concat(method.GenericParameters).ToArray());
                 proceedReference = proceed.Bind((GenericInstanceType)genericType);
             }
-            /*
-                        if (method.HasGenericParameters)
-                        {
-                            proceedReference = proceedReference.MakeGenericMethod(method.GenericParameters.Select(x => x.ResolveGenericParameter(null)).ToArray());
-                        }
-            */
 
             proceed.Body.Emit(il =>
             {
                 if (!method.IsStatic)
                 {
                     // Load target for subsequent call
-                    il.Emit(OpCodes.Ldarg_0);                    // Load "this"
+                    il.LoadField(instanceField);                    // Load "this"
                     il.Emit(OpCodes.Castclass, genericType);
                 }
 
@@ -123,6 +156,11 @@ namespace Someta.Fody
                     genericProceedTargetMethod = genericProceedTargetMethod.Bind((GenericInstanceType)genericType);
                 }
 
+/*                if (method.HasGenericParameters)
+                {
+                    genericProceedTargetMethod = genericProceedTargetMethod.MakeGenericMethod(proceed.GenericParameters.ToArray());
+                }
+*/
                 il.Emit(OpCodes.Call, genericProceedTargetMethod);
 
                 if (method.ReturnType.CompareTo(TypeSystem.VoidReference))

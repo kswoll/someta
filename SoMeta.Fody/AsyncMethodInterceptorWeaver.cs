@@ -91,7 +91,7 @@ namespace Someta.Fody
             var type = method.DeclaringType;
             var original = method.MoveImplementation($"{method.Name}$Original");
             var taskReturnType = Context.TaskTType.MakeGenericInstanceType(TypeSystem.ObjectReference);
-            var proceed = method.CreateSimilarMethod($"{method.Name}$Proceed", MethodAttributes.Private, taskReturnType);
+            var proceed = method.CreateMethodThatMatchesStaticScope($"{method.Name}$Proceed", MethodAttributes.Private, taskReturnType);
             method.CopyGenericParameters(proceed, x => $"{x}_Proceed");
 
             proceed.Parameters.Add(new ParameterDefinition(Context.ObjectArrayType));

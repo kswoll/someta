@@ -63,7 +63,7 @@ namespace Someta.Fody
         {
             var type = method.DeclaringType;
             var original = method.MoveImplementation(GenerateUniqueName(method, interceptorAttribute, "Original"));
-            var proceed = method.CreateSimilarMethod(GenerateUniqueName(method, interceptorAttribute, "Proceed"),
+            var proceed = method.CreateMethodThatMatchesStaticScope(GenerateUniqueName(method, interceptorAttribute, "Proceed"),
                 MethodAttributes.Private, TypeSystem.ObjectReference);
 
             MethodReference proceedReference = proceed;

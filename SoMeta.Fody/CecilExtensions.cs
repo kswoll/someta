@@ -144,7 +144,8 @@ namespace Someta.Fody
                 MethodFinder = methodFinder,
                 MethodInfoType = methodInfoType,
                 PropertyInfoType = propertyInfoType,
-                EventInfoType = eventInfoType
+                EventInfoType = eventInfoType,
+                ValueType = ModuleDefinition.ImportReference(typeof(ValueType))
             };
             Context = context;
         }
@@ -640,6 +641,22 @@ namespace Someta.Fody
             il.Emit(field.Resolve().IsStatic ? OpCodes.Stsfld : OpCodes.Stfld, field.Bind());
         }
 
+        public static void EmitStruct(this ILProcessor il, TypeReference type, MethodDefinition constructor = null, Action emitArgs)
+        {
+//            type = type.Import();
+            var local = new VariableDefinition(type);
+            il.Body.Variables.Add(local);
+            il.Emit(OpCodes.Ldloca_S, local);
+            if (constructor == null)
+                il.Emit(OpCodes.Initobj, type);
+            else
+            {
+                emitArgs();
+                il.Emit(OpCodes.Call, constructor);
+            }
+            il.Emit(OpCodes.Ldloc, local);
+        }
+
         /// <summary>
         /// Used when you want to get an argument at a specified index irrespective of whether the surrounding
         /// method is static or not.
@@ -700,7 +717,7 @@ namespace Someta.Fody
         {
             var proceedDelegateType = delegateType.MakeGenericInstanceType(typeArguments);
             var proceedDelegateTypeConstructor = delegateType.Resolve().GetConstructors().First().Bind(proceedDelegateType);
-            if (!handler.Resolve().IsStatic)
+            if (handler.HasThis)
                 il.Emit(OpCodes.Ldarg_0);
             else
                 il.Emit(OpCodes.Ldnull);
@@ -1242,7 +1259,7 @@ namespace Someta.Fody
             return attributes & MethodAttributes.Static;
         }
 
-        public static MethodDefinition CreateSimilarMethod(this MethodDefinition method, string name, MethodAttributes attributes, TypeReference returnType)
+        public static MethodDefinition CreateMethodThatMatchesStaticScope(this MethodDefinition method, string name, MethodAttributes attributes, TypeReference returnType)
         {
             var type = method.DeclaringType;
             var result = new MethodDefinition(name, attributes | method.Attributes.GetStatic(), returnType);
