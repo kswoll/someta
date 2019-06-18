@@ -376,6 +376,19 @@ namespace Someta.Fody
             return reference;
         }
 
+        public static MethodReference Bind2(this MethodReference method, TypeReference genericType)
+        {
+            var reference = new MethodReference(method.Name, method.ReturnType, genericType);
+            reference.HasThis = method.HasThis;
+            reference.ExplicitThis = method.ExplicitThis;
+            reference.CallingConvention = method.CallingConvention;
+
+            foreach (var parameter in method.Parameters)
+                reference.Parameters.Add(new ParameterDefinition(ModuleDefinition.ImportReference(parameter.ParameterType.ResolveGenericParameter(genericType))));
+
+            return reference;
+        }
+
         public static MethodReference Bind(this MethodReference method)
         {
             var result = method;
@@ -641,7 +654,7 @@ namespace Someta.Fody
             il.Emit(field.Resolve().IsStatic ? OpCodes.Stsfld : OpCodes.Stfld, field.Bind());
         }
 
-        public static void EmitStruct(this ILProcessor il, TypeReference type, MethodDefinition constructor = null, Action emitArgs = null)
+        public static void EmitStruct(this ILProcessor il, TypeReference type, MethodReference constructor = null, Action emitArgs = null)
         {
 //            type = type.Import();
             if (constructor == null)
@@ -703,11 +716,11 @@ namespace Someta.Fody
             return genericProceedTargetMethod;
         }
 
-        public static MethodReference BindAll(this MethodReference method, TypeDefinition declaringType, MethodDefinition callerMethod)
+        public static MethodReference BindAll(this MethodReference method, TypeReference declaringType, MethodDefinition callerMethod)
         {
             MethodReference result = method;
-//            if (declaringType.HasGenericParameters)
-//                result = method.Bind(declaringType.MakeGenericInstanceType(declaringType.GenericParameters.ToArray()));
+            if (declaringType.HasGenericParameters)
+                result = method.Bind(declaringType.MakeGenericInstanceType(declaringType.GenericParameters.ToArray()));
             var proceedTargetMethod = result.Import();
             var genericProceedTargetMethod = proceedTargetMethod;
             if (method.GenericParameters.Count > 0)
@@ -1003,7 +1016,7 @@ namespace Someta.Fody
             throw new Exception("Type " + type.FullName + " is not an instance of Task<T>");
         }
 
-        public static TypeReference ResolveGenericParameter(this TypeReference genericParameter, TypeDefinition typeContext)
+        public static TypeReference ResolveGenericParameter(this TypeReference genericParameter, TypeReference typeContext)
         {
             if (!genericParameter.IsGenericParameter)
                 return genericParameter;
