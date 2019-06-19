@@ -20,7 +20,6 @@ namespace Someta.Fody
 
         public void Weave(MethodDefinition method, ExtensionPointAttribute extensionPoint)
         {
-//            Debugger.Launch();
             // We don't want to intercept both async and non-async when the interceptor implements both interfaces
             if (Context.TaskType.IsAssignableFrom(method.ReturnType) && asyncMethodInterceptorInterface.IsAssignableFrom(extensionPoint.AttributeType))
             {
@@ -80,14 +79,7 @@ namespace Someta.Fody
 
         private MethodInterceptorBuilder ImplementProceed(MethodDefinition method, ExtensionPointAttribute extensionPoint)
         {
-//            Debugger.Launch();
-
             LogInfo($"ImplementProceed: {method.ReturnType}");
-
-            if (method.HasGenericParameters)
-            {
-//                Debugger.Launch();
-            }
 
             var builder = new MethodInterceptorBuilder(this, method, extensionPoint);
 

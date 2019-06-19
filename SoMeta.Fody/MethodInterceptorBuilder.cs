@@ -87,8 +87,8 @@ namespace Someta.Fody
 
             if (type.HasGenericParameters || method.HasGenericParameters)
             {
-                genericProceedTargetMethod = genericProceedTargetMethod.Bind2(genericType,
-                    proceedStruct.GenericParameters.Skip(type.GenericParameters.Count).ToArray());//.Bind((GenericInstanceType)genericProceedType);
+                var genericMethodArguments = proceedStruct.GenericParameters.Skip(type.GenericParameters.Count).ToArray();
+                genericProceedTargetMethod = genericProceedTargetMethod.BindMethod(genericType, genericMethodArguments);
             }
         }
 

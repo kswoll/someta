@@ -376,7 +376,7 @@ namespace Someta.Fody
             return reference;
         }
 
-        public static MethodReference Bind2(this MethodReference method, TypeReference genericType, TypeReference[] genericArguments)
+        public static MethodReference BindMethod(this MethodReference method, TypeReference genericType, TypeReference[] genericArguments)
         {
             var reference = new MethodReference(method.Name, method.ReturnType, genericType);
             reference.HasThis = method.HasThis;
@@ -1039,7 +1039,7 @@ namespace Someta.Fody
             return localParameter ?? genericParameter;
         }
 
-        public static TypeReference ResolveGenericParameter2(this TypeReference genericParameter, TypeReference typeContext, MethodReference method, TypeReference[] genericMethodParameters)
+        public static TypeReference ResolveGenericParameterForGenericMethod(this TypeReference genericParameter, TypeReference typeContext, MethodReference method, TypeReference[] genericMethodParameters)
         {
             if (!genericParameter.IsGenericParameter)
                 return genericParameter;
