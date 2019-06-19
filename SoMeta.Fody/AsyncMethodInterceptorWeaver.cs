@@ -48,7 +48,7 @@ namespace Someta.Fody
 
         private void ImplementBody(MethodDefinition method, ILProcessor il, FieldDefinition attributeField, FieldDefinition methodInfoField, MethodReference proceed)
         {
-            //            Debugger.Launch();
+//            Debugger.Launch();
 
             // We want to call the interceptor's setter method:
             // Task<object> InvokeMethodAsync(MethodInfo methodInfo, object instance, object[] parameters, Func<object[], Task<object>> invoker)

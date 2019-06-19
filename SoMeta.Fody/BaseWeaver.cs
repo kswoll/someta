@@ -30,17 +30,17 @@ namespace Someta.Fody
             LogWarning = context.LogWarning;
         }
 
-        protected TypeReference FindType(string ns, string name, params string[] typeParameters)
+        public TypeReference FindType(string ns, string name, params string[] typeParameters)
         {
             return ModuleDefinition.FindType(ns, name, Context.Someta, typeParameters);
         }
 
-        protected MethodReference FindMethod(TypeReference type, string name)
+        public MethodReference FindMethod(TypeReference type, string name)
         {
             return ModuleDefinition.FindMethod(type, name);
         }
 
-        protected string GenerateUniqueName(IMemberDefinition member, TypeReference attributeType, string name)
+        public string GenerateUniqueName(IMemberDefinition member, TypeReference attributeType, string name)
         {
             var key = (member.ToString(), attributeType.FullName, name);
             if (!uniqueNamesCounter.TryGetValue(key, out var counter))
@@ -59,7 +59,7 @@ namespace Someta.Fody
             return $"<{(member is TypeDefinition ? "" : member.Name)}>k__{attributeType.Name}{name}";
         }
 
-        protected void EmitInstanceArgument(ILProcessor il, MethodDefinition method)
+        public void EmitInstanceArgument(ILProcessor il, MethodDefinition method)
         {
             if (!method.IsStatic)
             {
@@ -72,7 +72,7 @@ namespace Someta.Fody
             }
         }
 
-        protected void ComposeArgumentsIntoArray(ILProcessor il, MethodDefinition method)
+        public void ComposeArgumentsIntoArray(ILProcessor il, MethodDefinition method)
         {
             // Colllect all the parameters into a single array as the third argument
             il.Emit(OpCodes.Ldc_I4, method.Parameters.Count);       // Array length
@@ -97,7 +97,7 @@ namespace Someta.Fody
             }
         }
 
-        protected void DecomposeArrayIntoArguments(ILProcessor il, MethodReference method, bool? isStatic = null)
+        public void DecomposeArrayIntoArguments(ILProcessor il, MethodReference method, bool? isStatic = null)
         {
             // Decompose array into arguments
             isStatic = isStatic ?? !method.HasThis;
@@ -111,7 +111,7 @@ namespace Someta.Fody
             }
         }
 
-        protected void DecomposeArrayIntoArguments2(ILProcessor il, TypeReference declaringType, MethodReference method, bool? isStatic = null)
+        public void DecomposeArrayIntoArguments2(ILProcessor il, TypeReference declaringType, MethodReference method, bool? isStatic = null)
         {
             // Decompose array into arguments
             isStatic = isStatic ?? !method.HasThis;
@@ -142,7 +142,7 @@ namespace Someta.Fody
         }
 */
 
-        protected FieldDefinition CacheAttributeInstance(IMemberDefinition member, ExtensionPointAttribute extensionPoint)
+        public FieldDefinition CacheAttributeInstance(IMemberDefinition member, ExtensionPointAttribute extensionPoint)
         {
             FieldDefinition attributeField;
             if (member is TypeDefinition typeDefinition)
@@ -173,12 +173,12 @@ namespace Someta.Fody
             return attributeField;
         }
 
-        protected FieldDefinition CacheAttributeInstance(TypeDefinition type, ExtensionPointAttribute extensionPoint)
+        public FieldDefinition CacheAttributeInstance(TypeDefinition type, ExtensionPointAttribute extensionPoint)
         {
             return CacheAttributeInstance(type, null, extensionPoint);
         }
 
-        protected FieldDefinition CacheAttributeInstance(IMemberDefinition member, FieldDefinition memberInfoField,
+        public FieldDefinition CacheAttributeInstance(IMemberDefinition member, FieldDefinition memberInfoField,
             ExtensionPointAttribute extensionPoint)
         {
 //            var declaringType = interceptor.Scope == InterceptorScope.Class ? interceptor.DeclaringType : type;
