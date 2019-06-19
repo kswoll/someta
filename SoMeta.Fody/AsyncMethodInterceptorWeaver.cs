@@ -1,10 +1,6 @@
-﻿using System;
-using System.Diagnostics;
-using System.Linq;
-using Mono.Cecil;
+﻿using Mono.Cecil;
 using Mono.Cecil.Cil;
 using Mono.Cecil.Rocks;
-using TypeSystem = Fody.TypeSystem;
 
 namespace Someta.Fody
 {
@@ -27,11 +23,8 @@ namespace Someta.Fody
         {
             if (!Context.TaskType.IsAssignableFrom(method.ReturnType))
             {
-//                Debugger.Launch();
                 return;
             }
-
-//            Debugger.Launch();
 
             LogInfo($"Weaving async method interceptor {extensionPoint.AttributeType.FullName} at {method.Describe()}");
 
@@ -48,8 +41,6 @@ namespace Someta.Fody
 
         private void ImplementBody(MethodDefinition method, ILProcessor il, FieldDefinition attributeField, FieldDefinition methodInfoField, MethodInterceptorBuilder builder)
         {
-//            Debugger.Launch();
-
             // We want to call the interceptor's setter method:
             // Task<object> InvokeMethodAsync(MethodInfo methodInfo, object instance, object[] parameters, Func<object[], Task<object>> invoker)
 
@@ -94,8 +85,6 @@ namespace Someta.Fody
 
             proceed.Body.Emit(il =>
             {
-                builder.EmitProceedInstance(il);
-                builder.DecomposeArrayIntoArguments(il);
                 builder.EmitCallOriginal(il);
 
                 // Before we return, we need to wrap the original `Task<T>` into a `Task<object>`

@@ -92,7 +92,7 @@ namespace Someta.Fody
             }
         }
 
-        public void EmitProceedInstance(ILProcessor il)
+        public void EmitCallOriginal(ILProcessor il)
         {
             if (!method.IsStatic)
             {
@@ -100,15 +100,8 @@ namespace Someta.Fody
                 il.LoadField(instanceField);                    // Load "this" for when calling "Original"
                 il.Emit(OpCodes.Castclass, genericType);
             }
-        }
 
-        public void DecomposeArrayIntoArguments(ILProcessor il)
-        {
             weaver.DecomposeArrayIntoArguments2(il, proceedStruct, genericProceedTargetMethod, isStatic: false);
-        }
-
-        public void EmitCallOriginal(ILProcessor il)
-        {
             il.Emit(OpCodes.Call, genericProceedTargetMethod);
         }
 

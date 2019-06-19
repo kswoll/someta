@@ -1,8 +1,5 @@
-﻿using System.Diagnostics;
-using System.Linq;
-using Mono.Cecil;
+﻿using Mono.Cecil;
 using Mono.Cecil.Cil;
-using Mono.Cecil.Rocks;
 
 namespace Someta.Fody
 {
@@ -90,8 +87,6 @@ namespace Someta.Fody
 
             proceed.Body.Emit(il =>
             {
-                builder.EmitProceedInstance(il);
-                builder.DecomposeArrayIntoArguments(il);
                 builder.EmitCallOriginal(il);
 
                 if (method.ReturnType.CompareTo(TypeSystem.VoidReference))
