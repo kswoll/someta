@@ -384,13 +384,13 @@ namespace Someta.Fody
             reference.CallingConvention = method.CallingConvention;
 
             foreach (var parameter in method.Parameters)
-                reference.Parameters.Add(new ParameterDefinition(ModuleDefinition.ImportReference(parameter.ParameterType.ResolveGenericParameter2(genericType, method, genericArguments))));
+                reference.Parameters.Add(new ParameterDefinition(ModuleDefinition.ImportReference(parameter.ParameterType)));
 
             if (method.HasGenericParameters)
             {
                 foreach (var parameter in method.GenericParameters)
                 {
-                    reference.GenericParameters.Add(new GenericParameter(parameter.Name, method));
+                    reference.GenericParameters.Add(new GenericParameter(parameter.Name + "_2", method));
                 }
 
                 var result = new GenericInstanceMethod(reference);

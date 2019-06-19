@@ -89,7 +89,7 @@ namespace Someta.Fody
 
             if (method.HasGenericParameters)
             {
-                Debugger.Launch();
+//                Debugger.Launch();
             }
 
             var type = method.DeclaringType;//.Import();
@@ -168,7 +168,7 @@ namespace Someta.Fody
                 if (type.HasGenericParameters || method.HasGenericParameters)
                 {
                     genericProceedTargetMethod = genericProceedTargetMethod.Bind2(genericType,
-                        ((GenericInstanceType)genericProceedType).GenericArguments.Skip(type.GenericParameters.Count).ToArray());//.Bind((GenericInstanceType)genericProceedType);
+                        proceedStruct.GenericParameters.Skip(type.GenericParameters.Count).ToArray());//.Bind((GenericInstanceType)genericProceedType);
                 }
 
                 if (method.HasGenericParameters)
@@ -176,7 +176,7 @@ namespace Someta.Fody
 //                    genericProceedTargetMethod = genericProceedTargetMethod.MakeGenericMethod(((GenericInstanceType)genericProceedType).GenericArguments.Skip(type.GenericParameters.Count).ToArray());
                 }
 
-                DecomposeArrayIntoArguments(il, genericProceedTargetMethod, isStatic: false);
+                DecomposeArrayIntoArguments2(il, proceedStruct, genericProceedTargetMethod, isStatic: false);
 
 
 /*                if (method.HasGenericParameters)
