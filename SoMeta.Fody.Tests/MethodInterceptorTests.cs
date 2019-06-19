@@ -60,6 +60,18 @@ namespace Someta.Fody.Tests
             types[2].ShouldBe(typeof(double));
         }
 
+        [Test]
+        public void NestedGenericConcatParameterTypesTest()
+        {
+            var o = new NestedGenericClasses<float>.Level2<double>();
+
+            var types = o.WithGenericParameters(1.1f, 1d, 1L, "foo");
+            types[0].ShouldBe(typeof(float));
+            types[1].ShouldBe(typeof(double));
+            types[2].ShouldBe(typeof(long));
+            types[3].ShouldBe(typeof(string));
+        }
+
         public class LogInterceptorAttribute : MethodInterceptorAttribute
         {
             public override object Invoke(MethodInfo methodInfo, object instance, object[] parameters, Func<object[], object> invoker)
@@ -143,6 +155,18 @@ namespace Someta.Fody.Tests
             private void GenericWrapper<U2, V2>(T a, U2 u, V2 v)
             {
                 WithGenericParameters<U2, V2>(a, u, v);
+            }
+        }
+
+        public class NestedGenericClasses<T>
+        {
+            public class Level2<U>
+            {
+                [ConcatParameterTypes]
+                public Type[] WithGenericParameters<V, W>(T a, U u, V v, W w)
+                {
+                    return new Type[0];
+                }
             }
         }
 
