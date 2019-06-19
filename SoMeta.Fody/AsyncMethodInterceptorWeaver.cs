@@ -1,10 +1,7 @@
-﻿using System;
-using System.Diagnostics;
-using System.Linq;
+﻿using System.Diagnostics;
 using Mono.Cecil;
 using Mono.Cecil.Cil;
 using Mono.Cecil.Rocks;
-using TypeSystem = Fody.TypeSystem;
 
 namespace Someta.Fody
 {
@@ -27,29 +24,24 @@ namespace Someta.Fody
         {
             if (!Context.TaskType.IsAssignableFrom(method.ReturnType))
             {
-//                Debugger.Launch();
                 return;
             }
-
-//            Debugger.Launch();
 
             LogInfo($"Weaving async method interceptor {extensionPoint.AttributeType.FullName} at {method.Describe()}");
 
             var methodInfoField = method.CacheMethodInfo();
             var attributeField = CacheAttributeInstance(method, methodInfoField, extensionPoint);
-            var proceedReference = ImplementProceed(method);
+            var builder = ImplementProceed(method, extensionPoint);
 
             // Re-implement method
             method.Body.Emit(il =>
             {
-                ImplementBody(method, il, attributeField, methodInfoField, proceedReference);
+                ImplementBody(method, il, attributeField, methodInfoField, builder);
             });
         }
 
-        private void ImplementBody(MethodDefinition method, ILProcessor il, FieldDefinition attributeField, FieldDefinition methodInfoField, MethodReference proceed)
+        private void ImplementBody(MethodDefinition method, ILProcessor il, FieldDefinition attributeField, FieldDefinition methodInfoField, MethodInterceptorBuilder builder)
         {
-            //            Debugger.Launch();
-
             // We want to call the interceptor's setter method:
             // Task<object> InvokeMethodAsync(MethodInfo methodInfo, object instance, object[] parameters, Func<object[], Task<object>> invoker)
 
@@ -66,7 +58,8 @@ namespace Someta.Fody
             ComposeArgumentsIntoArray(il, method);
 
             // Leave the delegate for the proceed implementation on the stack as the fourth argument
-            il.EmitDelegate(proceed, Context.Func2Type, Context.ObjectArrayType, Context.TaskTType.MakeGenericInstanceType(TypeSystem.ObjectReference));
+            builder.EmitProceedStruct(il);
+            il.EmitDelegate(builder.ProceedReference, Context.Func2Type, Context.ObjectArrayType, Context.TaskTType.MakeGenericInstanceType(TypeSystem.ObjectReference));
 
             // Finally, we emit the call to the interceptor
             il.Emit(OpCodes.Callvirt, baseInvoke);
@@ -81,39 +74,19 @@ namespace Someta.Fody
             il.Emit(OpCodes.Ret);
         }
 
-        private MethodReference ImplementProceed(MethodDefinition method)
+        private MethodInterceptorBuilder ImplementProceed(MethodDefinition method, ExtensionPointAttribute extensionPoint)
         {
-            if (method.HasGenericParameters)
-            {
-//                Debugger.Launch();
-            }
+            var builder = new MethodInterceptorBuilder(this, method, extensionPoint);
 
-            var type = method.DeclaringType;
-            var original = method.MoveImplementation($"{method.Name}$Original");
             var taskReturnType = Context.TaskTType.MakeGenericInstanceType(TypeSystem.ObjectReference);
-            var proceed = method.CreateSimilarMethod($"{method.Name}$Proceed", MethodAttributes.Private, taskReturnType);
-            method.CopyGenericParameters(proceed, x => $"{x}_Proceed");
-
+            var proceed = new MethodDefinition("Proceed", MethodAttributes.Public, taskReturnType);
             proceed.Parameters.Add(new ParameterDefinition(Context.ObjectArrayType));
-
-            MethodReference proceedReference = proceed;
-            if (method.HasGenericParameters)
-            {
-                proceedReference = proceedReference.MakeGenericMethod(method.GenericParameters.Select(x => x.ResolveGenericParameter(null)).ToArray());
-            }
+            builder.Proceed = proceed;
+            builder.Build();
 
             proceed.Body.Emit(il =>
             {
-                if (!method.IsStatic)
-                {
-                    // Load target for subsequent call
-                    il.Emit(OpCodes.Ldarg_0);                    // Load "this"
-                }
-
-                DecomposeArrayIntoArguments(il, method);
-
-                var genericProceedTargetMethod = original.BindAll(type, proceed);
-                il.Emit(method.IsStatic ? OpCodes.Call : OpCodes.Callvirt, genericProceedTargetMethod);
+                builder.EmitCallOriginal(il);
 
                 // Before we return, we need to wrap the original `Task<T>` into a `Task<object>`
                 var unwrappedReturnType = ((GenericInstanceType)method.ReturnType).GenericArguments[0];
@@ -123,7 +96,7 @@ namespace Someta.Fody
                 il.Emit(OpCodes.Ret);
             });
 
-            return proceedReference;
+            return builder;
         }
     }
 }

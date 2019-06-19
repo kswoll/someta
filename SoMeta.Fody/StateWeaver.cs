@@ -83,8 +83,8 @@ namespace Someta.Fody
                         il.LoadField(attributeField);       // Instance on which to set the InjectedField
 
                         // Instantiate the InjectedField
-                        il.EmitDelegate(getMethod, Context.Func2Type, TypeSystem.ObjectReference, propertyType);
-                        il.EmitDelegate(setMethod, Context.ActionTypes[2], TypeSystem.ObjectReference, propertyType);
+                        il.EmitLocalMethodDelegate(getMethod, Context.Func2Type, TypeSystem.ObjectReference, propertyType);
+                        il.EmitLocalMethodDelegate(setMethod, Context.ActionTypes[2], TypeSystem.ObjectReference, propertyType);
                         il.Emit(OpCodes.Newobj, injectedFieldConstructor);
 
                         il.EmitCall(property.SetMethod);

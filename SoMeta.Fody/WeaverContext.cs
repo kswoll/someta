@@ -7,6 +7,9 @@ namespace Someta.Fody
 {
     public class WeaverContext
     {
+        public static readonly TypeAttributes Struct = TypeAttributes.AnsiClass | TypeAttributes.SequentialLayout | TypeAttributes.Sealed | TypeAttributes.BeforeFieldInit;
+        public static readonly MethodAttributes Constructor = MethodAttributes.HideBySig | MethodAttributes.SpecialName | MethodAttributes.RTSpecialName;
+
         public ModuleDefinition ModuleDefinition { get; set; }
         public TypeSystem TypeSystem { get; set; }
         public AssemblyNameReference Someta { get; set; }
@@ -26,6 +29,7 @@ namespace Someta.Fody
         public TypeReference DelegateType { get; set; }
         public List<TypeReference> ActionTypes  { get; set; }
         public List<TypeReference> FuncTypes { get; set; }
+        public TypeReference ValueType { get; set; }
 
         public TypeReference MethodFinder { get; set; }
         public MethodReference FindMethod { get; set; }

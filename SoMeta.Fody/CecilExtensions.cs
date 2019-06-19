@@ -144,7 +144,8 @@ namespace Someta.Fody
                 MethodFinder = methodFinder,
                 MethodInfoType = methodInfoType,
                 PropertyInfoType = propertyInfoType,
-                EventInfoType = eventInfoType
+                EventInfoType = eventInfoType,
+                ValueType = ModuleDefinition.ImportReference(typeof(ValueType))
             };
             Context = context;
         }
@@ -371,6 +372,32 @@ namespace Someta.Fody
 
             foreach (var parameter in method.Parameters)
                 reference.Parameters.Add(new ParameterDefinition(ModuleDefinition.ImportReference(parameter.ParameterType)));
+
+            return reference;
+        }
+
+        public static MethodReference BindMethod(this MethodReference method, TypeReference genericType, TypeReference[] genericArguments)
+        {
+            var reference = new MethodReference(method.Name, method.ReturnType, genericType);
+            reference.HasThis = method.HasThis;
+            reference.ExplicitThis = method.ExplicitThis;
+            reference.CallingConvention = method.CallingConvention;
+
+            foreach (var parameter in method.Parameters)
+                reference.Parameters.Add(new ParameterDefinition(ModuleDefinition.ImportReference(parameter.ParameterType)));
+
+            if (method.HasGenericParameters)
+            {
+                foreach (var parameter in method.GenericParameters)
+                {
+                    reference.GenericParameters.Add(new GenericParameter(parameter.Name + "_2", method));
+                }
+
+                var result = new GenericInstanceMethod(reference);
+                foreach (var argument in genericArguments)
+                    result.GenericArguments.Add(argument);
+                reference = result;
+            }
 
             return reference;
         }
@@ -609,7 +636,7 @@ namespace Someta.Fody
                 il.Emit(OpCodes.Box, Import(type));
         }
 
-        public static void EmitUnboxIfNeeded(this ILProcessor il, TypeReference type, TypeDefinition declaringType)
+        public static void EmitUnboxIfNeeded(this ILProcessor il, TypeReference type, TypeReference declaringType)
         {
             // If it's a value type, unbox it
             if (type.IsValueType || type.IsGenericParameter)
@@ -638,6 +665,25 @@ namespace Someta.Fody
         public static void SaveField(this ILProcessor il, FieldReference field)
         {
             il.Emit(field.Resolve().IsStatic ? OpCodes.Stsfld : OpCodes.Stfld, field.Bind());
+        }
+
+        public static void EmitStruct(this ILProcessor il, TypeReference type, MethodReference constructor = null, Action emitArgs = null)
+        {
+//            type = type.Import();
+            if (constructor == null)
+            {
+                var local = new VariableDefinition(type);
+                il.Body.Variables.Add(local);
+                il.Emit(OpCodes.Ldloca_S, local);
+                il.Emit(OpCodes.Initobj, type);
+                il.Emit(OpCodes.Ldloc, local);
+            }
+            else
+            {
+//                il.Emit(OpCodes.Ldloc, local);
+                emitArgs();
+                il.Emit(OpCodes.Newobj, constructor);
+            }
         }
 
         /// <summary>
@@ -683,11 +729,11 @@ namespace Someta.Fody
             return genericProceedTargetMethod;
         }
 
-        public static MethodReference BindAll(this MethodReference method, TypeDefinition declaringType, MethodDefinition callerMethod)
+        public static MethodReference BindAll(this MethodReference method, TypeReference declaringType, MethodDefinition callerMethod)
         {
             MethodReference result = method;
-//            if (declaringType.HasGenericParameters)
-//                result = method.Bind(declaringType.MakeGenericInstanceType(declaringType.GenericParameters.ToArray()));
+            if (declaringType.HasGenericParameters)
+                result = method.Bind(declaringType.MakeGenericInstanceType(declaringType.GenericParameters.ToArray()));
             var proceedTargetMethod = result.Import();
             var genericProceedTargetMethod = proceedTargetMethod;
             if (method.GenericParameters.Count > 0)
@@ -700,12 +746,17 @@ namespace Someta.Fody
         {
             var proceedDelegateType = delegateType.MakeGenericInstanceType(typeArguments);
             var proceedDelegateTypeConstructor = delegateType.Resolve().GetConstructors().First().Bind(proceedDelegateType);
-            if (!handler.Resolve().IsStatic)
+            il.Emit(OpCodes.Ldftn, handler);
+            il.Emit(OpCodes.Newobj, proceedDelegateTypeConstructor);
+        }
+
+        public static void EmitLocalMethodDelegate(this ILProcessor il, MethodReference handler, TypeReference delegateType, params TypeReference[] typeArguments)
+        {
+            if (handler.HasThis)
                 il.Emit(OpCodes.Ldarg_0);
             else
                 il.Emit(OpCodes.Ldnull);
-            il.Emit(OpCodes.Ldftn, handler);
-            il.Emit(OpCodes.Newobj, proceedDelegateTypeConstructor);
+            il.EmitDelegate(handler, delegateType, typeArguments);
         }
 
         public static FieldDefinition CacheMemberInfo(this IMemberDefinition memberDefinition)
@@ -978,13 +1029,28 @@ namespace Someta.Fody
             throw new Exception("Type " + type.FullName + " is not an instance of Task<T>");
         }
 
-        public static TypeReference ResolveGenericParameter(this TypeReference genericParameter, TypeDefinition typeContext)
+        public static TypeReference ResolveGenericParameter(this TypeReference genericParameter, TypeReference typeContext)
         {
             if (!genericParameter.IsGenericParameter)
                 return genericParameter;
 
             var name = genericParameter.Name;
             var localParameter = typeContext?.GenericParameters.SingleOrDefault(x => x.Name == name);
+            return localParameter ?? genericParameter;
+        }
+
+        public static TypeReference ResolveGenericParameterForGenericMethod(this TypeReference genericParameter, TypeReference typeContext, MethodReference method, TypeReference[] genericMethodParameters)
+        {
+            if (!genericParameter.IsGenericParameter)
+                return genericParameter;
+
+            var name = genericParameter.Name;
+            TypeReference localParameter = typeContext?.GenericParameters.SingleOrDefault(x => x.Name == name);
+            var localMethodParameter = method.GenericParameters.SingleOrDefault(x => x.Name == name);
+            if (localMethodParameter != null)
+            {
+                localParameter = genericMethodParameters[method.GenericParameters.IndexOf(localMethodParameter)];
+            }
             return localParameter ?? genericParameter;
         }
 
@@ -1227,7 +1293,7 @@ namespace Someta.Fody
             return attributes & MethodAttributes.Static;
         }
 
-        public static MethodDefinition CreateSimilarMethod(this MethodDefinition method, string name, MethodAttributes attributes, TypeReference returnType)
+        public static MethodDefinition CreateMethodThatMatchesStaticScope(this MethodDefinition method, string name, MethodAttributes attributes, TypeReference returnType)
         {
             var type = method.DeclaringType;
             var result = new MethodDefinition(name, attributes | method.Attributes.GetStatic(), returnType);

@@ -60,7 +60,7 @@ namespace Someta.Fody
             il.EmitBoxIfNeeded(method.Parameters[0].ParameterType);
 
             // Leave the delegate for the proceed implementation on the stack as fifth argument
-            il.EmitDelegate(proceed, Context.Action1Type, TypeSystem.ObjectReference);
+            il.EmitLocalMethodDelegate(proceed, Context.Action1Type, TypeSystem.ObjectReference);
 
             // Finally, we emit the call to the interceptor
             il.Emit(OpCodes.Callvirt, setPropertyValue);
@@ -73,7 +73,7 @@ namespace Someta.Fody
         {
             var type = method.DeclaringType;
             var original = method.MoveImplementation(GenerateUniqueName(method, interceptorAttribute, "Original"));
-            var proceed = method.CreateSimilarMethod(GenerateUniqueName(method, interceptorAttribute, "Proceed"),
+            var proceed = method.CreateMethodThatMatchesStaticScope(GenerateUniqueName(method, interceptorAttribute, "Proceed"),
                 MethodAttributes.Private, TypeSystem.VoidReference);
 
             proceed.Parameters.Add(new ParameterDefinition(TypeSystem.ObjectReference));

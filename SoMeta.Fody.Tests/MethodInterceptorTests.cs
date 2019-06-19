@@ -60,6 +60,18 @@ namespace Someta.Fody.Tests
             types[2].ShouldBe(typeof(double));
         }
 
+        [Test]
+        public void NestedGenericConcatParameterTypesTest()
+        {
+            var o = new NestedGenericClasses<float>.Level2<double>();
+
+            var types = o.WithGenericParameters(1.1f, 1d, 1L, "foo");
+            types[0].ShouldBe(typeof(float));
+            types[1].ShouldBe(typeof(double));
+            types[2].ShouldBe(typeof(long));
+            types[3].ShouldBe(typeof(string));
+        }
+
         public class LogInterceptorAttribute : MethodInterceptorAttribute
         {
             public override object Invoke(MethodInfo methodInfo, object instance, object[] parameters, Func<object[], object> invoker)
@@ -73,7 +85,7 @@ namespace Someta.Fody.Tests
         {
             public override object Invoke(MethodInfo methodInfo, object instance, object[] parameters, Func<object[], object> invoker)
             {
-                return parameters.Select(x => x.GetType()).ToArray();
+                return ((Type[])invoker(parameters)).Concat(parameters.Select(x => x.GetType())).ToArray();
             }
         }
 
@@ -126,19 +138,80 @@ namespace Someta.Fody.Tests
             [ConcatParameterTypes]
             public Type[] ConcatTypes1(T a)
             {
-                return null;
+                return new Type[0];
+            }
+
+            public void ConcatTypesWrapper()
+            {
+                ConcatTypes1(default);
             }
 
             [ConcatParameterTypes]
             public Type[] WithGenericParameters<U, V>(T a, U u, V v)
             {
-                return null;
+                return new Type[0];
             }
 
             private void GenericWrapper<U2, V2>(T a, U2 u, V2 v)
             {
                 WithGenericParameters<U2, V2>(a, u, v);
             }
+        }
+
+        public class NestedGenericClasses<T>
+        {
+            public class Level2<U>
+            {
+                [ConcatParameterTypes]
+                public Type[] WithGenericParameters<V, W>(T a, U u, V v, W w)
+                {
+                    return new Type[0];
+                }
+            }
+        }
+
+        public class ClassWithMethodWithGenericParameters
+        {
+            [ConcatParameterTypes]
+            public Type[] WithGenericParameters<U, V>(U u, V v)
+            {
+                return new Type[0];
+            }
+
+/*
+            [ConcatParameterTypes]
+            public Type[] WithGenericParameters<U, V>()
+            {
+                return new Type[0];
+            }
+*/
+        }
+
+        public struct GenericMethodTest<T>
+        {
+            private MethodInterceptorTests instance;
+
+            public GenericMethodTest(MethodInterceptorTests instance)
+            {
+                this.instance = instance;
+            }
+
+//            [ConcatParameterTypes]
+            public void Proceed(object[] arguments)
+            {
+                var arg1 = (T)arguments[0];
+                instance.MockOriginal<T>(arg1);
+            }
+        }
+
+        public void Mock<T>(T t)
+        {
+            new GenericMethodTest<T>().Proceed(new object[] { t });
+        }
+
+        public void MockOriginal<T>(T t)
+        {
+
         }
     }
 }

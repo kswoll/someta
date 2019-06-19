@@ -84,7 +84,7 @@ namespace Someta.Fody
                             typeArguments.Add(targetMethod.ReturnType);
 
                         il.LoadField(attributeField);
-                        il.EmitDelegate(accessor, delegateType, typeArguments.ToArray());
+                        il.EmitLocalMethodDelegate(accessor, delegateType, typeArguments.ToArray());
                         il.EmitCall(interceptorProperty.SetMethod);
                     });
                 }
