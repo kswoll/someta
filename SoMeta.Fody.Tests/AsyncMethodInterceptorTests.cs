@@ -57,6 +57,15 @@ namespace Someta.Fody.Tests
         }
 
         [Test]
+        public async Task StaticGenericConcatParameterTypesTest()
+        {
+            var types = await GenericClass<float>.WithGenericParametersStatic(1.1f, 1L, 1d);
+            types[0].ShouldBe(typeof(float));
+            types[1].ShouldBe(typeof(long));
+            types[2].ShouldBe(typeof(double));
+        }
+
+        [Test]
         public async Task NestedGenericConcatParameterTypesTest()
         {
             var o = new NestedGenericClasses<float>.Level2<double>();
@@ -79,6 +88,13 @@ namespace Someta.Fody.Tests
 
             [ConcatParameterTypes]
             public async Task<Type[]> WithGenericParameters<U, V>(T a, U u, V v)
+            {
+                await Task.Delay(1);
+                return new Type[0];
+            }
+
+            [ConcatParameterTypes]
+            public static async Task<Type[]> WithGenericParametersStatic<U, V>(T a, U u, V v)
             {
                 await Task.Delay(1);
                 return new Type[0];

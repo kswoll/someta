@@ -79,7 +79,7 @@ namespace Someta.Fody
             {
                 genericProceedType = proceedStruct.MakeGenericInstanceType(type.GenericParameters.Concat(method.GenericParameters).ToArray());
                 ProceedReference = Proceed.Bind((GenericInstanceType)genericProceedType);
-                proceedStructConstructorReference = proceedStructConstructor.Bind((GenericInstanceType)genericProceedType);
+                proceedStructConstructorReference = proceedStructConstructor?.Bind((GenericInstanceType)genericProceedType);
             }
             proceedStructType = genericProceedType;
 
@@ -101,7 +101,7 @@ namespace Someta.Fody
                 il.Emit(OpCodes.Castclass, genericType);
             }
 
-            weaver.DecomposeArrayIntoArguments2(il, proceedStruct, genericProceedTargetMethod, isStatic: false);
+            weaver.DecomposeArrayIntoArguments(il, proceedStruct, genericProceedTargetMethod, isStatic: false);
             il.Emit(OpCodes.Call, genericProceedTargetMethod);
         }
 

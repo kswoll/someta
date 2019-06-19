@@ -97,21 +97,7 @@ namespace Someta.Fody
             }
         }
 
-        public void DecomposeArrayIntoArguments(ILProcessor il, MethodReference method, bool? isStatic = null)
-        {
-            // Decompose array into arguments
-            isStatic = isStatic ?? !method.HasThis;
-            for (var i = 0; i < method.Parameters.Count; i++)
-            {
-                var parameterInfo = method.Parameters[i];
-                il.Emit(isStatic.Value ? OpCodes.Ldarg_0 : OpCodes.Ldarg_1);                                                    // Push array
-                il.Emit(OpCodes.Ldc_I4, i);                                                  // Push element index
-                il.Emit(OpCodes.Ldelem_Any, TypeSystem.ObjectReference);                     // Get element
-                il.EmitUnboxIfNeeded(parameterInfo.ParameterType, method.DeclaringType);
-            }
-        }
-
-        public void DecomposeArrayIntoArguments2(ILProcessor il, TypeReference declaringType, MethodReference method, bool? isStatic = null)
+        public void DecomposeArrayIntoArguments(ILProcessor il, TypeReference declaringType, MethodReference method, bool? isStatic = null)
         {
             // Decompose array into arguments
             isStatic = isStatic ?? !method.HasThis;
@@ -124,23 +110,6 @@ namespace Someta.Fody
                 il.EmitUnboxIfNeeded(parameterInfo.ParameterType, declaringType);
             }
         }
-
-/*
-        protected void EmitAttribute(ILProcessor il, MethodDefinition method, TypeReference interceptorAttribute, InterceptorScope scope)
-        {
-            switch (scope)
-            {
-                case InterceptorScope.Member:
-                    il.EmitGetAttributeFromCurrentMethod(interceptorAttribute);
-                    break;
-                case InterceptorScope.Class:
-                    il.EmitGetAttributeFromClass(method.DeclaringType, interceptorAttribute);
-                    break;
-                default:
-                    throw new InvalidOperationException();
-            }
-        }
-*/
 
         public FieldDefinition CacheAttributeInstance(IMemberDefinition member, ExtensionPointAttribute extensionPoint)
         {
