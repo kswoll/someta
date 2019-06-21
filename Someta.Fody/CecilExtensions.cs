@@ -66,6 +66,8 @@ namespace Someta.Fody
             attributeGetCustomAttributes = ModuleDefinition.ImportReference(attributeTypeDefinition.Methods.Single(x => x.Name == nameof(Attribute.GetCustomAttributes) && x.Parameters.Count == 1 && x.Parameters[0].ParameterType.CompareTo(memberInfoType)));
             var methodBaseType = ModuleDefinition.ImportReference(typeof(MethodBase));
             methodBaseGetCurrentMethod = ModuleDefinition.FindMethod(methodBaseType, nameof(MethodBase.GetCurrentMethod));
+            var extensionPointRegistry = ModuleDefinition.FindType("Someta.Helpers", "ExtensionPointRegistry", soMeta);
+            var extensionPointRegistryRegister = ModuleDefinition.FindMethod(extensionPointRegistry, "Register");
 
             var func1Type = ModuleDefinition.ImportReference(typeof(Func<>));
             var func2Type = ModuleDefinition.ImportReference(typeof(Func<,>));
@@ -145,7 +147,8 @@ namespace Someta.Fody
                 MethodInfoType = methodInfoType,
                 PropertyInfoType = propertyInfoType,
                 EventInfoType = eventInfoType,
-                ValueType = ModuleDefinition.ImportReference(typeof(ValueType))
+                ValueType = ModuleDefinition.ImportReference(typeof(ValueType)),
+                RegisterExtensionPoint = extensionPointRegistryRegister
             };
             Context = context;
         }

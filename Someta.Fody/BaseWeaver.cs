@@ -42,7 +42,7 @@ namespace Someta.Fody
 
         public string GenerateUniqueName(IMemberDefinition member, TypeReference attributeType, string name)
         {
-            Debugger.Launch();
+//            Debugger.Launch();
             var key = (member.ToString(), attributeType.FullName, name);
             if (!uniqueNamesCounter.TryGetValue(key, out var counter))
             {
@@ -161,19 +161,21 @@ namespace Someta.Fody
             field = new FieldDefinition(fieldName, FieldAttributes.Static | FieldAttributes.Public, extensionPoint.AttributeType);
             declaringType.Fields.Add(field);
 
-            var staticConstructor = declaringType.GetStaticConstructor();
-            if (staticConstructor == null)
-            {
-                staticConstructor = declaringType.CreateStaticConstructor();
-                staticConstructor.Body.GetILProcessor().Emit(OpCodes.Ret);
-            }
-            staticConstructor.Body.EmitBeforeReturn(il =>
+            declaringType.EmitToStaticConstructor(il =>
             {
                 if (extensionPoint.Scope == ExtensionPointScope.Class)
                     il.EmitGetAttributeByIndex(declaringType, extensionPoint.Index, extensionPoint.AttributeType);
                 else
                     il.EmitGetAttributeByIndex(memberInfoField, extensionPoint.Index, extensionPoint.AttributeType);
                 il.SaveField(field);
+
+                // Register extension point
+                if (extensionPoint.Scope == ExtensionPointScope.Class)
+                    il.LoadType(declaringType);
+                else
+                    il.LoadField(memberInfoField);
+                il.LoadField(field);
+                il.EmitCall(Context.RegisterExtensionPoint);
             });
 
             return field;
