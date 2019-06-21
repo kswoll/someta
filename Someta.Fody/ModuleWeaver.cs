@@ -102,12 +102,23 @@ namespace Someta.Fody
             }
 
             // Inventory candidate classes
+//            Debugger.Launch();
             var allTypes = ModuleDefinition.GetAllTypes();
+            var assemblyInterceptors = ModuleDefinition.Assembly
+                .GetCustomAttributesIncludingSubtypes(extensionPointInterface)
+                .Select(x => new ExtensionPointAttribute(null, ModuleDefinition.Assembly, x, ModuleDefinition.Assembly.CustomAttributes.IndexOf(x), ExtensionPointScope.Assembly))
+                .ToArray();
+            var moduleInterceptors = ModuleDefinition
+                .GetCustomAttributesIncludingSubtypes(extensionPointInterface)
+                .Select(x => new ExtensionPointAttribute(null, ModuleDefinition, x, ModuleDefinition.CustomAttributes.IndexOf(x), ExtensionPointScope.Module))
+                .ToArray();
+            var assemblyAndModuleInterceptors = assemblyInterceptors.Concat(moduleInterceptors).ToArray();
             foreach (var type in allTypes)
             {
                 var classInterceptors = type
                     .GetCustomAttributesInAncestry(extensionPointInterface)
                     .Select(x => new ExtensionPointAttribute(x.DeclaringType, x.DeclaringType, x.Attribute, x.DeclaringType.CustomAttributes.IndexOf(x.Attribute), ExtensionPointScope.Class))
+                    .Concat(assemblyAndModuleInterceptors.Select(x => new ExtensionPointAttribute(type, x.DeclaringMember, x.Attribute, x.Index, x.Scope)))
                     .ToArray();
 
                 foreach (var classInterceptor in classInterceptors)

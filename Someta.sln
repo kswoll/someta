@@ -8,9 +8,11 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Someta.Fody.Tests", "Someta
 		{FBBD3165-8EC7-48A7-9563-51AF7B463BF8} = {FBBD3165-8EC7-48A7-9563-51AF7B463BF8}
 	EndProjectSection
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Someta.Fody", "Someta.Fody\Someta.Fody.csproj", "{FBBD3165-8EC7-48A7-9563-51AF7B463BF8}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Someta.Fody", "Someta.Fody\Someta.Fody.csproj", "{FBBD3165-8EC7-48A7-9563-51AF7B463BF8}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Someta", "Someta\Someta.csproj", "{9B731B1C-68B5-42A5-B9FE-D71809D14EF7}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Someta", "Someta\Someta.csproj", "{9B731B1C-68B5-42A5-B9FE-D71809D14EF7}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Someta.Fody.AssemblyTests", "Someta.Fody.AssemblyTests\Someta.Fody.AssemblyTests.csproj", "{620403C5-B1E8-4AD7-AFA7-171D221FB5FF}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -30,6 +32,10 @@ Global
 		{9B731B1C-68B5-42A5-B9FE-D71809D14EF7}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{9B731B1C-68B5-42A5-B9FE-D71809D14EF7}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{9B731B1C-68B5-42A5-B9FE-D71809D14EF7}.Release|Any CPU.Build.0 = Release|Any CPU
+		{620403C5-B1E8-4AD7-AFA7-171D221FB5FF}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{620403C5-B1E8-4AD7-AFA7-171D221FB5FF}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{620403C5-B1E8-4AD7-AFA7-171D221FB5FF}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{620403C5-B1E8-4AD7-AFA7-171D221FB5FF}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
