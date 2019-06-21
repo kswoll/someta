@@ -42,6 +42,7 @@ namespace Someta.Fody
 
         public string GenerateUniqueName(IMemberDefinition member, TypeReference attributeType, string name)
         {
+//            Debugger.Launch();
             var key = (member.ToString(), attributeType.FullName, name);
             if (!uniqueNamesCounter.TryGetValue(key, out var counter))
             {
@@ -52,7 +53,6 @@ namespace Someta.Fody
 
             if (counter > 1)
             {
-//                Debugger.Launch();
                 name += 2;
             }
 
@@ -150,7 +150,6 @@ namespace Someta.Fody
         public FieldDefinition CacheAttributeInstance(IMemberDefinition member, FieldDefinition memberInfoField,
             ExtensionPointAttribute extensionPoint)
         {
-//            var declaringType = interceptor.Scope == InterceptorScope.Class ? interceptor.DeclaringType : type;
             var declaringType = extensionPoint.DeclaringType;
             var declaration = extensionPoint.Scope == ExtensionPointScope.Class ? declaringType : member;
             var fieldName = $"<{declaration.Name}>k__{extensionPoint.AttributeType.Name}${extensionPoint.Index}";
@@ -162,37 +161,24 @@ namespace Someta.Fody
             field = new FieldDefinition(fieldName, FieldAttributes.Static | FieldAttributes.Public, extensionPoint.AttributeType);
             declaringType.Fields.Add(field);
 
-            var staticConstructor = declaringType.GetStaticConstructor();
-            if (staticConstructor == null)
-            {
-                staticConstructor = declaringType.CreateStaticConstructor();
-                staticConstructor.Body.GetILProcessor().Emit(OpCodes.Ret);
-            }
-            staticConstructor.Body.EmitBeforeReturn(il =>
+            declaringType.EmitToStaticConstructor(il =>
             {
                 if (extensionPoint.Scope == ExtensionPointScope.Class)
                     il.EmitGetAttributeByIndex(declaringType, extensionPoint.Index, extensionPoint.AttributeType);
                 else
                     il.EmitGetAttributeByIndex(memberInfoField, extensionPoint.Index, extensionPoint.AttributeType);
                 il.SaveField(field);
+
+                // Register extension point
+                if (extensionPoint.Scope == ExtensionPointScope.Class)
+                    il.LoadType(declaringType);
+                else
+                    il.LoadField(memberInfoField);
+                il.LoadField(field);
+                il.EmitCall(Context.RegisterExtensionPoint);
             });
 
             return field;
         }
-
-/*        protected void EmitAttribute(ILProcessor il, FieldReference attributeField)
-        {
-            switch (scope)
-            {
-                case InterceptorScope.Member:
-                    il.EmitGetAttribute(memberInfoField, interceptorAttribute);
-                    break;
-                case InterceptorScope.Class:
-                    il.EmitGetAttributeFromClass(method.DeclaringType, interceptorAttribute);
-                    break;
-                default:
-                    throw new InvalidOperationException();
-            }
-        }
-*/    }
+    }
 }
