@@ -441,28 +441,6 @@ namespace Someta.Fody
             return genericInstanceType;
         }
 
-        /*
-        public static MethodReference BindDefinition(this MethodReference method, TypeReference genericTypeDefinition)
-        {
-            if (!genericTypeDefinition.HasGenericParameters)
-                return method;
-
-            var genericDeclaration = new GenericInstanceType(genericTypeDefinition);
-            foreach (var parameter in genericTypeDefinition.GenericParameters)
-            {
-                genericDeclaration.GenericArguments.Add(parameter);
-            }
-            var reference = new MethodReference(method.Name, method.ReturnType, genericDeclaration);
-            reference.HasThis = method.HasThis;
-            reference.ExplicitThis = method.ExplicitThis;
-            reference.CallingConvention = method.CallingConvention;
-
-            foreach (var parameter in method.Parameters)
-                reference.Parameters.Add(new ParameterDefinition(parameter.ParameterType));
-
-            return reference;
-        }
-        */
         public static FieldReference BindDefinition(this FieldReference field, TypeReference genericTypeDefinition)
         {
             if (!genericTypeDefinition.HasGenericParameters)
@@ -514,17 +492,6 @@ namespace Someta.Fody
             il.Emit(OpCodes.Call, methodBaseGetCurrentMethod);
             il.Emit(OpCodes.Castclass, Context.MethodInfoType);
         }
-
-/*
-        public static void EmitGetAttributeFromCurrentMethod(this ILProcessor il, TypeReference attributeType)
-        {
-            il.LoadCurrentMethodInfo();
-            il.LoadType(attributeType);
-
-            il.Emit(OpCodes.Call, attributeGetCustomAttribute);
-            il.Emit(OpCodes.Castclass, attributeType);
-        }
-*/
 
         public static void EmitBeforeReturn(this MethodBody body, Action<ILProcessor> il)
         {
@@ -796,13 +763,7 @@ namespace Someta.Fody
             field = new FieldDefinition(fieldName, FieldAttributes.Static | FieldAttributes.Private, Context.PropertyInfoType);
             type.Fields.Add(field);
 
-            var staticConstructor = type.GetStaticConstructor();
-            if (staticConstructor == null)
-            {
-                staticConstructor = type.CreateStaticConstructor();
-                staticConstructor.Body.GetILProcessor().Emit(OpCodes.Ret);
-            }
-            staticConstructor.Body.EmitBeforeReturn(il =>
+            type.EmitToStaticConstructor(il =>
             {
                 il.EmitGetPropertyInfo(property);
                 il.Emit(OpCodes.Stsfld, field.Bind());
@@ -828,13 +789,7 @@ namespace Someta.Fody
             field = new FieldDefinition(fieldName, FieldAttributes.Static | FieldAttributes.Private, Context.EventInfoType);
             type.Fields.Add(field);
 
-            var staticConstructor = type.GetStaticConstructor();
-            if (staticConstructor == null)
-            {
-                staticConstructor = type.CreateStaticConstructor();
-                staticConstructor.Body.GetILProcessor().Emit(OpCodes.Ret);
-            }
-            staticConstructor.Body.EmitBeforeReturn(il =>
+            type.EmitToStaticConstructor(il =>
             {
                 il.EmitGetEventInfo(@event);
                 il.Emit(OpCodes.Stsfld, field.Bind());
@@ -954,50 +909,6 @@ namespace Someta.Fody
             il.Emit(OpCodes.Call, getTypeFromRuntimeHandleMethod);
         }
 
-        public static void StoreMethodInfo(this ILProcessor il, FieldReference staticField, TypeReference declaringType, MethodDefinition method)
-        {
-            var parameterTypes = method.Parameters.Select(info => info.ParameterType).ToArray();
-
-            // The type we want to invoke GetMethod upon
-            il.LoadType(declaringType);
-
-            // Arg1: methodName
-            il.Emit(OpCodes.Ldstr, method.Name);
-
-            // Arg2: bindingFlags
-            il.Emit(OpCodes.Ldc_I4, (int)(BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.Instance | BindingFlags.Static));
-
-            // Arg3: binder
-            il.Emit(OpCodes.Ldnull);
-
-            // Arg4: parameterTypes
-            il.Emit(OpCodes.Ldc_I4, parameterTypes.Length);
-            il.Emit(OpCodes.Newarr, typeType);
-
-            // Copy array for each element we are going to set
-            for (int i = 0; i < parameterTypes.Length; i++)
-            {
-                il.Emit(OpCodes.Dup);
-            }
-
-            // Set each element
-            for (int i = 0; i < parameterTypes.Length; i++)
-            {
-                il.Emit(OpCodes.Ldc_I4, i);
-                il.LoadType(ModuleDefinition.ImportReference(parameterTypes[i]));
-                il.Emit(OpCodes.Stelem_Any, typeType);
-            }
-
-            // Arg5: parameterModifiers
-            il.Emit(OpCodes.Ldnull);
-
-            // Invoke method
-            il.Emit(OpCodes.Call, typeGetMethod);
-
-            // Store MethodInfo into the static field
-            il.Emit(OpCodes.Stsfld, staticField);
-        }
-
         public static bool IsTaskT(this TypeReference type)
         {
             var current = type;
@@ -1052,35 +963,6 @@ namespace Someta.Fody
                 localParameter = genericMethodParameters[method.GenericParameters.IndexOf(localMethodParameter)];
             }
             return localParameter ?? genericParameter;
-        }
-
-        public static void CreateDefaultMethodImplementation(MethodDefinition methodInfo, ILProcessor il)
-        {
-            if (taskType.IsAssignableFrom(methodInfo.ReturnType))
-            {
-                if (methodInfo.ReturnType.IsTaskT())
-                {
-                    var returnTaskType = methodInfo.ReturnType.GetTaskType();
-                    //                    if (returnTaskType.IsGenericParameter)
-
-                    il.EmitDefaultValue(returnTaskType);
-                    var fromResult = taskFromResult.MakeGenericMethod(returnTaskType);
-                    il.Emit(OpCodes.Call, fromResult);
-                }
-                else
-                {
-                    il.Emit(OpCodes.Ldnull);
-                    var fromResult = taskFromResult.MakeGenericMethod(TypeSystem.ObjectReference);
-                    il.Emit(OpCodes.Call, fromResult);
-                }
-            }
-            else if (!methodInfo.ReturnType.CompareTo(TypeSystem.VoidReference))
-            {
-                il.EmitDefaultValue(methodInfo.ReturnType.Resolve());
-            }
-
-            // Return
-            il.Emit(OpCodes.Ret);
         }
 
         public static void EmitDefaultValue(this ILProcessor il, TypeReference type)
@@ -1229,28 +1111,6 @@ namespace Someta.Fody
 
             return false;
         }
-
-        /*
-
-                public static IEnumerable<TypeDefinition> GetAllTypes(this ModuleDefinition module)
-                {
-                    var stack = new Stack<TypeDefinition>();
-                    foreach (var type in module.Types)
-                    {
-                        stack.Push(type);
-                    }
-                    while (stack.Any())
-                    {
-                        var current = stack.Pop();
-                        yield return current;
-
-                        foreach (var nestedType in current.NestedTypes)
-                        {
-                            stack.Push(nestedType);
-                        }
-                    }
-                }
-        */
 
         public static MethodInfo CaptureMethod(Expression<Action> expression)
         {

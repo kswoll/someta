@@ -52,7 +52,6 @@ namespace Someta.Fody
 
             if (counter > 1)
             {
-//                Debugger.Launch();
                 name += 2;
             }
 
@@ -150,7 +149,6 @@ namespace Someta.Fody
         public FieldDefinition CacheAttributeInstance(IMemberDefinition member, FieldDefinition memberInfoField,
             ExtensionPointAttribute extensionPoint)
         {
-//            var declaringType = interceptor.Scope == InterceptorScope.Class ? interceptor.DeclaringType : type;
             var declaringType = extensionPoint.DeclaringType;
             var declaration = extensionPoint.Scope == ExtensionPointScope.Class ? declaringType : member;
             var fieldName = $"<{declaration.Name}>k__{extensionPoint.AttributeType.Name}${extensionPoint.Index}";
@@ -179,20 +177,5 @@ namespace Someta.Fody
 
             return field;
         }
-
-/*        protected void EmitAttribute(ILProcessor il, FieldReference attributeField)
-        {
-            switch (scope)
-            {
-                case InterceptorScope.Member:
-                    il.EmitGetAttribute(memberInfoField, interceptorAttribute);
-                    break;
-                case InterceptorScope.Class:
-                    il.EmitGetAttributeFromClass(method.DeclaringType, interceptorAttribute);
-                    break;
-                default:
-                    throw new InvalidOperationException();
-            }
-        }
-*/    }
+    }
 }
