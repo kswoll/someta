@@ -50,6 +50,15 @@ namespace Someta.Fody
         {
             ModuleDefinition = moduleDefinition;
             TypeSystem = typeSystem;
+
+            var extensionPointRegistry = ModuleDefinition.FindType("Someta.Helpers", "ExtensionPointRegistry", soMeta);
+            if (extensionPointRegistry == null)
+            {
+                LogWarning("You are using Someta.Fody but have not referenced or defined any interceptors");
+                return;
+            }
+            var extensionPointRegistryRegister = ModuleDefinition.FindMethod(extensionPointRegistry, "Register");
+
             typeType = ModuleDefinition.ImportReference(typeof(Type)).Resolve();
             taskType = ModuleDefinition.ImportReference(typeof(Task));
             getTypeFromRuntimeHandleMethod = ModuleDefinition.ImportReference(typeType.Methods.Single(x => x.Name == "GetTypeFromHandle"));
@@ -66,15 +75,14 @@ namespace Someta.Fody
             attributeGetCustomAttributes = ModuleDefinition.ImportReference(attributeTypeDefinition.Methods.Single(x => x.Name == nameof(Attribute.GetCustomAttributes) && x.Parameters.Count == 1 && x.Parameters[0].ParameterType.CompareTo(memberInfoType)));
             var methodBaseType = ModuleDefinition.ImportReference(typeof(MethodBase));
             methodBaseGetCurrentMethod = ModuleDefinition.FindMethod(methodBaseType, nameof(MethodBase.GetCurrentMethod));
-            var extensionPointRegistry = ModuleDefinition.FindType("Someta.Helpers", "ExtensionPointRegistry", soMeta);
-            var extensionPointRegistryRegister = ModuleDefinition.FindMethod(extensionPointRegistry, "Register");
 
             var func1Type = ModuleDefinition.ImportReference(typeof(Func<>));
             var func2Type = ModuleDefinition.ImportReference(typeof(Func<,>));
             var action1Type = ModuleDefinition.ImportReference(typeof(Action<>));
             var objectArrayType = ModuleDefinition.ImportReference(typeof(object[]));
             var asyncTaskMethodBuilder = ModuleDefinition.ImportReference(typeof(AsyncTaskMethodBuilder<>));
-            var originalMethodAttributeConstructor = ModuleDefinition.FindConstructor(ModuleDefinition.FindType("Someta.Reflection", "OriginalMethodAttribute", soMeta));
+            var originalMethodAtttribute = ModuleDefinition.FindType("Someta.Reflection", "OriginalMethodAttribute", soMeta);
+            var originalMethodAttributeConstructor = ModuleDefinition.FindConstructor(originalMethodAtttribute);
             var methodFinder = ModuleDefinition.FindType("Someta.Reflection", "MethodFinder`1", soMeta, "T");
             var findMethod = ModuleDefinition.FindMethod(methodFinder, "FindMethod");
             var findProperty = ModuleDefinition.FindMethod(methodFinder, "FindProperty");
