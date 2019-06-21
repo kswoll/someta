@@ -42,6 +42,7 @@ namespace Someta.Fody
 
         public string GenerateUniqueName(IMemberDefinition member, TypeReference attributeType, string name)
         {
+            Debugger.Launch();
             var key = (member.ToString(), attributeType.FullName, name);
             if (!uniqueNamesCounter.TryGetValue(key, out var counter))
             {
