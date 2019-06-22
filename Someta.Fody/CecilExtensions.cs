@@ -568,6 +568,12 @@ namespace Someta.Fody
             il.EmitGetAttributeByIndex(() => il.LoadType(type), index, attributeType);
         }
 
+        public static void EmitGetAttributeByIndex(this ILProcessor il, AssemblyDefinition type, int index, TypeReference attributeType)
+        {
+            Assembly.Get
+            il.EmitGetAttributeByIndex(() => il.LoadType(type), index, attributeType);
+        }
+
         private static void EmitGetAttributeByIndex(this ILProcessor il, Action emitTarget, int index, TypeReference attributeType)
         {
             emitTarget();

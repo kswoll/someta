@@ -1,10 +1,8 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Diagnostics;
-using System.Linq;
-using Mono.Cecil;
+﻿using Mono.Cecil;
 using Mono.Cecil.Cil;
-using Mono.Cecil.Rocks;
+using System;
+using System.Collections.Generic;
+using System.Linq;
 using TypeSystem = Fody.TypeSystem;
 
 namespace Someta.Fody
@@ -145,7 +143,7 @@ namespace Someta.Fody
         public FieldDefinition CacheAttributeInstance(TypeDefinition type, ExtensionPointAttribute extensionPoint)
         {
             return CacheAttributeInstance(type, null, extensionPoint);
-        }
+        }xx
 
         public FieldDefinition CacheAttributeInstance(IMemberDefinition member, FieldDefinition memberInfoField,
             ExtensionPointAttribute extensionPoint)
@@ -163,6 +161,8 @@ namespace Someta.Fody
 
             declaringType.EmitToStaticConstructor(il =>
             {
+                if (extensionPoint.Scope == ExtensionPointScope.Assembly)
+                    il.EmitGetAttributeByIndex(ModuleDefinition.Assembly, extensionPoint.Index, extensionPoint.AttributeType);
                 if (extensionPoint.Scope == ExtensionPointScope.Class)
                     il.EmitGetAttributeByIndex(declaringType, extensionPoint.Index, extensionPoint.AttributeType);
                 else
