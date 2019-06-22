@@ -1,10 +1,14 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
 using System.Diagnostics;
 using System.Linq;
+using System.Reflection;
 using Fody;
 using Mono.Cecil;
 using Mono.Cecil.Cil;
 using Mono.Cecil.Rocks;
+using FieldAttributes = Mono.Cecil.FieldAttributes;
+using TypeAttributes = Mono.Cecil.TypeAttributes;
 
 namespace Someta.Fody
 {
@@ -131,10 +135,11 @@ namespace Someta.Fody
                     .Select(x => new ExtensionPointAttribute(assemblyState, ModuleDefinition.Assembly, x, ModuleDefinition.Assembly.CustomAttributes.IndexOf(x), ExtensionPointScope.Assembly))
                     .ToArray();
 
-                foreach (var (interceptor, index) in assemblyInterceptors.Select((x, i) => (x, i)))
+                foreach (var interceptor in assemblyInterceptors)
                 {
                     var fieldName = interceptor.AttributeType.FullName.Replace(".", "$");
                     var attributeField = new FieldDefinition(fieldName, FieldAttributes.Static | FieldAttributes.Public, interceptor.AttributeType);
+                    var index = ModuleDefinition.Assembly.CustomAttributes.IndexOf(interceptor.Attribute);
                     assemblyState.Fields.Add(attributeField);
 
                     assemblyState.EmitToStaticConstructor(il =>
@@ -156,6 +161,10 @@ namespace Someta.Fody
 //            var assemblyAndModuleInterceptors = assemblyInterceptors.Concat(moduleInterceptors).ToArray();
             foreach (var type in allTypes)
             {
+                // We can get into recursion scenarios if we allow extension points on extension points.  For now, let's naively prohibit this
+                if (extensionPointInterface.IsAssignableFrom(type))
+                    continue;
+
                 var classInterceptors = type
                     .GetCustomAttributesInAncestry(extensionPointInterface)
                     .Select(x => new ExtensionPointAttribute(x.DeclaringType, x.DeclaringType, x.Attribute, x.DeclaringType.CustomAttributes.IndexOf(x.Attribute), ExtensionPointScope.Class))

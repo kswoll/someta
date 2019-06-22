@@ -42,6 +42,7 @@ namespace Someta.Fody
         private static TypeReference attributeType;
         private static MethodReference attributeGetCustomAttribute;
         private static MethodReference attributeGetCustomAttributes;
+        private static MethodReference attributeGetCustomAttributesForAssembly;
         private static MethodReference methodBaseGetCurrentMethod;
         private static MethodReference typeGetProperty;
         private static MethodReference typeGetEvent;
@@ -74,6 +75,8 @@ namespace Someta.Fody
             var memberInfoType = ModuleDefinition.ImportReference(typeof(MemberInfo));
             attributeGetCustomAttribute = ModuleDefinition.ImportReference(attributeTypeDefinition.Methods.Single(x => x.Name == nameof(Attribute.GetCustomAttribute) && x.Parameters.Count == 2 && x.Parameters[0].ParameterType.CompareTo(memberInfoType)));
             attributeGetCustomAttributes = ModuleDefinition.ImportReference(attributeTypeDefinition.Methods.Single(x => x.Name == nameof(Attribute.GetCustomAttributes) && x.Parameters.Count == 1 && x.Parameters[0].ParameterType.CompareTo(memberInfoType)));
+            var assemblyType = ModuleDefinition.ImportReference(typeof(Assembly));
+            attributeGetCustomAttributesForAssembly = ModuleDefinition.ImportReference(attributeTypeDefinition.Methods.Single(x => x.Name == nameof(Attribute.GetCustomAttributes) && x.Parameters.Count == 1 && x.Parameters[0].ParameterType.CompareTo(assemblyType)));
             var methodBaseType = ModuleDefinition.ImportReference(typeof(MethodBase));
             methodBaseGetCurrentMethod = ModuleDefinition.FindMethod(methodBaseType, nameof(MethodBase.GetCurrentMethod));
             typeGetAssembly = ModuleDefinition.ImportReference(typeType.Properties.Single(x => x.Name == nameof(Type.Assembly)).GetMethod);
@@ -572,7 +575,11 @@ namespace Someta.Fody
 
         public static void EmitGetAssemblyAttributeByIndex(this ILProcessor il, int index, TypeReference attributeType)
         {
-            il.EmitGetAttributeByIndex(() => il.LoadTypeAssembly(Context.AssemblyState), index, attributeType);
+            il.LoadTypeAssembly(Context.AssemblyState);
+            il.Emit(OpCodes.Call, attributeGetCustomAttributesForAssembly);
+            il.Emit(OpCodes.Ldc_I4, index);
+            il.Emit(OpCodes.Ldelem_Any, CecilExtensions.attributeType);
+            il.Emit(OpCodes.Castclass, attributeType);
         }
 
         private static void EmitGetAttributeByIndex(this ILProcessor il, Action emitTarget, int index, TypeReference attributeType)

@@ -40,7 +40,10 @@ namespace Someta.Fody.AssemblyTests
     {
         public object Invoke(MethodInfo methodInfo, object instance, object[] parameters, Func<object[], object> invoker)
         {
-            AssemblyInterceptorTest.Invocations.Add(methodInfo);
+            if (instance is AssemblyInterceptorTest.TestClass)
+            {
+                AssemblyInterceptorTest.Invocations.Add(methodInfo);
+            }
             return invoker(parameters);
         }
     }
