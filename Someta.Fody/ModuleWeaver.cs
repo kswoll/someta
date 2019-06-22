@@ -1,9 +1,14 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
 using System.Diagnostics;
 using System.Linq;
+using System.Reflection;
 using Fody;
 using Mono.Cecil;
+using Mono.Cecil.Cil;
 using Mono.Cecil.Rocks;
+using FieldAttributes = Mono.Cecil.FieldAttributes;
+using TypeAttributes = Mono.Cecil.TypeAttributes;
 
 namespace Someta.Fody
 {
@@ -103,11 +108,67 @@ namespace Someta.Fody
 
             // Inventory candidate classes
             var allTypes = ModuleDefinition.GetAllTypes();
+            var assemblyInterceptorAttributes = ModuleDefinition.Assembly
+                .GetCustomAttributesIncludingSubtypes(extensionPointInterface)
+                .ToArray();
+            ExtensionPointAttribute[] assemblyInterceptors;
+
+            // If we have any assembly-level interceptors, we create a special state class to hold the attribute instances (since attributes
+            // can contain state, but getting attributes through reflection always returns a new instance.
+            if (assemblyInterceptorAttributes.Any())
+            {
+//                Debugger.Launch();
+                var assemblyState = new TypeDefinition("Someta", "AssemblyState", TypeAttributes.Public, TypeSystem.ObjectReference);
+                ModuleDefinition.Types.Add(assemblyState);
+
+/*
+                var constructorWithTarget = new MethodDefinition(".ctor", MethodAttributes.Public | MethodAttributes.SpecialName | MethodAttributes.RTSpecialName, TypeSystem.VoidReference);
+                constructorWithTarget.Body.Emit(il =>
+                {
+                    il.Emit(OpCodes.Ret);
+                });
+                assemblyState.Methods.Add(constructorWithTarget);
+*/
+
+                CecilExtensions.Context.AssemblyState = assemblyState;
+                assemblyInterceptors = assemblyInterceptorAttributes
+                    .Select(x => new ExtensionPointAttribute(assemblyState, ModuleDefinition.Assembly, x, ModuleDefinition.Assembly.CustomAttributes.IndexOf(x), ExtensionPointScope.Assembly))
+                    .ToArray();
+
+                foreach (var interceptor in assemblyInterceptors)
+                {
+                    var fieldName = interceptor.AttributeType.FullName.Replace(".", "$");
+                    var attributeField = new FieldDefinition(fieldName, FieldAttributes.Static | FieldAttributes.Public, interceptor.AttributeType);
+                    var index = ModuleDefinition.Assembly.CustomAttributes.IndexOf(interceptor.Attribute);
+                    assemblyState.Fields.Add(attributeField);
+
+                    assemblyState.EmitToStaticConstructor(il =>
+                    {
+                        il.EmitGetAssemblyAttributeByIndex(index, interceptor.AttributeType);
+                        il.SaveField(attributeField);
+                    });
+                }
+            }
+            else
+            {
+                assemblyInterceptors = new ExtensionPointAttribute[0];
+            }
+
+//            var moduleInterceptors = ModuleDefinition
+//                .GetCustomAttributesIncludingSubtypes(extensionPointInterface)
+//                .Select(x => new ExtensionPointAttribute(null, ModuleDefinition, x, ModuleDefinition.CustomAttributes.IndexOf(x), ExtensionPointScope.Module))
+//                .ToArray();
+//            var assemblyAndModuleInterceptors = assemblyInterceptors.Concat(moduleInterceptors).ToArray();
             foreach (var type in allTypes)
             {
+                // We can get into recursion scenarios if we allow extension points on extension points.  For now, let's naively prohibit this
+                if (extensionPointInterface.IsAssignableFrom(type))
+                    continue;
+
                 var classInterceptors = type
                     .GetCustomAttributesInAncestry(extensionPointInterface)
                     .Select(x => new ExtensionPointAttribute(x.DeclaringType, x.DeclaringType, x.Attribute, x.DeclaringType.CustomAttributes.IndexOf(x.Attribute), ExtensionPointScope.Class))
+                    .Concat(assemblyInterceptors/*.Select(x => new ExtensionPointAttribute(type, x.DeclaringMember, x.Attribute, x.Index, x.Scope))*/)
                     .ToArray();
 
                 foreach (var classInterceptor in classInterceptors)

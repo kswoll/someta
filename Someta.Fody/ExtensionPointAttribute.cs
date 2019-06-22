@@ -6,13 +6,13 @@ namespace Someta.Fody
     public struct ExtensionPointAttribute
     {
         public TypeDefinition DeclaringType { get; }
-        public IMemberDefinition DeclaringMember { get; }
+        public ICustomAttributeProvider DeclaringMember { get; }
         public CustomAttribute Attribute { get; }
         public TypeReference AttributeType => Attribute.AttributeType;
         public int Index { get; }
         public ExtensionPointScope Scope { get; }
 
-        public ExtensionPointAttribute(TypeDefinition declaringType, IMemberDefinition declaringMember, CustomAttribute attribute, int index, ExtensionPointScope scope) : this()
+        public ExtensionPointAttribute(TypeDefinition declaringType, ICustomAttributeProvider declaringMember, CustomAttribute attribute, int index, ExtensionPointScope scope) : this()
         {
             if (index < 0)
                 throw new ArgumentException(nameof(index));

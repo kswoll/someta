@@ -42,9 +42,11 @@ namespace Someta.Fody
         private static TypeReference attributeType;
         private static MethodReference attributeGetCustomAttribute;
         private static MethodReference attributeGetCustomAttributes;
+        private static MethodReference attributeGetCustomAttributesForAssembly;
         private static MethodReference methodBaseGetCurrentMethod;
         private static MethodReference typeGetProperty;
         private static MethodReference typeGetEvent;
+        private static MethodReference typeGetAssembly;
 
         internal static void Initialize(ModuleDefinition moduleDefinition, TypeSystem typeSystem, AssemblyNameReference soMeta)
         {
@@ -73,8 +75,11 @@ namespace Someta.Fody
             var memberInfoType = ModuleDefinition.ImportReference(typeof(MemberInfo));
             attributeGetCustomAttribute = ModuleDefinition.ImportReference(attributeTypeDefinition.Methods.Single(x => x.Name == nameof(Attribute.GetCustomAttribute) && x.Parameters.Count == 2 && x.Parameters[0].ParameterType.CompareTo(memberInfoType)));
             attributeGetCustomAttributes = ModuleDefinition.ImportReference(attributeTypeDefinition.Methods.Single(x => x.Name == nameof(Attribute.GetCustomAttributes) && x.Parameters.Count == 1 && x.Parameters[0].ParameterType.CompareTo(memberInfoType)));
+            var assemblyType = ModuleDefinition.ImportReference(typeof(Assembly));
+            attributeGetCustomAttributesForAssembly = ModuleDefinition.ImportReference(attributeTypeDefinition.Methods.Single(x => x.Name == nameof(Attribute.GetCustomAttributes) && x.Parameters.Count == 1 && x.Parameters[0].ParameterType.CompareTo(assemblyType)));
             var methodBaseType = ModuleDefinition.ImportReference(typeof(MethodBase));
             methodBaseGetCurrentMethod = ModuleDefinition.FindMethod(methodBaseType, nameof(MethodBase.GetCurrentMethod));
+            typeGetAssembly = ModuleDefinition.ImportReference(typeType.Properties.Single(x => x.Name == nameof(Type.Assembly)).GetMethod);
 
             var func1Type = ModuleDefinition.ImportReference(typeof(Func<>));
             var func2Type = ModuleDefinition.ImportReference(typeof(Func<,>));
@@ -568,6 +573,15 @@ namespace Someta.Fody
             il.EmitGetAttributeByIndex(() => il.LoadType(type), index, attributeType);
         }
 
+        public static void EmitGetAssemblyAttributeByIndex(this ILProcessor il, int index, TypeReference attributeType)
+        {
+            il.LoadTypeAssembly(Context.AssemblyState);
+            il.Emit(OpCodes.Call, attributeGetCustomAttributesForAssembly);
+            il.Emit(OpCodes.Ldc_I4, index);
+            il.Emit(OpCodes.Ldelem_Any, CecilExtensions.attributeType);
+            il.Emit(OpCodes.Castclass, attributeType);
+        }
+
         private static void EmitGetAttributeByIndex(this ILProcessor il, Action emitTarget, int index, TypeReference attributeType)
         {
             emitTarget();
@@ -918,6 +932,12 @@ namespace Someta.Fody
         {
             il.Emit(OpCodes.Ldtoken, type);
             il.Emit(OpCodes.Call, getTypeFromRuntimeHandleMethod);
+        }
+
+        public static void LoadTypeAssembly(this ILProcessor il, TypeReference type)
+        {
+            il.LoadType(type);
+            il.EmitCall(typeGetAssembly);
         }
 
         public static bool IsTaskT(this TypeReference type)

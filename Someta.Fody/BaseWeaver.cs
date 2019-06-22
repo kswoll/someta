@@ -1,10 +1,8 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Diagnostics;
-using System.Linq;
-using Mono.Cecil;
+﻿using Mono.Cecil;
 using Mono.Cecil.Cil;
-using Mono.Cecil.Rocks;
+using System;
+using System.Collections.Generic;
+using System.Linq;
 using TypeSystem = Fody.TypeSystem;
 
 namespace Someta.Fody
@@ -150,6 +148,13 @@ namespace Someta.Fody
         public FieldDefinition CacheAttributeInstance(IMemberDefinition member, FieldDefinition memberInfoField,
             ExtensionPointAttribute extensionPoint)
         {
+            if (extensionPoint.Scope == ExtensionPointScope.Assembly)
+            {
+                var assemblyAttributeFieldName = extensionPoint.AttributeType.FullName.Replace(".", "$");
+                var assemblyAttributeField = Context.AssemblyState.Fields.Single(x => x.Name == assemblyAttributeFieldName);
+                return assemblyAttributeField;
+            }
+
             var declaringType = extensionPoint.DeclaringType;
             var declaration = extensionPoint.Scope == ExtensionPointScope.Class ? declaringType : member;
             var fieldName = $"<{declaration.Name}>k__{extensionPoint.AttributeType.Name}${extensionPoint.Index}";

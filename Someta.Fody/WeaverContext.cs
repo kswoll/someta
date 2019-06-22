@@ -36,5 +36,6 @@ namespace Someta.Fody
         public MethodReference FindProperty { get; set; }
         public MethodReference OriginalMethodAttributeConstructor { get; set; }
         public MethodReference RegisterExtensionPoint { get; set; }
+        public TypeDefinition AssemblyState { get; set; }
     }
 }
