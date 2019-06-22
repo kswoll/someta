@@ -102,23 +102,53 @@ namespace Someta.Fody
             }
 
             // Inventory candidate classes
-//            Debugger.Launch();
             var allTypes = ModuleDefinition.GetAllTypes();
-            var assemblyInterceptors = ModuleDefinition.Assembly
+            var assemblyInterceptorAttributes = ModuleDefinition.Assembly
                 .GetCustomAttributesIncludingSubtypes(extensionPointInterface)
-                .Select(x => new ExtensionPointAttribute(null, ModuleDefinition.Assembly, x, ModuleDefinition.Assembly.CustomAttributes.IndexOf(x), ExtensionPointScope.Assembly))
                 .ToArray();
-            var moduleInterceptors = ModuleDefinition
-                .GetCustomAttributesIncludingSubtypes(extensionPointInterface)
-                .Select(x => new ExtensionPointAttribute(null, ModuleDefinition, x, ModuleDefinition.CustomAttributes.IndexOf(x), ExtensionPointScope.Module))
-                .ToArray();
-            var assemblyAndModuleInterceptors = assemblyInterceptors.Concat(moduleInterceptors).ToArray();
+            ExtensionPointAttribute[] assemblyInterceptors;
+
+            // If we have any assembly-level interceptors, we create a special state class to hold the attribute instances (since attributes
+            // can contain state, but getting attributes through reflection always returns a new instance.
+            if (assemblyInterceptorAttributes.Any())
+            {
+                Debugger.Launch();
+                var assemblyState = new TypeDefinition("", "$AssemblyState", TypeAttributes.Public);
+                ModuleDefinition.Types.Add(assemblyState);
+                CecilExtensions.Context.AssemblyState = assemblyState;
+                assemblyInterceptors = assemblyInterceptorAttributes
+                    .Select(x => new ExtensionPointAttribute(assemblyState, ModuleDefinition.Assembly, x, ModuleDefinition.Assembly.CustomAttributes.IndexOf(x), ExtensionPointScope.Assembly))
+                    .ToArray();
+
+                foreach (var (interceptor, index) in assemblyInterceptors.Select((x, i) => (x, i)))
+                {
+                    var fieldName = interceptor.AttributeType.FullName.Replace(".", "$");
+                    var attributeField = new FieldDefinition(fieldName, FieldAttributes.Static | FieldAttributes.Public, interceptor.AttributeType);
+                    assemblyState.Fields.Add(attributeField);
+
+                    assemblyState.EmitToStaticConstructor(il =>
+                    {
+                        il.EmitGetAssemblyAttributeByIndex(index, interceptor.AttributeType);
+                        il.SaveField(attributeField);
+                    });
+                }
+            }
+            else
+            {
+                assemblyInterceptors = new ExtensionPointAttribute[0];
+            }
+
+//            var moduleInterceptors = ModuleDefinition
+//                .GetCustomAttributesIncludingSubtypes(extensionPointInterface)
+//                .Select(x => new ExtensionPointAttribute(null, ModuleDefinition, x, ModuleDefinition.CustomAttributes.IndexOf(x), ExtensionPointScope.Module))
+//                .ToArray();
+//            var assemblyAndModuleInterceptors = assemblyInterceptors.Concat(moduleInterceptors).ToArray();
             foreach (var type in allTypes)
             {
                 var classInterceptors = type
                     .GetCustomAttributesInAncestry(extensionPointInterface)
                     .Select(x => new ExtensionPointAttribute(x.DeclaringType, x.DeclaringType, x.Attribute, x.DeclaringType.CustomAttributes.IndexOf(x.Attribute), ExtensionPointScope.Class))
-                    .Concat(assemblyAndModuleInterceptors.Select(x => new ExtensionPointAttribute(type, x.DeclaringMember, x.Attribute, x.Index, x.Scope)))
+                    .Concat(assemblyInterceptors/*.Select(x => new ExtensionPointAttribute(type, x.DeclaringMember, x.Attribute, x.Index, x.Scope))*/)
                     .ToArray();
 
                 foreach (var classInterceptor in classInterceptors)

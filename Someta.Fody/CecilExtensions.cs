@@ -45,6 +45,7 @@ namespace Someta.Fody
         private static MethodReference methodBaseGetCurrentMethod;
         private static MethodReference typeGetProperty;
         private static MethodReference typeGetEvent;
+        private static MethodReference typeGetAssembly;
 
         internal static void Initialize(ModuleDefinition moduleDefinition, TypeSystem typeSystem, AssemblyNameReference soMeta)
         {
@@ -75,6 +76,7 @@ namespace Someta.Fody
             attributeGetCustomAttributes = ModuleDefinition.ImportReference(attributeTypeDefinition.Methods.Single(x => x.Name == nameof(Attribute.GetCustomAttributes) && x.Parameters.Count == 1 && x.Parameters[0].ParameterType.CompareTo(memberInfoType)));
             var methodBaseType = ModuleDefinition.ImportReference(typeof(MethodBase));
             methodBaseGetCurrentMethod = ModuleDefinition.FindMethod(methodBaseType, nameof(MethodBase.GetCurrentMethod));
+            typeGetAssembly = ModuleDefinition.ImportReference(typeType.Properties.Single(x => x.Name == nameof(Type.Assembly)).GetMethod);
 
             var func1Type = ModuleDefinition.ImportReference(typeof(Func<>));
             var func2Type = ModuleDefinition.ImportReference(typeof(Func<,>));
@@ -568,10 +570,9 @@ namespace Someta.Fody
             il.EmitGetAttributeByIndex(() => il.LoadType(type), index, attributeType);
         }
 
-        public static void EmitGetAttributeByIndex(this ILProcessor il, AssemblyDefinition type, int index, TypeReference attributeType)
+        public static void EmitGetAssemblyAttributeByIndex(this ILProcessor il, int index, TypeReference attributeType)
         {
-            Assembly.Get
-            il.EmitGetAttributeByIndex(() => il.LoadType(type), index, attributeType);
+            il.EmitGetAttributeByIndex(() => il.LoadTypeAssembly(Context.AssemblyState), index, attributeType);
         }
 
         private static void EmitGetAttributeByIndex(this ILProcessor il, Action emitTarget, int index, TypeReference attributeType)
@@ -924,6 +925,12 @@ namespace Someta.Fody
         {
             il.Emit(OpCodes.Ldtoken, type);
             il.Emit(OpCodes.Call, getTypeFromRuntimeHandleMethod);
+        }
+
+        public static void LoadTypeAssembly(this ILProcessor il, TypeReference type)
+        {
+            il.LoadType(type);
+            il.EmitCall(typeGetAssembly);
         }
 
         public static bool IsTaskT(this TypeReference type)

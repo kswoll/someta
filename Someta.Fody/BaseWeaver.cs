@@ -143,11 +143,18 @@ namespace Someta.Fody
         public FieldDefinition CacheAttributeInstance(TypeDefinition type, ExtensionPointAttribute extensionPoint)
         {
             return CacheAttributeInstance(type, null, extensionPoint);
-        }xx
+        }
 
         public FieldDefinition CacheAttributeInstance(IMemberDefinition member, FieldDefinition memberInfoField,
             ExtensionPointAttribute extensionPoint)
         {
+            if (extensionPoint.Scope == ExtensionPointScope.Assembly)
+            {
+                var assemblyAttributeFieldName = extensionPoint.AttributeType.FullName.Replace(".", "$");
+                var assemblyAttributeField = Context.AssemblyState.Fields.Single(x => x.Name == assemblyAttributeFieldName);
+                return assemblyAttributeField;
+            }
+
             var declaringType = extensionPoint.DeclaringType;
             var declaration = extensionPoint.Scope == ExtensionPointScope.Class ? declaringType : member;
             var fieldName = $"<{declaration.Name}>k__{extensionPoint.AttributeType.Name}${extensionPoint.Index}";
@@ -161,8 +168,6 @@ namespace Someta.Fody
 
             declaringType.EmitToStaticConstructor(il =>
             {
-                if (extensionPoint.Scope == ExtensionPointScope.Assembly)
-                    il.EmitGetAttributeByIndex(ModuleDefinition.Assembly, extensionPoint.Index, extensionPoint.AttributeType);
                 if (extensionPoint.Scope == ExtensionPointScope.Class)
                     il.EmitGetAttributeByIndex(declaringType, extensionPoint.Index, extensionPoint.AttributeType);
                 else
