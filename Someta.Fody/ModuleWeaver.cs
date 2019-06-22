@@ -3,6 +3,7 @@ using System.Diagnostics;
 using System.Linq;
 using Fody;
 using Mono.Cecil;
+using Mono.Cecil.Cil;
 using Mono.Cecil.Rocks;
 
 namespace Someta.Fody
@@ -112,9 +113,19 @@ namespace Someta.Fody
             // can contain state, but getting attributes through reflection always returns a new instance.
             if (assemblyInterceptorAttributes.Any())
             {
-                Debugger.Launch();
-                var assemblyState = new TypeDefinition("", "$AssemblyState", TypeAttributes.Public);
+//                Debugger.Launch();
+                var assemblyState = new TypeDefinition("Someta", "AssemblyState", TypeAttributes.Public, TypeSystem.ObjectReference);
                 ModuleDefinition.Types.Add(assemblyState);
+
+/*
+                var constructorWithTarget = new MethodDefinition(".ctor", MethodAttributes.Public | MethodAttributes.SpecialName | MethodAttributes.RTSpecialName, TypeSystem.VoidReference);
+                constructorWithTarget.Body.Emit(il =>
+                {
+                    il.Emit(OpCodes.Ret);
+                });
+                assemblyState.Methods.Add(constructorWithTarget);
+*/
+
                 CecilExtensions.Context.AssemblyState = assemblyState;
                 assemblyInterceptors = assemblyInterceptorAttributes
                     .Select(x => new ExtensionPointAttribute(assemblyState, ModuleDefinition.Assembly, x, ModuleDefinition.Assembly.CustomAttributes.IndexOf(x), ExtensionPointScope.Assembly))
