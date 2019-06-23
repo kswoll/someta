@@ -44,25 +44,25 @@ namespace Someta.Fody.Tests
                 Suffix = suffix;
             }
 
-            public override object GetPropertyValue(PropertyInfo propertyInfo, object instance, Func<object> getter)
+            public override object GetPropertyValue(PropertyInfo propertyInfo, object instance, Func<object> proceed)
             {
-                return getter() + Suffix;
+                return proceed() + Suffix;
             }
         }
 
         private class ChainA : PropertyInterceptorAttribute
         {
-            public override object GetPropertyValue(PropertyInfo propertyInfo, object instance, Func<object> getter)
+            public override object GetPropertyValue(PropertyInfo propertyInfo, object instance, Func<object> proceed)
             {
-                return getter() + "A";
+                return proceed() + "A";
             }
         }
 
         private class ChainB : PropertyInterceptorAttribute
         {
-            public override object GetPropertyValue(PropertyInfo propertyInfo, object instance, Func<object> getter)
+            public override object GetPropertyValue(PropertyInfo propertyInfo, object instance, Func<object> proceed)
             {
-                return getter() + "B";
+                return proceed() + "B";
             }
         }
     }

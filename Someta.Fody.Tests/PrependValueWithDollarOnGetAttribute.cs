@@ -5,9 +5,9 @@ namespace Someta.Fody.Tests
 {
     public class PrependValueWithDollarOnGetAttribute : PropertyInterceptorAttribute
     {
-        public override object GetPropertyValue(PropertyInfo propertyInfo, object instance, Func<object> getter)
+        public override object GetPropertyValue(PropertyInfo propertyInfo, object instance, Func<object> proceed)
         {
-            var value = getter();
+            var value = proceed();
             return $"${value}";
         }
     }

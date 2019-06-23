@@ -28,7 +28,7 @@ namespace Someta.Fody.Tests
         {
             public InjectedField<object> Field { get; set; }
 
-            public object GetPropertyValue(PropertyInfo propertyInfo, object instance, Func<object> getter)
+            public object GetPropertyValue(PropertyInfo propertyInfo, object instance, Func<object> proceed)
             {
                 var helper = Field.GetValue(instance);
                 var value = helper.GetType().GetProperty("Value").GetValue(helper);

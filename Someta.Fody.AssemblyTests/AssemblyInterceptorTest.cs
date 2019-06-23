@@ -23,7 +23,7 @@ namespace Someta.Fody.AssemblyTests
 
             Invocations.Count.ShouldBe(2);
         }
-
+        
         public class TestClass
         {
             public void M()

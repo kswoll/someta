@@ -6,14 +6,14 @@ namespace Someta
     [AttributeUsage(AttributeTargets.Property | AttributeTargets.Class, AllowMultiple = true)]
     public abstract class PropertyInterceptorAttribute : ExtensionPointAttribute, IPropertyGetInterceptor, IPropertySetInterceptor
     {
-        public virtual object GetPropertyValue(PropertyInfo propertyInfo, object instance, Func<object> getter)
+        public virtual object GetPropertyValue(PropertyInfo propertyInfo, object instance, Func<object> proceed)
         {
-            return getter();
+            return proceed();
         }
 
-        public virtual void SetPropertyValue(PropertyInfo propertyInfo, object instance, object oldValue, object newValue, Action<object> setter)
+        public virtual void SetPropertyValue(PropertyInfo propertyInfo, object instance, object oldValue, object newValue, Action<object> proceed)
         {
-            setter(newValue);
+            proceed(newValue);
         }
     }
 }

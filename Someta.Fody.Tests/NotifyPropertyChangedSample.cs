@@ -72,11 +72,11 @@ namespace Someta.Fody.Tests
             [InjectAccess("OnPropertyChanged")]
             public Action<object, string, object, object> OnPropertyChanged { get; set; }
 
-            public void SetPropertyValue(PropertyInfo propertyInfo, object instance, object oldValue, object newValue, Action<object> setter)
+            public void SetPropertyValue(PropertyInfo propertyInfo, object instance, object oldValue, object newValue, Action<object> proceed)
             {
                 if (!Equals(oldValue, newValue))
                 {
-                    setter(newValue);
+                    proceed(newValue);
                     OnPropertyChanged(instance, propertyInfo.Name, oldValue, newValue);
                 }
             }

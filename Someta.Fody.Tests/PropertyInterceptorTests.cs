@@ -94,7 +94,7 @@ namespace Someta.Fody.Tests
 
         private class GetOnlyInterceptor : Attribute, IPropertyGetInterceptor
         {
-            public object GetPropertyValue(PropertyInfo propertyInfo, object instance, Func<object> getter)
+            public object GetPropertyValue(PropertyInfo propertyInfo, object instance, Func<object> proceed)
             {
                 return "foobar";
             }

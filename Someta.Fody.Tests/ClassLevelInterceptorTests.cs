@@ -58,9 +58,9 @@ namespace Someta.Fody.Tests
 
         private class GetPropertyValueAttribute : Attribute, IPropertyGetInterceptor
         {
-            public object GetPropertyValue(PropertyInfo propertyInfo, object instance, Func<object> getter)
+            public object GetPropertyValue(PropertyInfo propertyInfo, object instance, Func<object> proceed)
             {
-                return getter() + "foo";
+                return proceed() + "foo";
             }
         }
     }

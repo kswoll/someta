@@ -21,14 +21,14 @@ namespace Someta.Fody.Tests
                 Locker.SetValue(instance, new object());
         }
 
-        public object GetPropertyValue(PropertyInfo propertyInfo, object instance, Func<object> getter)
+        public object GetPropertyValue(PropertyInfo propertyInfo, object instance, Func<object> proceed)
         {
             lock (Locker.GetValue(instance))
             {
                 var currentValue = Field.GetValue(instance);
                 if (currentValue == null)
                 {
-                    currentValue = getter();
+                    currentValue = proceed();
                     Field.SetValue(instance, currentValue);
                 }
 
