@@ -23,7 +23,14 @@ namespace Someta.Fody.AssemblyTests
 
             Invocations.Count.ShouldBe(2);
         }
-        
+
+        [Test]
+        public void GetExtension()
+        {
+            var extension = GetType().Assembly.GetExtensionPoint<AssemblyMethodInterceptorAttribute>();
+            Assert.IsNotNull(extension);
+        }
+
         public class TestClass
         {
             public void M()

@@ -121,15 +121,6 @@ namespace Someta.Fody
                 var assemblyState = new TypeDefinition("Someta", "AssemblyState", TypeAttributes.Public, TypeSystem.ObjectReference);
                 ModuleDefinition.Types.Add(assemblyState);
 
-/*
-                var constructorWithTarget = new MethodDefinition(".ctor", MethodAttributes.Public | MethodAttributes.SpecialName | MethodAttributes.RTSpecialName, TypeSystem.VoidReference);
-                constructorWithTarget.Body.Emit(il =>
-                {
-                    il.Emit(OpCodes.Ret);
-                });
-                assemblyState.Methods.Add(constructorWithTarget);
-*/
-
                 CecilExtensions.Context.AssemblyState = assemblyState;
                 assemblyInterceptors = assemblyInterceptorAttributes
                     .Select(x => new ExtensionPointAttribute(assemblyState, ModuleDefinition.Assembly, x, ModuleDefinition.Assembly.CustomAttributes.IndexOf(x), ExtensionPointScope.Assembly))
@@ -146,6 +137,10 @@ namespace Someta.Fody
                     {
                         il.EmitGetAssemblyAttributeByIndex(index, interceptor.AttributeType);
                         il.SaveField(attributeField);
+
+                        il.LoadTypeAssembly(CecilExtensions.Context.AssemblyState);
+                        il.LoadField(attributeField);
+                        il.EmitCall(CecilExtensions.Context.RegisterExtensionPoint);
                     });
                 }
             }
