@@ -21,8 +21,6 @@ namespace Someta.Fody
 
         public override void Execute()
         {
-//            Debugger.Launch();
-
             var soMeta = ModuleDefinition.FindAssembly("Someta");
 
             CecilExtensions.LogInfo = WriteInfo;
