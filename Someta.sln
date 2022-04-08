@@ -1,18 +1,15 @@
 ﻿
 Microsoft Visual Studio Solution File, Format Version 12.00
-# Visual Studio Version 16
-VisualStudioVersion = 16.0.28902.138
+# Visual Studio Version 17
+VisualStudioVersion = 17.1.32319.34
 MinimumVisualStudioVersion = 10.0.40219.1
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Someta.Fody.Tests", "Someta.Fody.Tests\Someta.Fody.Tests.csproj", "{441B37E7-5787-432A-ADCA-19A127CD39FA}"
-	ProjectSection(ProjectDependencies) = postProject
-		{FBBD3165-8EC7-48A7-9563-51AF7B463BF8} = {FBBD3165-8EC7-48A7-9563-51AF7B463BF8}
-	EndProjectSection
-EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Someta.Fody", "Someta.Fody\Someta.Fody.csproj", "{FBBD3165-8EC7-48A7-9563-51AF7B463BF8}"
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Someta", "Someta\Someta.csproj", "{9B731B1C-68B5-42A5-B9FE-D71809D14EF7}"
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Someta.Fody.AssemblyTests", "Someta.Fody.AssemblyTests\Someta.Fody.AssemblyTests.csproj", "{620403C5-B1E8-4AD7-AFA7-171D221FB5FF}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Someta.Fody.Tests", "Someta.Fody.Tests\Someta.Fody.Tests.csproj", "{8EE407C4-3A43-402B-8A32-511F95FC9B0A}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -20,10 +17,6 @@ Global
 		Release|Any CPU = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(ProjectConfigurationPlatforms) = postSolution
-		{441B37E7-5787-432A-ADCA-19A127CD39FA}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
-		{441B37E7-5787-432A-ADCA-19A127CD39FA}.Debug|Any CPU.Build.0 = Debug|Any CPU
-		{441B37E7-5787-432A-ADCA-19A127CD39FA}.Release|Any CPU.ActiveCfg = Release|Any CPU
-		{441B37E7-5787-432A-ADCA-19A127CD39FA}.Release|Any CPU.Build.0 = Release|Any CPU
 		{FBBD3165-8EC7-48A7-9563-51AF7B463BF8}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
 		{FBBD3165-8EC7-48A7-9563-51AF7B463BF8}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{FBBD3165-8EC7-48A7-9563-51AF7B463BF8}.Release|Any CPU.ActiveCfg = Release|Any CPU
@@ -36,6 +29,10 @@ Global
 		{620403C5-B1E8-4AD7-AFA7-171D221FB5FF}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{620403C5-B1E8-4AD7-AFA7-171D221FB5FF}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{620403C5-B1E8-4AD7-AFA7-171D221FB5FF}.Release|Any CPU.Build.0 = Release|Any CPU
+		{8EE407C4-3A43-402B-8A32-511F95FC9B0A}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{8EE407C4-3A43-402B-8A32-511F95FC9B0A}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{8EE407C4-3A43-402B-8A32-511F95FC9B0A}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{8EE407C4-3A43-402B-8A32-511F95FC9B0A}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

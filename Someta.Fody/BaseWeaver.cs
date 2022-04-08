@@ -165,6 +165,8 @@ namespace Someta.Fody
             // Add static field for property
             field = new FieldDefinition(fieldName, FieldAttributes.Static | FieldAttributes.Public, extensionPoint.AttributeType);
             declaringType.Fields.Add(field);
+            if (declaringType.IsBeforeFieldInit)
+                declaringType.IsBeforeFieldInit = false;
 
             declaringType.EmitToStaticConstructor(il =>
             {

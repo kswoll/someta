@@ -20,12 +20,10 @@ namespace Someta.Fody.Tests
 
         public class TestClass
         {
-            public string s;
-
             [ObservableAsProperty]
             public string StringProperty { get; private set; }
         }
-
+        
         public class ObservableAsProperty : Attribute, IPropertyGetInterceptor, IStateExtensionPoint
         {
             public InjectedField<object> Field { get; set; }

@@ -25,9 +25,9 @@ namespace Someta.Fody
 
             var soMeta = ModuleDefinition.FindAssembly("Someta");
 
-            CecilExtensions.LogInfo = LogInfo;
-            CecilExtensions.LogWarning = LogWarning;
-            CecilExtensions.LogError = LogError;
+            CecilExtensions.LogInfo = WriteInfo;
+            CecilExtensions.LogWarning = WriteWarning;
+            CecilExtensions.LogError = WriteError;
             CecilExtensions.Initialize(ModuleDefinition, TypeSystem, soMeta);
 
             var extensionPointInterface = ModuleDefinition.FindType("Someta", "IExtensionPoint", soMeta);
@@ -173,20 +173,20 @@ namespace Someta.Fody
 
                 foreach (var classInterceptor in classInterceptors)
                 {
-                    LogInfo($"Found class interceptor {classInterceptor.AttributeType}");
+                    WriteInfo($"Found class interceptor {classInterceptor.AttributeType}");
                     if (nonPublicAccessInterface.IsAssignableFrom(classInterceptor.AttributeType))
                     {
-                        LogInfo($"Discovered class enhancer {classInterceptor.AttributeType.FullName} at {type.FullName}");
+                        WriteInfo($"Discovered class enhancer {classInterceptor.AttributeType.FullName} at {type.FullName}");
                         classEnhancers.Add((type, classInterceptor));
                     }
                     if (HasScope(classInterceptor, stateExtensionPointInterface, ExtensionPointScope.Class, stateExtensionPointInterfaceBase))
                     {
-                        LogInfo($"Discovered class state interceptor {classInterceptor.AttributeType.FullName} at {type.FullName}");
+                        WriteInfo($"Discovered class state interceptor {classInterceptor.AttributeType.FullName} at {type.FullName}");
                         stateInterceptions.Add((type, classInterceptor));
                     }
                     if (HasScope(classInterceptor, instanceInitializerInterface, ExtensionPointScope.Class, instanceInitializerInterfaceBase))
                     {
-                        LogInfo($"Discovered instance initializer {classInterceptor.AttributeType.FullName} at {type.FullName}");
+                        WriteInfo($"Discovered instance initializer {classInterceptor.AttributeType.FullName} at {type.FullName}");
                         instanceInitializers.Add((type, classInterceptor));
                     }
                 }
@@ -200,22 +200,22 @@ namespace Someta.Fody
                     {
                         if (propertyGetInterceptorInterface.IsAssignableFrom(interceptor.AttributeType))
                         {
-                            LogInfo($"Discovered property get interceptor {interceptor.AttributeType.FullName} at {type.FullName}.{property.Name}");
+                            WriteInfo($"Discovered property get interceptor {interceptor.AttributeType.FullName} at {type.FullName}.{property.Name}");
                             propertyGetInterceptions.Add((property, interceptor));
                         }
                         if (propertySetInterceptorInterface.IsAssignableFrom(interceptor.AttributeType))
                         {
-                            LogInfo($"Discovered property set interceptor {interceptor.AttributeType.FullName} at {type.FullName}.{property.Name}");
+                            WriteInfo($"Discovered property set interceptor {interceptor.AttributeType.FullName} at {type.FullName}.{property.Name}");
                             propertySetInterceptions.Add((property, interceptor));
                         }
                         if (HasScope(interceptor, stateExtensionPointInterface, ExtensionPointScope.Property, stateExtensionPointInterfaceBase))
                         {
-                            LogInfo($"Discovered property state interceptor {interceptor.AttributeType.FullName} at {type.FullName}.{property.Name}");
+                            WriteInfo($"Discovered property state interceptor {interceptor.AttributeType.FullName} at {type.FullName}.{property.Name}");
                             stateInterceptions.Add((property, interceptor));
                         }
                         if (HasScope(interceptor, instanceInitializerInterface, ExtensionPointScope.Property, instanceInitializerInterfaceBase))
                         {
-                            LogInfo($"Discovered instance initializer {interceptor.AttributeType.FullName} at {type.FullName}");
+                            WriteInfo($"Discovered instance initializer {interceptor.AttributeType.FullName} at {type.FullName}");
                             instanceInitializers.Add((property, interceptor));
                         }
                     }
@@ -232,12 +232,12 @@ namespace Someta.Fody
                     {
                         if (eventAddInterceptorInterface.IsAssignableFrom(interceptor.AttributeType))
                         {
-                            LogInfo($"Discovered event add interceptor {interceptor.AttributeType.FullName} at {type.FullName}.{@event.Name}");
+                            WriteInfo($"Discovered event add interceptor {interceptor.AttributeType.FullName} at {type.FullName}.{@event.Name}");
                             eventAddInterceptions.Add((@event, interceptor));
                         }
                         if (eventRemoveInterceptorInterface.IsAssignableFrom(interceptor.AttributeType))
                         {
-                            LogInfo($"Discovered event remove interceptor {interceptor.AttributeType.FullName} at {type.FullName}.{@event.Name}");
+                            WriteInfo($"Discovered event remove interceptor {interceptor.AttributeType.FullName} at {type.FullName}.{@event.Name}");
                             eventRemoveInterceptions.Add((@event, interceptor));
                         }
                     }
@@ -252,22 +252,22 @@ namespace Someta.Fody
                     {
                         if (methodInterceptorInterface.IsAssignableFrom(interceptor.AttributeType))
                         {
-                            LogInfo($"Discovered method interceptor {interceptor.AttributeType.FullName} at {type.FullName}.{method.Name}");
+                            WriteInfo($"Discovered method interceptor {interceptor.AttributeType.FullName} at {type.FullName}.{method.Name}");
                             methodInterceptions.Add((method, interceptor));
                         }
                         if (asyncMethodInterceptorInterface.IsAssignableFrom(interceptor.AttributeType))
                         {
-                            LogInfo($"Discovered async method interceptor {interceptor.AttributeType.FullName} at {type.FullName}.{method.Name}");
+                            WriteInfo($"Discovered async method interceptor {interceptor.AttributeType.FullName} at {type.FullName}.{method.Name}");
                             asyncMethodInterceptions.Add((method, interceptor));
                         }
                         if (HasScope(interceptor, stateExtensionPointInterface, ExtensionPointScope.Method, stateExtensionPointInterfaceBase))
                         {
-                            LogInfo($"Discovered method state interceptor {interceptor.AttributeType.FullName} at {type.FullName}.{method.Name}");
+                            WriteInfo($"Discovered method state interceptor {interceptor.AttributeType.FullName} at {type.FullName}.{method.Name}");
                             stateInterceptions.Add((method, interceptor));
                         }
                         if (HasScope(interceptor, instanceInitializerInterface, ExtensionPointScope.Method, instanceInitializerInterfaceBase))
                         {
-                            LogInfo($"Discovered instance initializer {interceptor.AttributeType.FullName} at {type.FullName}");
+                            WriteInfo($"Discovered instance initializer {interceptor.AttributeType.FullName} at {type.FullName}");
                             instanceInitializers.Add((method, interceptor));
                         }
                     }
