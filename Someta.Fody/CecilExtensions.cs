@@ -54,7 +54,7 @@ namespace Someta.Fody
             TypeSystem = typeSystem;
 
             var extensionPointRegistry = ModuleDefinition.FindType("Someta.Helpers", "ExtensionPointRegistry", soMeta);
-            if (extensionPointRegistry == null)
+            if (extensionPointRegistry == null || soMeta == null)
             {
                 LogWarning("You are using Someta.Fody but have not referenced or defined any interceptors");
                 return;
