@@ -166,6 +166,10 @@ namespace Someta.Fody
             // Add static field for property
             field = new FieldDefinition(fieldName, FieldAttributes.Static | FieldAttributes.Public, extensionPoint.AttributeType);
             declaringType.Fields.Add(field);
+
+            // Since we are explicitly declaring a static constructor, we need to ensure IsBeforeFieldInit is always false, as that being
+            // true depends on their not being a static constructor, so if there wasn't a static constructor before the weaving, it'll lead
+            // to unexpected results where the static constructor isn't called when expected (like when a type is instantiated).
             if (declaringType.IsBeforeFieldInit)
                 declaringType.IsBeforeFieldInit = false;
 

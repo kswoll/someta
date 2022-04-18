@@ -214,6 +214,30 @@ namespace Someta.Fody
             }
         }
 
+        /// <summary>
+        /// Emits to all primary constructors (constructors that do not chain to other constructors of the same class)
+        /// </summary>
+        public static void EmitToConstructorStart(this TypeDefinition type, Action<ILProcessor> il)
+        {
+            foreach (var constructor in type.GetConstructors().Where(x => !x.IsStatic))
+            {
+                if (constructor.Body.Instructions.Count > 1)
+                {
+                    var potentialConstructorCall = constructor.Body.Instructions[1];    // [0] is loading "this"
+                    if (potentialConstructorCall.Operand is MethodReference)
+                    {
+                        var potentialConstructor = ((MethodReference)potentialConstructorCall.Operand).Resolve();
+                        if (potentialConstructor.Resolve().IsConstructor && potentialConstructor.DeclaringType.CompareTo(type))
+                        {
+                            // This is not a primary constructor, so skip
+                            continue;
+                        }
+                    }
+                }
+                constructor.Body.EmitAfterBaseConstructorCall(il);
+            }
+        }
+
         public static GenericInstanceMethod MakeGenericMethod(this MethodReference method, params TypeReference[] genericArguments)
         {
             var result = new GenericInstanceMethod(method);
@@ -515,7 +539,7 @@ namespace Someta.Fody
             var ret = body.Instructions[retIndex];
 
             if (ret.OpCode != OpCodes.Ret)
-                throw new InvalidOperationException("Last instruction is not a return instruction, which is illeagl");
+                throw new InvalidOperationException("Last instruction is not a return instruction, which is illegal");
             if (!body.Method.ReturnType.CompareTo(TypeSystem.VoidReference))
                 throw new InvalidOperationException("Method return type is not void, so we cannot insert before the ret statement");
 
@@ -526,6 +550,46 @@ namespace Someta.Fody
             il(ilProcessor);
 
             ilProcessor.Emit(OpCodes.Ret);
+        }
+
+        public static Instruction FindConstructorCall(this MethodBody body)
+        {
+            // Find instruction that call the base constructor
+            foreach (var instruction in body.Instructions)
+            {
+                if (instruction.OpCode == OpCodes.Call && instruction.Operand is MethodReference methodReference)
+                {
+                    var potentialConstructor = methodReference.Resolve();
+                    if (potentialConstructor.IsConstructor)
+                    {
+                        return instruction;
+                    }
+                }
+            }
+            return null;
+        }
+
+        public static void EmitAfterBaseConstructorCall(this MethodBody body, Action<ILProcessor> il)
+        {
+            var constructorCall = body.FindConstructorCall();
+            if (constructorCall == null)
+                throw new InvalidOperationException($"No constructor call found in method.  Either the method isn't a constructor, or it's badly formed.");
+            var startIndex = body.Instructions.IndexOf(constructorCall);
+
+            var instructionsCopy = body.Instructions.ToArray();
+            body.Instructions.Clear();
+
+            // Add back the instructions before and including the constructor call
+            for (int i = 0; i <= startIndex; i++)
+                body.Instructions.Add(instructionsCopy[i]);
+
+            // Add the new instructions
+            var ilProcessor = body.GetILProcessor();
+            il(ilProcessor);
+
+            // Add back the instructions after the constructor call
+            for (int i = startIndex + 1; i < instructionsCopy.Length; i++)
+                body.Instructions.Add(instructionsCopy[i]);
         }
 
         public static void EmitGetPropertyInfo(this ILProcessor il, PropertyDefinition property)

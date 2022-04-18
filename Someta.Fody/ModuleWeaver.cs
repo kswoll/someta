@@ -43,6 +43,8 @@ namespace Someta.Fody
             var asyncInvokerUnwrap = ModuleDefinition.FindMethod(asyncInvoker, "Unwrap");
             var instanceInitializerInterfaceBase = ModuleDefinition.FindType("Someta", "IInstanceInitializer", soMeta);
             var instanceInitializerInterface = ModuleDefinition.FindType("Someta", "IInstanceInitializer`1", soMeta, "T");
+            var instancePreinitializerInterfaceBase = ModuleDefinition.FindType("Someta", "IInstancePreinitializer", soMeta);
+            var instancePreinitializerInterface = ModuleDefinition.FindType("Someta", "IInstancePreinitializer`1", soMeta, "T");
 //            var interceptorScopeAttribute = ModuleDefinition.FindType("Someta", "InterceptorScopeAttribute", soMeta);
 //            var requireScopeInterceptorInterface = ModuleDefinition.FindType("Someta", "IRequireScopeInterceptor", soMeta);
 
@@ -62,6 +64,7 @@ namespace Someta.Fody
             var classEnhancers = new List<(TypeDefinition, ExtensionPointAttribute)>();
             var stateInterceptions = new List<(IMemberDefinition, ExtensionPointAttribute)>();
             var instanceInitializers = new List<(IMemberDefinition, ExtensionPointAttribute)>();
+            var instancePreinitializers = new List<(IMemberDefinition, ExtensionPointAttribute)>();
 
             var propertyGetInterceptorWeaver = new PropertyGetInterceptorWeaver(CecilExtensions.Context, propertyGetInterceptorInterface);
             var propertySetInterceptorWeaver = new PropertySetInterceptorWeaver(CecilExtensions.Context, propertySetInterceptorInterface);
@@ -71,6 +74,7 @@ namespace Someta.Fody
             var classEnhancerWeaver = new ClassEnhancerWeaver(CecilExtensions.Context);
             var stateWeaver = new StateWeaver(CecilExtensions.Context);
             var instanceInitializerWeaver = new InstanceInitializerWeaver(CecilExtensions.Context);
+            var instancePreinitializerWeaver = new InstancePreinitializerWeaver(CecilExtensions.Context);
 
             // unscopedInterface: If present, and if genericTypes is empty (meaning no specific scope was specified),
             // unscopedInterface will be checked as a fallback.
@@ -187,6 +191,11 @@ namespace Someta.Fody
                         WriteInfo($"Discovered instance initializer {classInterceptor.AttributeType.FullName} at {type.FullName}");
                         instanceInitializers.Add((type, classInterceptor));
                     }
+                    if (HasScope(classInterceptor, instancePreinitializerInterface, ExtensionPointScope.Class, instancePreinitializerInterfaceBase))
+                    {
+                        WriteInfo($"Discovered instance preinitializer {classInterceptor.AttributeType.FullName} at {type.FullName}");
+                        instancePreinitializers.Add((type, classInterceptor));
+                    }
                 }
 
                 foreach (var property in type.Properties)
@@ -215,6 +224,11 @@ namespace Someta.Fody
                         {
                             WriteInfo($"Discovered instance initializer {interceptor.AttributeType.FullName} at {type.FullName}");
                             instanceInitializers.Add((property, interceptor));
+                        }
+                        if (HasScope(interceptor, instancePreinitializerInterface, ExtensionPointScope.Property, instancePreinitializerInterfaceBase))
+                        {
+                            WriteInfo($"Discovered instance preinitializer {interceptor.AttributeType.FullName} at {type.FullName}");
+                            instancePreinitializers.Add((property, interceptor));
                         }
                     }
                 }
@@ -268,6 +282,11 @@ namespace Someta.Fody
                             WriteInfo($"Discovered instance initializer {interceptor.AttributeType.FullName} at {type.FullName}");
                             instanceInitializers.Add((method, interceptor));
                         }
+                        if (HasScope(interceptor, instancePreinitializerInterface, ExtensionPointScope.Method, instancePreinitializerInterfaceBase))
+                        {
+                            WriteInfo($"Discovered instance preinitializer {interceptor.AttributeType.FullName} at {type.FullName}");
+                            instancePreinitializers.Add((method, interceptor));
+                        }
                     }
                 }
             }
@@ -315,6 +334,11 @@ namespace Someta.Fody
             foreach (var (type, interceptor) in instanceInitializers)
             {
                 instanceInitializerWeaver.Weave(type, interceptor);
+            }
+
+            foreach (var (type, interceptor) in instancePreinitializers)
+            {
+                instancePreinitializerWeaver.Weave(type, interceptor);
             }
         }
     }
