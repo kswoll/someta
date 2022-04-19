@@ -9,8 +9,6 @@ jobs:
     runs-on: windows-2022
     timeout-minutes: 15
     steps:
-    - name: Debug Environment Variables
-      uses: hmarr/debug-action@v2
     - name: setup-msbuild
       uses: microsoft/setup-msbuild@v1.1    
     - name: Checkout
@@ -21,8 +19,15 @@ jobs:
         git branch --remote --contains | grep origin/master
     - name: Set VERSION variable from tag
       run: |
-        echo "VERSION=${GITHUB_REF/refs\/tags\/v/}" >> $GITHUB_ENV
-        echo "${GITHUB_REF/refs\/tags\/v/}"
+        Write-Output "github.ref_name ${{ github.ref_name }}"
+        echo "Working Path: ${Env:GITHUB_WORKSPACE}"
+        echo "github.ref_name ${{ github.ref_name }}"
+        $version = "${{ github.ref_name }}";
+        $versionNumber = $version -replace "v", ""
+        echo $versionNumber
+
+        echo $Env:GITHUB_REF
+        echo "VERSION=$versionNumber" >> $GITHUB_ENV
     - name: Setup .NET
       uses: actions/setup-dotnet@v2
       with:
