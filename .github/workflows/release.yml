@@ -45,7 +45,7 @@ jobs:
       run: dotnet test --configuration Release /p:Version=${Env:VERSION} --no-build
     - name: Pack
       run: |
-        copy .\nugets\*.* .
+        copy ..\nugets\*.* .
     - name: Push
       run: |
         dotnet nuget push Someta.Fody.${Env:VERSION}.nupkg -s https://api.nuget.org/v3/index.json --api-key ${Env:NUGET_API_KEY}
