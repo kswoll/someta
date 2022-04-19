@@ -20,15 +20,11 @@ jobs:
     - name: Set VERSION variable from tag
       run: |
         Write-Output "github.ref_name ${{ github.ref_name }}"
-        echo "Working Path: ${Env:GITHUB_WORKSPACE}"
-        echo "github.ref_name ${{ github.ref_name }}"
         $version = "${{ github.ref_name }}";
         $versionNumber = $version -replace "v", ""
         echo $versionNumber
 
-        echo $Env:GITHUB_REF
         echo "VERSION=$versionNumber" >> ${Env:GITHUB_ENV}
-        echo "${Env:GITHUB_ENV}"
     - name: Setup .NET
       uses: actions/setup-dotnet@v2
       with:
