@@ -22,7 +22,7 @@ jobs:
     - name: Restore dependencies
       run: dotnet restore
     - name: MsBuild
-      run: msbuild /property:Configuration=Release
+      run: msbuild
     - name: Build
       run: dotnet build --no-restore
     - name: Test
