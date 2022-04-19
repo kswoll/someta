@@ -9,6 +9,8 @@ jobs:
     runs-on: windows-2022
     timeout-minutes: 15
     steps:
+    - name: Debug Environment Variables
+      uses: hmarr/debug-action@v2
     - name: setup-msbuild
       uses: microsoft/setup-msbuild@v1.1    
     - name: Checkout
