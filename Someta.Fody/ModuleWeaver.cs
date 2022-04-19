@@ -22,11 +22,15 @@ namespace Someta.Fody
         public override void Execute()
         {
             var soMeta = ModuleDefinition.FindAssembly("Someta");
+            if (soMeta == null)
+                throw new InvalidOperationException($"Could not find assembly Someta");
 
             CecilExtensions.LogInfo = WriteInfo;
             CecilExtensions.LogWarning = WriteWarning;
             CecilExtensions.LogError = WriteError;
-            CecilExtensions.Initialize(ModuleDefinition, TypeSystem, soMeta);
+
+            if (!CecilExtensions.Initialize(ModuleDefinition, TypeSystem, soMeta))
+                return;
 
             var extensionPointInterface = ModuleDefinition.FindType("Someta", "IExtensionPoint", soMeta);
             var stateExtensionPointInterface = ModuleDefinition.FindType("Someta", "IStateExtensionPoint`1", soMeta, "T");

@@ -9,6 +9,7 @@
     <PackageTags>fody metaprogramming aop</PackageTags>
     <PackageOutputPath>$(SolutionDir)../nugets</PackageOutputPath>
     <PackageProjectUrl>https://github.com/kswoll/Someta</PackageProjectUrl>
+    <GenerateDocumentationFile>False</GenerateDocumentationFile>
   </PropertyGroup>
 
   <ItemGroup>

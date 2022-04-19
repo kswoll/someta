@@ -51,8 +51,10 @@ namespace Someta.Fody
         private static MethodReference typeGetEvent;
         private static MethodReference typeGetAssembly;
 
-        internal static void Initialize(ModuleDefinition moduleDefinition, TypeSystem typeSystem, AssemblyNameReference soMeta)
+        internal static bool Initialize(ModuleDefinition moduleDefinition, TypeSystem typeSystem, AssemblyNameReference soMeta)
         {
+//            Debugger.Launch();
+
             ModuleDefinition = moduleDefinition;
             TypeSystem = typeSystem;
 
@@ -60,11 +62,16 @@ namespace Someta.Fody
             if (extensionPointRegistry == null || soMeta == null)
             {
                 LogWarning("You are using Someta.Fody but have not referenced or defined any interceptors");
-                return;
+                return false;
             }
             var extensionPointRegistryRegister = ModuleDefinition.FindMethod(extensionPointRegistry, "Register");
 
             typeType = ModuleDefinition.ImportReference(typeof(Type)).Resolve();
+            if (typeType == null)
+            {
+                throw new InvalidOperationException($"System.Type was somehow not found.  Aborting.");
+            }
+
             taskType = ModuleDefinition.ImportReference(typeof(Task));
             getTypeFromRuntimeHandleMethod = ModuleDefinition.ImportReference(typeType.Methods.Single(x => x.Name == "GetTypeFromHandle"));
             typeGetMethods = ModuleDefinition.ImportReference(CaptureFunc<Type, MethodInfo[]>(x => x.GetMethods(default)));
@@ -167,6 +174,8 @@ namespace Someta.Fody
                 RegisterExtensionPoint = extensionPointRegistryRegister
             };
             Context = context;
+
+            return true;
         }
 
         public static AssemblyNameReference FindAssembly(this ModuleDefinition module, string name)
