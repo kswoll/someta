@@ -18,6 +18,9 @@ using TypeSystem = Fody.TypeSystem;
 
 namespace Someta.Fody
 {
+    /// <summary>
+    /// Lots of utility methods to make writing IL with Fody less painful.
+    /// </summary>
     public static class CecilExtensions
     {
         public static ModuleDefinition ModuleDefinition { get; set; }
@@ -808,8 +811,10 @@ namespace Someta.Fody
 
         public static void EmitLocalMethodDelegate(this ILProcessor il, MethodReference handler, TypeReference delegateType, params TypeReference[] typeArguments)
         {
+            // Creating a new delegate expects "this" to be on the stack (for instance methods)
             if (handler.HasThis)
                 il.Emit(OpCodes.Ldarg_0);
+            // ...and "null" on the stack for static methods
             else
                 il.Emit(OpCodes.Ldnull);
             il.EmitDelegate(handler, delegateType, typeArguments);

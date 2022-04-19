@@ -59,6 +59,13 @@ namespace Someta.Fody
             il.Emit(OpCodes.Ret);
         }
 
+        /// <summary>
+        /// Implements the delegate passed to your interceptor that allows you to call the original getter.
+        /// </summary>
+        /// <param name="method">The original Property.get method that is being intercepted.</param>
+        /// <param name="interceptorAttribute">The attribute that implements IPropertyGetInterceptor associated
+        /// with this property.</param>
+        /// <returns>The method definition that implements the delegate (proceed).</returns>
         private MethodReference ImplementProceedGet(MethodDefinition method, TypeReference interceptorAttribute)
         {
             var type = method.DeclaringType;
