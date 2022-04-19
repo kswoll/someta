@@ -28,7 +28,7 @@ namespace Someta.Fody.Tests
             o.Value.ShouldBe("foobar");
         }
 
-        //[ClassInitializer]
+        [ClassInitializer]
         public class ClassInitializerTestClass
         {
             public MemberInfo MemberInfo { get; set; }
@@ -44,7 +44,7 @@ namespace Someta.Fody.Tests
 
         public class PropertyInitializerTestClass
         {
-           // [PropertyInitializer]
+            [PropertyInitializer]
             public PropertyInfo PropertyInfo { get; set; }
         }
 
