@@ -20,7 +20,7 @@ jobs:
     - name: Set VERSION variable from tag
       run: |
         echo "VERSION=${GITHUB_REF/refs\/tags\/v/}" >> $GITHUB_ENV
-        echo "${VERSION}"
+        echo "${GITHUB_REF/refs\/tags\/v/}"
     - name: Setup .NET
       uses: actions/setup-dotnet@v2
       with:
