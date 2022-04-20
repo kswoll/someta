@@ -72,24 +72,24 @@ namespace Someta.Fody.Tests
             types[3].ShouldBe(typeof(string));
         }
 
-        public class LogInterceptorAttribute : MethodInterceptorAttribute
+        public class LogInterceptorAttribute : Attribute, IMethodInterceptor
         {
-            public override object Invoke(MethodInfo methodInfo, object instance, object[] parameters, Func<object[], object> invoker)
+            public object Invoke(MethodInfo methodInfo, object instance, object[] parameters, Func<object[], object> invoker)
             {
                 ((TestClass)instance).InvocationCount++;
                 return invoker(parameters);
             }
         }
 
-        public class ConcatParameterTypes : MethodInterceptorAttribute
+        public class ConcatParameterTypes : Attribute, IMethodInterceptor
         {
-            public override object Invoke(MethodInfo methodInfo, object instance, object[] parameters, Func<object[], object> invoker)
+            public object Invoke(MethodInfo methodInfo, object instance, object[] parameters, Func<object[], object> invoker)
             {
                 return ((Type[])invoker(parameters)).Concat(parameters.Select(x => x.GetType())).ToArray();
             }
         }
 
-        public class StringInterceptorAttribute : MethodInterceptorAttribute
+        public class StringInterceptorAttribute : Attribute, IMethodInterceptor
         {
             public string Data { get; }
 
@@ -98,7 +98,7 @@ namespace Someta.Fody.Tests
                 Data = data;
             }
 
-            public override object Invoke(MethodInfo methodInfo, object instance, object[] parameters, Func<object[], object> invoker)
+            public object Invoke(MethodInfo methodInfo, object instance, object[] parameters, Func<object[], object> invoker)
             {
                 var originalValue = invoker(parameters);
                 return originalValue + Data;

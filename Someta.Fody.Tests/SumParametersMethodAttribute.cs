@@ -1,12 +1,10 @@
-﻿using System;
-using System.Linq;
-using System.Reflection;
+﻿using System.Reflection;
 
 namespace Someta.Fody.Tests
 {
-    public class SumParametersMethodAttribute : MethodInterceptorAttribute
+    public class SumParametersMethodAttribute : Attribute, IMethodInterceptor
     {
-        public override object Invoke(MethodInfo methodInfo, object instance, object[] parameters, Func<object[], object> invoker)
+        public object Invoke(MethodInfo methodInfo, object instance, object[] parameters, Func<object[], object> invoker)
         {
             return parameters.Select(x => (int)x).Sum();
         }

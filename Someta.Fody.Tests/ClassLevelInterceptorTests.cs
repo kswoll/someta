@@ -48,9 +48,9 @@ namespace Someta.Fody.Tests
             public string Property { get; set; }
         }
 
-        private class ReturnMethodNameAttribute : MethodInterceptorAttribute
+        private class ReturnMethodNameAttribute : Attribute, IMethodInterceptor
         {
-            public override object Invoke(MethodInfo methodInfo, object instance, object[] parameters, Func<object[], object> invoker)
+            public object Invoke(MethodInfo methodInfo, object instance, object[] parameters, Func<object[], object> invoker)
             {
                 return methodInfo.Name;
             }

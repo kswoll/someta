@@ -4,9 +4,9 @@ using Someta;
 
 namespace Someta.Fody.Tests
 {
-    public class DoubleStringOnSetAttribute : PropertyInterceptorAttribute
+    public class DoubleStringOnSetAttribute : Attribute, IPropertySetInterceptor
     {
-        public override void SetPropertyValue(PropertyInfo propertyInfo, object instance, object oldValue, object newValue, Action<object> setter)
+        public void SetPropertyValue(PropertyInfo propertyInfo, object instance, object oldValue, object newValue, Action<object> setter)
         {
             var s = (string)newValue;
             s = s + s;

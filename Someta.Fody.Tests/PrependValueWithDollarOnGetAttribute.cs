@@ -1,11 +1,10 @@
-﻿using System;
-using System.Reflection;
+﻿using System.Reflection;
 
 namespace Someta.Fody.Tests
 {
-    public class PrependValueWithDollarOnGetAttribute : PropertyInterceptorAttribute
+    public class PrependValueWithDollarOnGetAttribute : Attribute, IPropertyGetInterceptor
     {
-        public override object GetPropertyValue(PropertyInfo propertyInfo, object instance, Func<object> getter)
+        public object GetPropertyValue(PropertyInfo propertyInfo, object instance, Func<object> getter)
         {
             var value = getter();
             return $"${value}";

@@ -35,7 +35,8 @@ namespace Someta.Fody.Tests
             public string SameChain { get; set; }
         }
 
-        private class Chain : PropertyInterceptorAttribute
+        [AttributeUsage(AttributeTargets.Property, AllowMultiple = true)]
+        private class Chain : Attribute, IPropertyGetInterceptor
         {
             public string Suffix { get; }
 
@@ -44,23 +45,25 @@ namespace Someta.Fody.Tests
                 Suffix = suffix;
             }
 
-            public override object GetPropertyValue(PropertyInfo propertyInfo, object instance, Func<object> getter)
+            public object GetPropertyValue(PropertyInfo propertyInfo, object instance, Func<object> getter)
             {
                 return getter() + Suffix;
             }
         }
 
-        private class ChainA : PropertyInterceptorAttribute
+        [AttributeUsage(AttributeTargets.Property, AllowMultiple = true)]
+        private class ChainA : Attribute, IPropertyGetInterceptor
         {
-            public override object GetPropertyValue(PropertyInfo propertyInfo, object instance, Func<object> getter)
+            public object GetPropertyValue(PropertyInfo propertyInfo, object instance, Func<object> getter)
             {
                 return getter() + "A";
             }
         }
 
-        private class ChainB : PropertyInterceptorAttribute
+        [AttributeUsage(AttributeTargets.Property, AllowMultiple = true)]
+        private class ChainB : Attribute, IPropertyGetInterceptor
         {
-            public override object GetPropertyValue(PropertyInfo propertyInfo, object instance, Func<object> getter)
+            public object GetPropertyValue(PropertyInfo propertyInfo, object instance, Func<object> getter)
             {
                 return getter() + "B";
             }
