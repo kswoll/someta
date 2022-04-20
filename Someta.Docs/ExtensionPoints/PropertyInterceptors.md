@@ -9,7 +9,7 @@ To change this file edit the source file and then run MarkdownSnippets.
 
 Someta supports property interceptors.  What this means is that when you decorate your property with an implementation of one or both of `IPropertyGetInterceptor` and `IPropertySetInterceptor` you can have your own code called instead.  Both property gets and sets allow you to call the original implementation via a provided delegate.
 
-### IPropertyGetInterceptor
+## IPropertyGetInterceptor
 
 This interface has one method:
 
@@ -24,12 +24,12 @@ As you can see, your implementation is provided with everything you need to cust
 ```cs
 public void PropertySetExample()
 {
-    var testClass = new PropertySetTestClass();
+    var testClass = new PropertyGetTestClass();
     testClass.Value = 3;
     Console.WriteLine(testClass.Value);     // Prints 6
 }
 
-class PropertySetTestClass
+class PropertyGetTestClass
 {
     [PropertyGetInterceptor]
     public int Value { get; set; }
@@ -48,7 +48,7 @@ class PropertyGetInterceptor : Attribute, IPropertyGetInterceptor
 <sup><a href='/Someta.Docs/Samples/PropertyGetInterceptorExample.cs#L10-L33' title='Snippet source file'>snippet source</a> | <a href='#snippet-propertygetinterceptorexample' title='Start of snippet'>anchor</a></sup>
 <!-- endSnippet -->
 
-### IPropertySetInterceptor
+## IPropertySetInterceptor
 
 This interface has one method:
 
@@ -58,7 +58,7 @@ void SetPropertyValue(PropertyInfo propertyInfo, object instance, object oldValu
 
 As you can see, your implementation is provided with everything you need to customize the behavior of the setter.  If you don't want to call the original set, simply don't invoke `setter`.
 
-#### Example
+### Example
 
 <!-- snippet: PropertySetInterceptorExample -->
 <a id='snippet-propertysetinterceptorexample'></a>
