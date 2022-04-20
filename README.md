@@ -45,4 +45,4 @@ One final question one might ask is why these scoped versions of the extension p
 
 ## FAQ
 
-Please see our [FAQ](https://github.com/kswoll/someta/wiki/FAQ) to see if it addresses any of your questions or concerns.
+Please see our [FAQ](Someta.Docs/FAQ.md) to see if it addresses any of your questions or concerns.
