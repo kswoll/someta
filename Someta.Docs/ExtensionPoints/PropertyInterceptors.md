@@ -48,7 +48,7 @@ class PropertyGetInterceptor : Attribute, IPropertyGetInterceptor
 <sup><a href='/Someta.Docs/Samples/PropertyGetInterceptorExample.cs#L10-L33' title='Snippet source file'>snippet source</a> | <a href='#snippet-propertygetinterceptorexample' title='Start of snippet'>anchor</a></sup>
 <!-- endSnippet -->
 
-## IPropertySetInterceptor
+## [IPropertySetInterceptor](/Someta/IPropertySetInterceptor.cs)
 
 This interface has one method:
 

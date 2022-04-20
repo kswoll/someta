@@ -14,7 +14,7 @@ As you can see, your implementation is provided with everything you need to cust
 
 snippet: PropertyGetInterceptorExample
 
-## IPropertySetInterceptor
+## [IPropertySetInterceptor](/Someta/IPropertySetInterceptor.cs)
 
 This interface has one method:
 
