@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.Linq;
@@ -1275,6 +1276,56 @@ namespace Someta.Fody
         public static string Describe(this MethodDefinition method)
         {
             return $"{method.ReturnType.Name} {method.DeclaringType.FullName}.{method.Name}({string.Join(", ", method.Parameters.Select(x => $"{x.ParameterType.Name} {x.Name}"))})";
+        }
+
+        public static string Describe(this TypeDefinition type)
+        {
+            return type.FullName;
+        }
+
+        public static string Describe(this PropertyDefinition property)
+        {
+            return $"{property.DeclaringType.FullName}.{property.Name}";
+        }
+
+        public static string Describe(this EventDefinition @event)
+        {
+            return $"{@event.DeclaringType.FullName}.{@event.Name}";
+        }
+
+        public static string Describe(this IMemberDefinition member)
+        {
+            if (member is MethodDefinition method)
+                return Describe(method);
+            else if (member is PropertyDefinition property)
+                return Describe(property);
+            else if (member is EventDefinition @event)
+                return Describe(@event);
+            else if (member is TypeDefinition type)
+                return Describe(type);
+            else
+                throw new InvalidOperationException($"Unexpected member type: {member.GetType().FullName}");
+        }
+
+        private static ConcurrentDictionary<TypeDefinition, HashSet<MethodDefinition>> isPropertyAccessorCache = new();
+
+        public static bool IsPropertyAccessor(this MethodDefinition method)
+        {
+            var cache = isPropertyAccessorCache.GetOrAdd(method.DeclaringType, x =>
+            {
+                var properties = method.DeclaringType.Properties;
+                var typeCache = new HashSet<MethodDefinition>();
+                foreach (var property in properties)
+                {
+                    if (property.GetMethod != null)
+                        typeCache.Add(property.GetMethod);
+                    if (property.SetMethod != null)
+                        typeCache.Add(property.SetMethod);
+                }
+
+                return typeCache;
+            });
+            return cache.Contains(method);
         }
     }
 }
