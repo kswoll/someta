@@ -5,11 +5,11 @@ Source File: /Someta.Docs/ExtensionPoints/PropertyInterceptors.source.md
 To change this file edit the source file and then run MarkdownSnippets.
 -->
 
-# Property Interceptors
+# Markdown File
 
 Someta supports property interceptors.  What this means is that when you decorate your property with an implementation of one or both of `IPropertyGetInterceptor` and `IPropertySetInterceptor` you can have your own code called instead.  Both property gets and sets allow you to call the original implementation via a provided delegate.
 
-## IPropertyGetInterceptor
+### IPropertyGetInterceptor
 
 This interface has one method:
 
@@ -19,7 +19,36 @@ object GetPropertyValue(PropertyInfo propertyInfo, object instance, Func<object>
 
 As you can see, your implementation is provided with everything you need to customize the behavior of the getter.  If you don't want to call the original get, simply don't invoke `getter`.
 
-## IPropertySetInterceptor
+<!-- snippet: PropertyGetInterceptorExample -->
+<a id='snippet-propertygetinterceptorexample'></a>
+```cs
+public void PropertySetExample()
+{
+    var testClass = new PropertySetTestClass();
+    testClass.Value = 3;
+    Console.WriteLine(testClass.Value);     // Prints 6
+}
+
+class PropertySetTestClass
+{
+    [PropertyGetInterceptor]
+    public int Value { get; set; }
+}
+
+[AttributeUsage(AttributeTargets.Property)]
+class PropertyGetInterceptor : Attribute, IPropertyGetInterceptor
+{
+    public object GetPropertyValue(PropertyInfo propertyInfo, object instance, Func<object> getter)
+    {
+        var currentValue = (int)getter();
+        return currentValue * 2;
+    }
+}
+```
+<sup><a href='/Someta.Docs/Samples/PropertyGetInterceptorExample.cs#L10-L33' title='Snippet source file'>snippet source</a> | <a href='#snippet-propertygetinterceptorexample' title='Start of snippet'>anchor</a></sup>
+<!-- endSnippet -->
+
+### IPropertySetInterceptor
 
 This interface has one method:
 
@@ -29,7 +58,7 @@ void SetPropertyValue(PropertyInfo propertyInfo, object instance, object oldValu
 
 As you can see, your implementation is provided with everything you need to customize the behavior of the setter.  If you don't want to call the original set, simply don't invoke `setter`.
 
-### Example
+#### Example
 
 <!-- snippet: PropertySetInterceptorExample -->
 <a id='snippet-propertysetinterceptorexample'></a>
