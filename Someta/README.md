@@ -1,4 +1,4 @@
-﻿# Markdown File
+# Markdown File
 
 # Someta
 

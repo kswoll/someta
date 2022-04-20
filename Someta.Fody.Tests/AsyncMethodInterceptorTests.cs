@@ -28,9 +28,9 @@ namespace Someta.Fody.Tests
             }
         }
 
-        public class AsyncTestInterceptor : AsyncMethodInterceptorAttribute
+        public class AsyncTestInterceptor : Attribute, IAsyncMethodInterceptor
         {
-            public override async Task<object> InvokeAsync(MethodInfo methodInfo, object instance, object[] arguments, Func<object[], Task<object>> invoker)
+            public async Task<object> InvokeAsync(MethodInfo methodInfo, object instance, object[] arguments, Func<object[], Task<object>> invoker)
             {
                 await Task.Delay(1);
                 var value = (int)await invoker(arguments);
@@ -124,9 +124,9 @@ namespace Someta.Fody.Tests
             }
         }
 
-        public class ConcatParameterTypes : AsyncMethodInterceptorAttribute
+        public class ConcatParameterTypes : Attribute, IAsyncMethodInterceptor
         {
-            public override async Task<object> InvokeAsync(MethodInfo methodInfo, object instance, object[] arguments, Func<object[], Task<object>> invoker)
+            public async Task<object> InvokeAsync(MethodInfo methodInfo, object instance, object[] arguments, Func<object[], Task<object>> invoker)
             {
                 return ((Type[])await invoker(arguments)).Concat(arguments.Select(x => x.GetType())).ToArray();
             }
