@@ -9,7 +9,7 @@ To change this file edit the source file and then run MarkdownSnippets.
 
 Someta supports property interceptors.  What this means is that when you decorate your property with an implementation of one or both of `IPropertyGetInterceptor` and `IPropertySetInterceptor` you can have your own code called instead.  Both property gets and sets allow you to call the original implementation via a provided delegate.
 
-## IPropertyGetInterceptor
+## [IPropertyGetInterceptor](/Someta/IPropertyGetInterceptor.cs)
 
 This interface has one method:
 
