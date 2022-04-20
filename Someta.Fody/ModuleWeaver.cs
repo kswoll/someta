@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.Linq;
@@ -75,7 +75,7 @@ namespace Someta.Fody
             var eventInterceptorWeaver = new EventInterceptorWeaver(CecilExtensions.Context);
             var methodInterceptorWeaver = new MethodInterceptorWeaver(CecilExtensions.Context, methodInterceptorInterface, asyncMethodInterceptorInterface);
             var asyncMethodInterceptorWeaver = new AsyncMethodInterceptorWeaver(CecilExtensions.Context, asyncMethodInterceptorInterface, asyncInvokerWrap, asyncInvokerUnwrap);
-            var classEnhancerWeaver = new ClassEnhancerWeaver(CecilExtensions.Context);
+            var classEnhancerWeaver = new NonPublicAccessWeaver(CecilExtensions.Context);
             var stateWeaver = new StateWeaver(CecilExtensions.Context);
             var instanceInitializerWeaver = new InstanceInitializerWeaver(CecilExtensions.Context);
             var instancePreinitializerWeaver = new InstancePreinitializerWeaver(CecilExtensions.Context);
@@ -259,7 +259,18 @@ namespace Someta.Fody
                     }
                 }
 
-                foreach (var method in type.Methods.Where(x => !x.IsConstructor))
+                // This is what enforces, for example, that method interceptors don't catch property accessors or constructors.
+                // We've decided it makes the code more clear if property accessors must be explicitly opted into via the
+                // property interceptor interfaces.  So if you want all methods including property accessors to be caught by your
+                // extension, just implement all the interfaces and create a common method if you have common behavior for them all.
+                //
+                // TODO: possibly reconsider whether async/non-async should have the special case it currently enjoys where we allow a
+                // non async method interceptor to be a catch all if no async version exists.  By the logic of this comment, it would seem
+                // to follow that async should also be explicitly handled by implementing the async interface if you are interested
+                // in those methods.
+                var methods = type.Methods.Where(x => !x.IsConstructor && !x.IsPropertyAccessor()).ToArray();
+
+                foreach (var method in methods)
                 {
                     var interceptors = method.GetCustomAttributesIncludingSubtypes(extensionPointInterface)
                         .Select(x => new ExtensionPointAttribute(type, method, x, method.CustomAttributes.IndexOf(x), ExtensionPointScope.Method))
