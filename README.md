@@ -6,8 +6,6 @@ What is this library? It aims to be a swiss-army knife toolkit for easy meta pro
 > Install-Package Someta.Fody
 
 ## Summary
-Please see our [Wiki](https://github.com/kswoll/someta/wiki) for documentation and samples.
-
 It provides a number of extension points for you to customize your compiled code.  The current set of available extension points are:
 
 * [Property interceptors](Someta.Docs/ExtensionPoints/PropertyInterceptors.md)
