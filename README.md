@@ -21,7 +21,7 @@ It provides a number of extension points for you to customize your compiled code
   * `IAsyncMethodInterceptor` will intercept only methods that return `Task` or `Task<T>` and allows the interceptor to use async semantics (i.e. `await`) when intercepting.
 * [State](Someta.Docs/ExtensionPoints/StateExtensionPoints.md)
   * `IStateExtensionPoint` allows you to inject fields into the host so your extension can track state against your types and instances directly.
-* Non public access
+* [Non public access](Someta.Docs/ExtensionPoints/NonPublicAccess.md)
   * `INonPublicAccess` allows you to inject access to non-public members of the annotated class.  Used with `InjectAccessAttribute`
 `InjectTargetAttribute`.
 * [Instance initialization](Someta.Docs/ExtensionPoints/InstanceInitializers.md)
