@@ -31,7 +31,7 @@ public class AsyncMethodInterceptorExample
     {
         public async Task<object> InvokeAsync(MethodInfo methodInfo, object instance, object[] arguments, Func<object[], Task<object>> invoker)
         {
-            await Task.Delay(0);        // Just to force await semantics
+            await Task.Delay(0);        // Just to demonstrate await semantics
             ((AsyncMethodTestClass)instance).InvocationCount++;
             return await invoker(arguments);
         }

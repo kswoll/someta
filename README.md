@@ -24,7 +24,7 @@ It provides a number of extension points for you to customize your compiled code
 * Non public access
   * `INonPublicAccess` allows you to inject access to non-public members of the annotated class.  Used with `InjectAccessAttribute`
 `InjectTargetAttribute`.
-* Instance initialization
+* [Instance initialization](Someta.Docs/ExtensionPoints/InstanceInitializers.md)
   * `IInstanceInitializer` gives you a place to add behavior to the end of the constructor of the annotated class.  Useful for instantiating fields when using the state extension point.
 * Instance preinitialization
   * `IInstancePreinitializer` gives you a place to add behavior to the start of the constructor of the annotated class.  Useful for instantiating fields when using the state extension point, and you want them initialized before the actual constructor runs.  Note that preinitialization begins after calling the base class constructor.
