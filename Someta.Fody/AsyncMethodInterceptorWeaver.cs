@@ -65,10 +65,14 @@ namespace Someta.Fody
             il.Emit(OpCodes.Callvirt, baseInvoke);
 
             // Before we return, we need to convert the `Task<object>` to `Task<T>`  We use the
-            // AsyncInvoker helper so we don't have to build the state machine from scratch.
-            var unwrappedReturnType = ((GenericInstanceType)method.ReturnType).GenericArguments[0];
-            var typedInvoke = asyncInvokerUnwrap.MakeGenericMethod(unwrappedReturnType);
-            il.Emit(OpCodes.Call, typedInvoke);
+            // AsyncInvoker helper so we don't have to build the state machine from scratch. Note: this
+            // obviously only applies if the return type is Task<T> vs Task.
+            if (method.ReturnType is GenericInstanceType)
+            {
+                var unwrappedReturnType = ((GenericInstanceType)method.ReturnType).GenericArguments[0];
+                var typedInvoke = asyncInvokerUnwrap.MakeGenericMethod(unwrappedReturnType);
+                il.Emit(OpCodes.Call, typedInvoke);
+            }
 
             // Return
             il.Emit(OpCodes.Ret);
@@ -88,10 +92,13 @@ namespace Someta.Fody
             {
                 builder.EmitCallOriginal(il);
 
-                // Before we return, we need to wrap the original `Task<T>` into a `Task<object>`
-                var unwrappedReturnType = ((GenericInstanceType)method.ReturnType).GenericArguments[0];
-                var typedInvoke = asyncInvokerWrap.MakeGenericMethod(unwrappedReturnType);
-                il.Emit(OpCodes.Call, typedInvoke);
+                // Before we return, we need to wrap the original `Task<T>` into a `Task<object>` (if it's actually a Task<T> vs. a Task)
+                if (method.ReturnType is GenericInstanceType taskT)
+                {
+                    var unwrappedReturnType = taskT.GenericArguments[0];
+                    var typedInvoke = asyncInvokerWrap.MakeGenericMethod(unwrappedReturnType);
+                    il.Emit(OpCodes.Call, typedInvoke);
+                }
 
                 il.Emit(OpCodes.Ret);
             });

@@ -13,20 +13,19 @@ It provides a number of extension points for you to customize your compiled code
 * [Property interceptors](Someta.Docs/ExtensionPoints/PropertyInterceptors.md)
   * `get` in the form of `IPropertyGetInterceptor`
   * `set` in the form of `IPropertySetInterceptor`
-* Event interceptors
+* [Event interceptors](Someta.Docs/ExtensionPoints/EventInterceptors.md)
   * `add` in the form of `IEventAddInterceptor`
   * `remove` in the form of `IEventRemoveInterceptor`
-* Method interceptors
+* [Method interceptors](Someta.Docs/ExtensionPoints/MethodInterceptors.md)
   * `IMethodInterceptor` will intercept all methods unless the extension also implements `IAsyncMethodInterceptor`, in which case async methods (defined as returning an instance of `Task` or `Task<T>`) are ignored and handled by the following extension point.
   * `IAsyncMethodInterceptor` will intercept only methods that return `Task` or `Task<T>` and allows the interceptor to use async semantics (i.e. `await`) when intercepting.
-* State
+* [State](Someta.Docs/ExtensionPoints/StateExtensionPoints.md)
   * `IStateExtensionPoint` allows you to inject fields into the host so your extension can track state against your types and instances directly.
-* Non public access
+* [Non public access](Someta.Docs/ExtensionPoints/NonPublicAccess.md)
   * `INonPublicAccess` allows you to inject access to non-public members of the annotated class.  Used with `InjectAccessAttribute`
 `InjectTargetAttribute`.
-* Instance initialization
+* [Instance initialization](Someta.Docs/ExtensionPoints/InstanceInitializers.md)
   * `IInstanceInitializer` gives you a place to add behavior to the end of the constructor of the annotated class.  Useful for instantiating fields when using the state extension point.
-* Instance preinitialization
   * `IInstancePreinitializer` gives you a place to add behavior to the start of the constructor of the annotated class.  Useful for instantiating fields when using the state extension point, and you want them initialized before the actual constructor runs.  Note that preinitialization begins after calling the base class constructor.
 
 ## Extensions
@@ -45,4 +44,4 @@ One final question one might ask is why these scoped versions of the extension p
 
 ## FAQ
 
-Please see our [FAQ](https://github.com/kswoll/someta/wiki/FAQ) to see if it addresses any of your questions or concerns.
+Please see our [FAQ](Someta.Docs/FAQ.md) to see if it addresses any of your questions or concerns.

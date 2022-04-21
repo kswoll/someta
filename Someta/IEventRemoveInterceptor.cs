@@ -16,6 +16,8 @@ namespace Someta
         /// <param name="instance">The instance on which the event was removed (or null for static methods).</param>
         /// <param name="handler">The event handler being removed.</param>
         /// <param name="proceed">A delegate you can call to invoke the original remove function.</param>
+        #region EventRemoveInterceptor
         void RemoveEventHandler(EventInfo eventInfo, object instance, Delegate handler, Action<Delegate> proceed);
+        #endregion
     }
 }

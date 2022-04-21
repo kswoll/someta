@@ -16,7 +16,9 @@ namespace Someta
         /// </summary>
         /// <param name="instance">The new instance of the target member (or its enclosing class)</param>
         /// <param name="member">The member to which this extension point was applied</param>
+        #region InstancePreinitializer
         void Preinitialize(object instance, MemberInfo member);
+        #endregion
     }
 
     /// <summary>
