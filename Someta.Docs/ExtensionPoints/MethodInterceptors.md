@@ -9,7 +9,9 @@ To change this file edit the source file and then run MarkdownSnippets.
 
 Someta supports method interceptors.  What this means is that when you decorate your method with an implementation of one or both of `IMethodInterceptor` and `IAsyncMethodInterceptor` you can have your own code called instead.  Both kinds allow you to call the original implementation via a provided delegate.
 
-The reason we have two types of interfaces is that for async interceptors, there's a good chance you'll want to use `await`.  Since `await` requires the return type of the interceptor 
+The reason we have two types of interfaces is that for async interceptors, there's a good chance you'll want to use `await`.  Since `await` requires the return type of the interceptor method to return a `Task`, you have to have a separate implementation for async methods if you actually want to make use of `await` in your interceptor.
+
+However, you _are_ allowed to _only_ implement `IMethodInterceptor`.  If you don't _also_ implement `IAsyncMethodInterceptor` then the `Invoke` method defined in `IMethodInterceptor` will be called for _all_ methods, both async and non-async.
 
 
 ## [IMethodInterceptor](/Someta/IMethodInterceptor.cs)
@@ -24,50 +26,40 @@ object Invoke(MethodInfo methodInfo, object instance, object[] arguments, Func<o
 <sup><a href='/Someta/IMethodInterceptor.cs#L25-L27' title='Snippet source file'>snippet source</a> | <a href='#snippet-methodinterceptor' title='Start of snippet'>anchor</a></sup>
 <!-- endSnippet -->
 
-
 ### Example
 
-<!-- snippet: StateExtensionPointExample -->
-<a id='snippet-stateextensionpointexample'></a>
+<!-- snippet: MethodInterceptorExample -->
+<a id='snippet-methodinterceptorexample'></a>
 ```cs
-public void StateExample()
+public void MethodExample()
 {
-    var testClass = new StateExtensionPointTestClass();
-    testClass.Run();
-    var extensionPoint = ExtensionPoint.GetExtensionPoint<StateExtensionPoint>(testClass.GetType());
-    var invocationCount = extensionPoint.GetCurrentValue(testClass);
-    Console.WriteLine(invocationCount);     // Prints 1
+    var testClass = new MethodTestClass();
+    testClass.Method();
+    Console.WriteLine(testClass.InvocationCount);     // Prints 1
 }
 
-[StateExtensionPoint]
-class StateExtensionPointTestClass
+class MethodTestClass
 {
-    public int Value { get; set; }
-
-    public void Run()
+    [MethodInterceptor]
+    public void Method()
     {
     }
+
+    public int InvocationCount { get; set; }
 }
 
-[AttributeUsage(AttributeTargets.Class)]
-class StateExtensionPoint : Attribute, IStateExtensionPoint, IMethodInterceptor
+[AttributeUsage(AttributeTargets.Method)]
+class MethodInterceptor : Attribute, IMethodInterceptor
 {
-    public InjectedField<int> TestField { get; set; } = default!;
-
-    public object? Invoke(MethodInfo methodInfo, object instance, object[] arguments, Func<object[], object> invoker)
+    public object Invoke(MethodInfo methodInfo, object instance, object[] arguments, Func<object[], object> invoker)
     {
-        var value = TestField.GetValue(instance);
-        var newValue = value + 1;
-        TestField.SetValue(instance, newValue);
-        return null;
+        ((MethodTestClass)instance).InvocationCount++;
+        return invoker(arguments);
     }
-
-    public int GetCurrentValue(object instance) => TestField.GetValue(instance);
 }
 ```
-<sup><a href='/Someta.Docs/Samples/StateExtensionPointExample.cs#L10-L45' title='Snippet source file'>snippet source</a> | <a href='#snippet-stateextensionpointexample' title='Start of snippet'>anchor</a></sup>
+<sup><a href='/Someta.Docs/Samples/MethodInterceptorExample.cs#L10-L37' title='Snippet source file'>snippet source</a> | <a href='#snippet-methodinterceptorexample' title='Start of snippet'>anchor</a></sup>
 <!-- endSnippet -->
-
 
 ## [IAsyncMethodInterceptor](/Someta/IAsyncMethodInterceptor.cs)
 
@@ -79,4 +71,41 @@ This interface has one method:
 Task<object> InvokeAsync(MethodInfo methodInfo, object instance, object[] arguments, Func<object[], Task<object>> invoker);
 ```
 <sup><a href='/Someta/IAsyncMethodInterceptor.cs#L26-L28' title='Snippet source file'>snippet source</a> | <a href='#snippet-asyncmethodinterceptor' title='Start of snippet'>anchor</a></sup>
+<!-- endSnippet -->
+
+### Example
+
+<!-- snippet: AsyncMethodInterceptorExample -->
+<a id='snippet-asyncmethodinterceptorexample'></a>
+```cs
+public async Task AsyncMethodExample()
+{
+    var testClass = new AsyncMethodTestClass();
+    await testClass.AsyncMethod();
+    Console.WriteLine(testClass.InvocationCount);     // Prints 1
+}
+
+class AsyncMethodTestClass
+{
+    [AsyncMethodInterceptor]
+    public async Task AsyncMethod()
+    {
+        await Task.Delay(0);        // Just to force await semantics
+    }
+
+    public int InvocationCount { get; set; }
+}
+
+[AttributeUsage(AttributeTargets.Method)]
+class AsyncMethodInterceptor : Attribute, IAsyncMethodInterceptor
+{
+    public async Task<object> InvokeAsync(MethodInfo methodInfo, object instance, object[] arguments, Func<object[], Task<object>> invoker)
+    {
+        await Task.Delay(0);        // Just to force await semantics
+        ((AsyncMethodTestClass)instance).InvocationCount++;
+        return await invoker(arguments);
+    }
+}
+```
+<sup><a href='/Someta.Docs/Samples/AsyncMethodInterceptorExample.cs#L10-L39' title='Snippet source file'>snippet source</a> | <a href='#snippet-asyncmethodinterceptorexample' title='Start of snippet'>anchor</a></sup>
 <!-- endSnippet -->
