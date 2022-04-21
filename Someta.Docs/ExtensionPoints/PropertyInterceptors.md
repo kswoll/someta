@@ -5,7 +5,7 @@ Source File: /Someta.Docs/ExtensionPoints/PropertyInterceptors.source.md
 To change this file edit the source file and then run MarkdownSnippets.
 -->
 
-# Markdown File
+# Property Interceptors
 
 Someta supports property interceptors.  What this means is that when you decorate your property with an implementation of one or both of `IPropertyGetInterceptor` and `IPropertySetInterceptor` you can have your own code called instead.  Both property gets and sets allow you to call the original implementation via a provided delegate.
 
@@ -46,6 +46,44 @@ class PropertyGetInterceptor : Attribute, IPropertyGetInterceptor
 }
 ```
 <sup><a href='/Someta.Docs/Samples/PropertyGetInterceptorExample.cs#L10-L33' title='Snippet source file'>snippet source</a> | <a href='#snippet-propertygetinterceptorexample' title='Start of snippet'>anchor</a></sup>
+<a id='snippet-propertygetinterceptorexample-1'></a>
+```cs
+public void PropertyGetExample()
+{
+    var testClass = new StateExtensionPointTestClass();
+    testClass.Run();
+    var extensionPoint = ExtensionPoint.GetExtensionPoint<StateExtensionPoint>(testClass.GetType());
+    var invocationCount = extensionPoint.GetCurrentValue(testClass);
+    Console.WriteLine(invocationCount);     // Prints 1
+}
+
+[StateExtensionPoint]
+class StateExtensionPointTestClass
+{
+    public int Value { get; set; }
+
+    public void Run()
+    {
+    }
+}
+
+[AttributeUsage(AttributeTargets.Class)]
+class StateExtensionPoint : Attribute, IStateExtensionPoint, IMethodInterceptor
+{
+    public InjectedField<int> TestField { get; set; } = default!;
+
+    public object? Invoke(MethodInfo methodInfo, object instance, object[] arguments, Func<object[], object> invoker)
+    {
+        var value = TestField.GetValue(instance);
+        var newValue = value + 1;
+        TestField.SetValue(instance, newValue);
+        return null;
+    }
+
+    public int GetCurrentValue(object instance) => TestField.GetValue(instance);
+}
+```
+<sup><a href='/Someta.Docs/Samples/StateExtensionPointExample.cs#L10-L45' title='Snippet source file'>snippet source</a> | <a href='#snippet-propertygetinterceptorexample-1' title='Start of snippet'>anchor</a></sup>
 <!-- endSnippet -->
 
 ## [IPropertySetInterceptor](/Someta/IPropertySetInterceptor.cs)

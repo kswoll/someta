@@ -1,0 +1,9 @@
+# State Extension Points
+
+Someta allows you to add fields to the class containing your extension point.  There are a variety of reasons where you may want to track state for each instance that the extension point is attached to.  
+
+**Note**: static fields are not supported as there's no point.  If you need a static field, just declare it in your extension point as a normal static field.
+
+## [IStateExtensionPoint](/Someta/IStateExtensionPoint.cs)
+
+This interface works in conjunction with [`InjectedField<T>`](../../Someta/InjectedField.cs).  The purpose of this interface is to act as a marker for whether or not to look for injected fields in your extension point.

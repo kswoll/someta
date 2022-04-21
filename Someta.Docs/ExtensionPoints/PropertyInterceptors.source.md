@@ -1,4 +1,4 @@
-# Markdown File
+# Property Interceptors
 
 Someta supports property interceptors.  What this means is that when you decorate your property with an implementation of one or both of `IPropertyGetInterceptor` and `IPropertySetInterceptor` you can have your own code called instead.  Both property gets and sets allow you to call the original implementation via a provided delegate.
 
