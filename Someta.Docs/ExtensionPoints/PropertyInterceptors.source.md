@@ -12,6 +12,8 @@ object GetPropertyValue(PropertyInfo propertyInfo, object instance, Func<object>
 
 As you can see, your implementation is provided with everything you need to customize the behavior of the getter.  If you don't want to call the original get, simply don't invoke `getter`.
 
+### Example
+
 snippet: PropertyGetInterceptorExample
 
 ## [IPropertySetInterceptor](/Someta/IPropertySetInterceptor.cs)

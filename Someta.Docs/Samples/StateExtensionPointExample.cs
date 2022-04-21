@@ -7,7 +7,7 @@ namespace Someta.Docs.Samples;
 public class StateExtensionPointExample
 {
     [Test]
-    #region PropertyGetInterceptorExample
+    #region StateExtensionPointExample
     public void PropertyGetExample()
     {
         var testClass = new StateExtensionPointTestClass();

@@ -19,6 +19,8 @@ object GetPropertyValue(PropertyInfo propertyInfo, object instance, Func<object>
 
 As you can see, your implementation is provided with everything you need to customize the behavior of the getter.  If you don't want to call the original get, simply don't invoke `getter`.
 
+### Example
+
 <!-- snippet: PropertyGetInterceptorExample -->
 <a id='snippet-propertygetinterceptorexample'></a>
 ```cs
@@ -46,44 +48,6 @@ class PropertyGetInterceptor : Attribute, IPropertyGetInterceptor
 }
 ```
 <sup><a href='/Someta.Docs/Samples/PropertyGetInterceptorExample.cs#L10-L33' title='Snippet source file'>snippet source</a> | <a href='#snippet-propertygetinterceptorexample' title='Start of snippet'>anchor</a></sup>
-<a id='snippet-propertygetinterceptorexample-1'></a>
-```cs
-public void PropertyGetExample()
-{
-    var testClass = new StateExtensionPointTestClass();
-    testClass.Run();
-    var extensionPoint = ExtensionPoint.GetExtensionPoint<StateExtensionPoint>(testClass.GetType());
-    var invocationCount = extensionPoint.GetCurrentValue(testClass);
-    Console.WriteLine(invocationCount);     // Prints 1
-}
-
-[StateExtensionPoint]
-class StateExtensionPointTestClass
-{
-    public int Value { get; set; }
-
-    public void Run()
-    {
-    }
-}
-
-[AttributeUsage(AttributeTargets.Class)]
-class StateExtensionPoint : Attribute, IStateExtensionPoint, IMethodInterceptor
-{
-    public InjectedField<int> TestField { get; set; } = default!;
-
-    public object? Invoke(MethodInfo methodInfo, object instance, object[] arguments, Func<object[], object> invoker)
-    {
-        var value = TestField.GetValue(instance);
-        var newValue = value + 1;
-        TestField.SetValue(instance, newValue);
-        return null;
-    }
-
-    public int GetCurrentValue(object instance) => TestField.GetValue(instance);
-}
-```
-<sup><a href='/Someta.Docs/Samples/StateExtensionPointExample.cs#L10-L45' title='Snippet source file'>snippet source</a> | <a href='#snippet-propertygetinterceptorexample-1' title='Start of snippet'>anchor</a></sup>
 <!-- endSnippet -->
 
 ## [IPropertySetInterceptor](/Someta/IPropertySetInterceptor.cs)
