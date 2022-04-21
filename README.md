@@ -16,7 +16,7 @@ It provides a number of extension points for you to customize your compiled code
 * Event interceptors
   * `add` in the form of `IEventAddInterceptor`
   * `remove` in the form of `IEventRemoveInterceptor`
-* Method interceptors
+* [Method interceptors](Someta.Docs/ExtensionPoints/MethodInterceptors.md)
   * `IMethodInterceptor` will intercept all methods unless the extension also implements `IAsyncMethodInterceptor`, in which case async methods (defined as returning an instance of `Task` or `Task<T>`) are ignored and handled by the following extension point.
   * `IAsyncMethodInterceptor` will intercept only methods that return `Task` or `Task<T>` and allows the interceptor to use async semantics (i.e. `await`) when intercepting.
 * [State](Someta.Docs/ExtensionPoints/StateExtensionPoints.md)
