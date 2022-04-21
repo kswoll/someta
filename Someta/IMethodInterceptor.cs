@@ -22,6 +22,8 @@ namespace Someta
         /// <param name="arguments">The arguments passed to the method.</param>
         /// <param name="invoker">A delegate you can call to invoke the original method implementation.</param>
         /// <returns>The result of the method that should be returned to the caller.</returns>
+        #region MethodInterceptor
         object Invoke(MethodInfo methodInfo, object instance, object[] arguments, Func<object[], object> invoker);
+        #endregion
     }
 }

@@ -7,7 +7,7 @@ To change this file edit the source file and then run MarkdownSnippets.
 
 # State Extension Points
 
-Someta allows you to add fields to the class containing your extension point.  There are a variety of reasons where you may want to track state for each instance that the extension point is attached to.  (For example, )
+Someta allows you to add fields to the class containing your extension point.  There are a variety of siutations where you may want to track state for each instance that the extension point is attached to.
 
 **Note**: static fields are not supported as there's no point.  If you need a static field, just declare it in your extension point as a normal static field.
 
