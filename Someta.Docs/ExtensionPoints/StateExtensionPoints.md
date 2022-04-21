@@ -20,7 +20,7 @@ This interface works in conjunction with [`InjectedField<T>`](../../Someta/Injec
 <!-- snippet: StateExtensionPointExample -->
 <a id='snippet-stateextensionpointexample'></a>
 ```cs
-public void PropertyGetExample()
+public void StateExample()
 {
     var testClass = new StateExtensionPointTestClass();
     testClass.Run();

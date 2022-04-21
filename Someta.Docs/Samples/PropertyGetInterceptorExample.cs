@@ -8,7 +8,7 @@ public class PropertyGetInterceptorExample
 {
     [Test]
     #region PropertyGetInterceptorExample
-    public void PropertySetExample()
+    public void PropertyGetExample()
     {
         var testClass = new PropertyGetTestClass();
         testClass.Value = 3;

@@ -24,7 +24,7 @@ As you can see, your implementation is provided with everything you need to cust
 <!-- snippet: PropertyGetInterceptorExample -->
 <a id='snippet-propertygetinterceptorexample'></a>
 ```cs
-public void PropertySetExample()
+public void PropertyGetExample()
 {
     var testClass = new PropertyGetTestClass();
     testClass.Value = 3;

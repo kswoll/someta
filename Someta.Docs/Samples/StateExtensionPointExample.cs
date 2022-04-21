@@ -8,7 +8,7 @@ public class StateExtensionPointExample
 {
     [Test]
     #region StateExtensionPointExample
-    public void PropertyGetExample()
+    public void StateExample()
     {
         var testClass = new StateExtensionPointTestClass();
         testClass.Run();
