@@ -16,6 +16,8 @@ namespace Someta
         /// <param name="instance">The instance on which the event was added (or null for static methods).</param>
         /// <param name="handler">The event handler being added.</param>
         /// <param name="proceed">A delegate you can call to invoke the original add function.</param>
+        #region EventAddInterceptor
         void AddEventHandler(EventInfo eventInfo, object instance, Delegate handler, Action<Delegate> proceed);
+        #endregion
     }
 }

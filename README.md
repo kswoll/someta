@@ -13,7 +13,7 @@ It provides a number of extension points for you to customize your compiled code
 * [Property interceptors](Someta.Docs/ExtensionPoints/PropertyInterceptors.md)
   * `get` in the form of `IPropertyGetInterceptor`
   * `set` in the form of `IPropertySetInterceptor`
-* Event interceptors
+* [Event interceptors](Someta.Docs/ExtensionPoints/EventInterceptors.md)
   * `add` in the form of `IEventAddInterceptor`
   * `remove` in the form of `IEventRemoveInterceptor`
 * [Method interceptors](Someta.Docs/ExtensionPoints/MethodInterceptors.md)
@@ -26,7 +26,6 @@ It provides a number of extension points for you to customize your compiled code
 `InjectTargetAttribute`.
 * [Instance initialization](Someta.Docs/ExtensionPoints/InstanceInitializers.md)
   * `IInstanceInitializer` gives you a place to add behavior to the end of the constructor of the annotated class.  Useful for instantiating fields when using the state extension point.
-* Instance preinitialization
   * `IInstancePreinitializer` gives you a place to add behavior to the start of the constructor of the annotated class.  Useful for instantiating fields when using the state extension point, and you want them initialized before the actual constructor runs.  Note that preinitialization begins after calling the base class constructor.
 
 ## Extensions
