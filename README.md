@@ -1,5 +1,5 @@
 # Introduction
-What is this library? It aims to be a swiss-army knife toolkit for easy meta programming in C# built on the back of the [Fody](https://github.com/Fody/Fody) engine.
+What is this library? It aims to be a swiss-army knife toolkit for easy meta programming in C# built on the back of the [Fody](https://github.com/Fody/Fody) engine. It offers the ability to intercept methods, properties, and events; inject fields into classes, and add inject code inside constructors.
 
 ## Installation
 
