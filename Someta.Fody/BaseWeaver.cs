@@ -77,6 +77,7 @@ namespace Someta.Fody
 
             // I don't fully understand this, but if this line isn't here, you'll get the error:
             // Member 'System.Type' is declared in another module and needs to be imported
+            // More context here: https://stackoverflow.com/a/32673098/189950
             typeType = ModuleDefinition.ImportReference(typeType.Resolve());
 
             // Colllect all the parameters into a single array as the third argument

@@ -24,7 +24,7 @@ namespace Someta
         /// <param name="invoker">A delegate you can call to invoke the original method implementation.</param>
         /// <returns>The result of the method that should be returned to the caller.</returns>
         #region AsyncMethodInterceptor
-        Task<object> InvokeAsync(MethodInfo methodInfo, object instance, object[] arguments, Func<object[], Task<object>> invoker);
+        Task<object> InvokeAsync(MethodInfo methodInfo, object instance, Type[] typeArguments, object[] arguments, Func<object[], Task<object>> invoker);
         #endregion
     }
 }

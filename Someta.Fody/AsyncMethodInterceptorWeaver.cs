@@ -43,7 +43,7 @@ namespace Someta.Fody
         private void ImplementBody(MethodDefinition method, ILProcessor il, FieldDefinition attributeField, FieldDefinition methodInfoField, MethodInterceptorBuilder builder)
         {
             // We want to call the interceptor's setter method:
-            // Task<object> InvokeMethodAsync(MethodInfo methodInfo, object instance, object[] parameters, Func<object[], Task<object>> invoker)
+            // Task<object> InvokeMethodAsync(MethodInfo methodInfo, object instance, object[] typeArguments, object[] parameters, Func<object[], Task<object>> invoker)
 
             // Get interceptor attribute
             il.LoadField(attributeField);
@@ -54,7 +54,10 @@ namespace Someta.Fody
             // Leave the instance on the stack as the second argument
             EmitInstanceArgument(il, method);
 
-            // Colllect all the parameters into a single array as the third argument
+            // Collect all the method type arguments into a single array as the third argument
+            ComposeTypeArgumentsIntoArray(il, method);
+
+            // Colllect all the parameters into a single array as the fourth argument
             ComposeArgumentsIntoArray(il, method);
 
             // Leave the delegate for the proceed implementation on the stack as the fourth argument

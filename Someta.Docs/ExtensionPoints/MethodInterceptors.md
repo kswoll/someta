@@ -68,7 +68,7 @@ This interface has one method:
 <!-- snippet: AsyncMethodInterceptor -->
 <a id='snippet-asyncmethodinterceptor'></a>
 ```cs
-Task<object> InvokeAsync(MethodInfo methodInfo, object instance, object[] arguments, Func<object[], Task<object>> invoker);
+Task<object> InvokeAsync(MethodInfo methodInfo, object instance, Type[] typeArguments, object[] arguments, Func<object[], Task<object>> invoker);
 ```
 <sup><a href='/Someta/IAsyncMethodInterceptor.cs#L26-L28' title='Snippet source file'>snippet source</a> | <a href='#snippet-asyncmethodinterceptor' title='Start of snippet'>anchor</a></sup>
 <!-- endSnippet -->
@@ -99,7 +99,7 @@ class AsyncMethodTestClass
 [AttributeUsage(AttributeTargets.Method)]
 class AsyncMethodInterceptor : Attribute, IAsyncMethodInterceptor
 {
-    public async Task<object> InvokeAsync(MethodInfo methodInfo, object instance, object[] arguments, Func<object[], Task<object>> invoker)
+    public async Task<object> InvokeAsync(MethodInfo methodInfo, object instance, Type[] typeArguments, object[] arguments, Func<object[], Task<object>> invoker)
     {
         await Task.Delay(0);        // Just to demonstrate await semantics
         ((AsyncMethodTestClass)instance).InvocationCount++;

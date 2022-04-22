@@ -29,7 +29,7 @@ public class AsyncMethodInterceptorExample
     [AttributeUsage(AttributeTargets.Method)]
     class AsyncMethodInterceptor : Attribute, IAsyncMethodInterceptor
     {
-        public async Task<object> InvokeAsync(MethodInfo methodInfo, object instance, object[] arguments, Func<object[], Task<object>> invoker)
+        public async Task<object> InvokeAsync(MethodInfo methodInfo, object instance, Type[] typeArguments, object[] arguments, Func<object[], Task<object>> invoker)
         {
             await Task.Delay(0);        // Just to demonstrate await semantics
             ((AsyncMethodTestClass)instance).InvocationCount++;

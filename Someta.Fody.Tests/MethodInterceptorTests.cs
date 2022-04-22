@@ -76,6 +76,13 @@ public class MethodInterceptorTests
         var result = testClass.Create<TestClass>();
     }
 
+    [Test]
+    public async Task AsyncGenericMethodParameterTest()
+    {
+        var testClass = new GenericClass<string>();
+        var result = await testClass.CreateAsync<TestClass>();
+    }
+
     public class LogInterceptorAttribute : Attribute, IMethodInterceptor
     {
         public object Invoke(MethodInfo methodInfo, object instance, Type[] typeArguments, object[] parameters, Func<object[], object> invoker)
@@ -145,6 +152,14 @@ public class MethodInterceptorTests
         }
     }
 
+    public class AsyncGenericMethodInterceptor : Attribute, IAsyncMethodInterceptor
+    {
+        public async Task<object> InvokeAsync(MethodInfo methodInfo, object instance, Type[] typeArguments, object[] arguments, Func<object[], Task<object>> invoker)
+        {
+            return await invoker(arguments);
+        }
+    }
+
     public class GenericClass<T>
     {
         [ConcatParameterTypes]
@@ -168,6 +183,12 @@ public class MethodInterceptorTests
         public TCreate Create<TCreate>() where TCreate : new()
         {
             return new TCreate();
+        }
+
+        [AsyncGenericMethodInterceptor]
+        public Task<TCreate> CreateAsync<TCreate>() where TCreate : new()
+        {
+            return Task.FromResult(new TCreate());
         }
 
         private void GenericWrapper<U2, V2>(T a, U2 u, V2 v)
