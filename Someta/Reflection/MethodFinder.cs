@@ -8,7 +8,7 @@ namespace Someta.Reflection
 {
     public static class MethodFinder
     {
-        private static ConcurrentDictionary<MethodInfo, MethodInfo> originalMethods = new ConcurrentDictionary<MethodInfo, MethodInfo>();
+        private static readonly ConcurrentDictionary<MethodInfo, MethodInfo> originalMethods = new ConcurrentDictionary<MethodInfo, MethodInfo>();
 
         internal static string GenerateSignature(MethodInfo method)
         {

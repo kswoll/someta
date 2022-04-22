@@ -35,11 +35,11 @@ namespace Someta.Fody
             // Re-implement method
             method.Body.Emit(il =>
             {
-                ImplementBody(@event, attributeField, eventInfoField, method, il, proceedReference, isAdd ? addEventHandler : removeEventHandler);
+                ImplementBody(attributeField, eventInfoField, method, il, proceedReference, isAdd ? addEventHandler : removeEventHandler);
             });
         }
 
-        private void ImplementBody(EventDefinition @event, FieldDefinition attributeField, FieldDefinition eventInfoField,
+        private void ImplementBody(FieldDefinition attributeField, FieldDefinition eventInfoField,
             MethodDefinition method, ILProcessor il, MethodReference proceed, MethodReference addOrRemoveHandler)
         {
             // We want to call the interceptor's AddEventHandler method:

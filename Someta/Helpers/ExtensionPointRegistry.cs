@@ -7,8 +7,8 @@ namespace Someta.Helpers
 {
     public static class ExtensionPointRegistry
     {
-        private static ConcurrentDictionary<MemberInfo, List<IExtensionPoint>> storage = new ConcurrentDictionary<MemberInfo, List<IExtensionPoint>>();
-        private static IReadOnlyList<IExtensionPoint> emptyList = new IExtensionPoint[0];
+        private static readonly ConcurrentDictionary<MemberInfo, List<IExtensionPoint>> storage = new ConcurrentDictionary<MemberInfo, List<IExtensionPoint>>();
+        private static readonly IReadOnlyList<IExtensionPoint> emptyList = new IExtensionPoint[0];
 
         public static void Register(MemberInfo member, IExtensionPoint extensionPoint)
         {

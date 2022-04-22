@@ -25,6 +25,7 @@ public class InstanceInitializerExample
         public int Value { get; set; }
     }
 
+    [AttributeUsage(AttributeTargets.Class)]
     class InitializerExtensionPoint : Attribute, IInstanceInitializer
     {
         public void Initialize(object instance, MemberInfo member)

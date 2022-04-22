@@ -63,7 +63,7 @@ namespace Someta.Fody.Tests
 
             public PreinitializerClass()
             {
-                Value = Value + "bar";
+                Value += "bar";
             }
         }
 

@@ -1,5 +1,4 @@
-﻿using System.Diagnostics;
-using System.Linq;
+﻿using System.Linq;
 using Mono.Cecil;
 using Mono.Cecil.Cil;
 using Mono.Cecil.Rocks;
@@ -8,12 +7,13 @@ namespace Someta.Fody
 {
     public class AsyncMethodInterceptorWeaver : BaseWeaver
     {
-        private MethodReference baseInvoke;
-        private MethodReference asyncInvokerUnwrap;
-        private MethodReference asyncInvokerWrap;
+        private readonly MethodReference baseInvoke;
+        private readonly MethodReference asyncInvokerUnwrap;
+        private readonly MethodReference asyncInvokerWrap;
 
         public AsyncMethodInterceptorWeaver(WeaverContext context, TypeReference methodInterceptorInterface,
-            MethodReference asyncInvokerWrap, MethodReference asyncInvokerUnwrap)
+            MethodReference asyncInvokerWrap, MethodReference asyncInvokerUnwrap
+        )
             : base(context)
         {
             baseInvoke = ModuleDefinition.FindMethod(methodInterceptorInterface, "InvokeAsync");
@@ -71,9 +71,9 @@ namespace Someta.Fody
             // Before we return, we need to convert the `Task<object>` to `Task<T>`  We use the
             // AsyncInvoker helper so we don't have to build the state machine from scratch. Note: this
             // obviously only applies if the return type is Task<T> vs Task.
-            if (method.ReturnType is GenericInstanceType)
+            if (method.ReturnType is GenericInstanceType type)
             {
-                var unwrappedReturnType = ((GenericInstanceType)method.ReturnType).GenericArguments[0];
+                var unwrappedReturnType = type.GenericArguments[0];
                 var typedInvoke = asyncInvokerUnwrap.MakeGenericMethod(unwrappedReturnType);
                 il.Emit(OpCodes.Call, typedInvoke);
             }

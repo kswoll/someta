@@ -39,6 +39,7 @@ public class NonPublicAccessExample
         }
     }
 
+    [AttributeUsage(AttributeTargets.Class)]
     class NotifyPropertyChanged : Attribute, IPropertySetInterceptor, INonPublicAccess
     {
         [InjectAccess("OnPropertyChanged")]

@@ -49,8 +49,10 @@ namespace Someta.Fody
 
                 proceedStructConstructor = new MethodDefinition(".ctor", WeaverContext.Constructor, weaver.TypeSystem.VoidReference);
                 proceedStructConstructor.Parameters.Add(new ParameterDefinition(genericType));
-                proceedStructConstructor.Body = new MethodBody(proceedStructConstructor);
-                proceedStructConstructor.Body.InitLocals = true;
+                proceedStructConstructor.Body = new MethodBody(proceedStructConstructor)
+                {
+                    InitLocals = true
+                };
                 proceedStructConstructor.Body.Emit(il =>
                 {
                     il.Emit(OpCodes.Ldarg_0);

@@ -26,6 +26,7 @@ public class InstancePreinitializerExample
         }
     }
 
+    [AttributeUsage(AttributeTargets.Class)]
     class PreinitializerExtensionPoint : Attribute, IInstancePreinitializer
     {
         public void Preinitialize(object instance, MemberInfo member)
