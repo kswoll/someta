@@ -36,7 +36,7 @@ namespace Someta.Fody.Tests
             }
         }
 
-        public object Invoke(MethodInfo methodInfo, object instance, object[] parameters, Func<object[], object> invoker)
+        public object Invoke(MethodInfo methodInfo, object instance, Type[] typeArguments, object[] parameters, Func<object[], object> invoker)
         {
             lock (Locker.GetValue(instance))
             {

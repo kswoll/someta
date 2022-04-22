@@ -34,7 +34,9 @@ public void NonPublicAccess()
 [NotifyPropertyChanged]
 class NonPublicAccessTestClass : INotifyPropertyChanged
 {
+    // Except for this property, the rest of this class would be suitable as a base class for any class that wants to reuse this logic.
     public int Value { get; set; }
+
     public event PropertyChangedEventHandler? PropertyChanged;
 
     [InjectTarget(nameof(OnPropertyChanged))]
@@ -65,5 +67,5 @@ class NotifyPropertyChanged : Attribute, IPropertySetInterceptor, INonPublicAcce
     }
 }
 ```
-<sup><a href='/Someta.Docs/Samples/NonPublicAccessExample.cs#L11-L54' title='Snippet source file'>snippet source</a> | <a href='#snippet-nonpublicaccessexample' title='Start of snippet'>anchor</a></sup>
+<sup><a href='/Someta.Docs/Samples/NonPublicAccessExample.cs#L11-L56' title='Snippet source file'>snippet source</a> | <a href='#snippet-nonpublicaccessexample' title='Start of snippet'>anchor</a></sup>
 <!-- endSnippet -->

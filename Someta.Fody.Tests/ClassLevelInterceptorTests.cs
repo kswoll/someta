@@ -50,7 +50,7 @@ namespace Someta.Fody.Tests
 
         private class ReturnMethodNameAttribute : Attribute, IMethodInterceptor
         {
-            public object Invoke(MethodInfo methodInfo, object instance, object[] parameters, Func<object[], object> invoker)
+            public object Invoke(MethodInfo methodInfo, object instance, Type[] typeArguments, object[] parameters, Func<object[], object> invoker)
             {
                 return methodInfo.Name;
             }

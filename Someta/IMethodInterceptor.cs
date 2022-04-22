@@ -19,11 +19,12 @@ namespace Someta
         /// </summary>
         /// <param name="methodInfo">The MethodInfo representing the method this extension was applied to.</param>
         /// <param name="instance">The instance on which the method was invoked (or null for static methods).</param>
+        /// <param name="typeArguments">The type arguments passed to the method.</param>
         /// <param name="arguments">The arguments passed to the method.</param>
         /// <param name="invoker">A delegate you can call to invoke the original method implementation.</param>
         /// <returns>The result of the method that should be returned to the caller.</returns>
         #region MethodInterceptor
-        object Invoke(MethodInfo methodInfo, object instance, object[] arguments, Func<object[], object> invoker);
+        object Invoke(MethodInfo methodInfo, object instance, Type[] typeArguments, object[] arguments, Func<object[], object> invoker);
         #endregion
     }
 }
