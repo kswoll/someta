@@ -4,6 +4,6 @@ Aside from the trivial examples already described in the sections on each extens
 
 * [Memoize](Memoize.md)
 * [Reactive](Reactive.md)
-* [ObservableAsProperty](https://github.com/kswoll/someta/wiki/ObservableAsProperty)
-* [Unnullable](https://github.com/kswoll/someta/wiki/Unnullable-properties)
-* [NotifyPropertyChanged](NonPublicAccessExample) (This was actually the example for the state extension point)
+* [ObservableAsProperty](ObservableAsProperty.md)
+* [Unnullable](Unnullable.md)
+* [NotifyPropertyChanged](/Someta.Docs/ExtensionPoints/NonPublicAccess.md) (This was actually the example for the state extension point)

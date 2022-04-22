@@ -25,7 +25,7 @@ public class ReactiveAttribute : Attribute, IPropertySetInterceptor
     }
 }
 ```
-<sup><a href='/Someta.Docs/Source/Samples/Reactive.cs#L6-L19' title='Snippet source file'>snippet source</a> | <a href='#snippet-reactive' title='Start of snippet'>anchor</a></sup>
+<sup><a href='/Someta.Docs/Source/Samples/ReactiveAttribute.cs#L6-L19' title='Snippet source file'>snippet source</a> | <a href='#snippet-reactive' title='Start of snippet'>anchor</a></sup>
 <!-- endSnippet -->
 
 The basic idea is you want to call `RaisePropertyChanged` when the value of the property changes.  Here we use an `IPropertySetInterceptor` that can rather trivially do this for you without authoring your own Fody package.

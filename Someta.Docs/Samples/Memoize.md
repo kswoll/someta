@@ -170,7 +170,7 @@ public class MemoizeAttribute : Attribute, IPropertyGetInterceptor, IStateExtens
     }
 }
 ```
-<sup><a href='/Someta.Docs/Source/Samples/Memoize.cs#L6-L68' title='Snippet source file'>snippet source</a> | <a href='#snippet-memoize' title='Start of snippet'>anchor</a></sup>
+<sup><a href='/Someta.Docs/Source/Samples/MemoizeAttribute.cs#L6-L68' title='Snippet source file'>snippet source</a> | <a href='#snippet-memoize' title='Start of snippet'>anchor</a></sup>
 <!-- endSnippet -->
 
 #### Key Concepts
