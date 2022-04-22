@@ -1,4 +1,5 @@
 ﻿using System.Diagnostics;
+using System.Linq;
 using Mono.Cecil;
 using Mono.Cecil.Cil;
 using Mono.Cecil.Rocks;
@@ -99,6 +100,17 @@ namespace Someta.Fody
                 if (method.ReturnType is GenericInstanceType taskT)
                 {
                     var unwrappedReturnType = taskT.GenericArguments[0];
+
+                    // If the return type is a generic method parameter, we need to replace the return type with the
+                    // type parameter that represents that argument in the class created to house the Proceed method.
+                    // i.e. If the original method call was `Task<T> M<T>()` we can't use the type parameter `T` here as it
+                    // doesn't exist.  Instead, we need to replace it with the type parmeter in the type representing the
+                    // generic method parameter.
+                    if (unwrappedReturnType.IsGenericParameter && method.GenericParameters.Contains((GenericParameter)unwrappedReturnType))
+                    {
+                        unwrappedReturnType = proceed.DeclaringType.GenericParameters.Single(x => x.Name == unwrappedReturnType.Name);
+                    }
+
                     var typedInvoke = asyncInvokerWrap.MakeGenericMethod(unwrappedReturnType);
                     il.Emit(OpCodes.Call, typedInvoke);
                 }

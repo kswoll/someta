@@ -106,8 +106,6 @@ namespace Someta.Fody
                     // type parameter that represents that argument in the class created to house the Proceed method.
                     // i.e. If the original method call was `T M<T>()` we can't use the type parameter `T` here as it
                     // doesn't exist.  Instead, we need to replace it with the type parmeter in the type.
-                    // Note: this logic doesn't exist in the async version because the return type is never a type
-                    // parameter -- it's always Task or Task<T>
                     if (method.ReturnType.IsGenericParameter && method.GenericParameters.Contains((GenericParameter)method.ReturnType))
                     {
                         returnType = proceed.DeclaringType.GenericParameters.Single(x => x.Name == method.ReturnType.Name);
