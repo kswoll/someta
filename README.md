@@ -31,7 +31,7 @@ It provides a number of extension points for you to customize your compiled code
 
 ## Extensions
 
-To use these extension points, you simply subclass `Attribute`, implement one or more of the above interfaces, and decorate your type or members depending on your scenario.  See our various [samples](https://github.com/kswoll/someta/wiki/Samples) if you want to learn by example.
+To use these extension points, you simply subclass `Attribute`, implement one or more of the above interfaces, and decorate your type or members depending on your scenario.  See our various [samples](Someta.Docs/Samples/README.md) if you want to learn by example.
 
 ### Chaining
 Particularly with the interceptor form of extension points, it should be noted that it's perfectly acceptable to chain multiple extensions on a single member. For example, with an `IPropertyGetInterceptor`, you can declare multiple extensions (i.e. `[ExtensionA, ExtensionB]`) and both will be applied to the property -- in that order.  You can see a demonstration of this in our [unit tests](https://github.com/kswoll/someta/blob/master/Someta.Fody.Tests/ChainingTests.cs).
