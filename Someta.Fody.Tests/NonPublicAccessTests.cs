@@ -39,7 +39,7 @@ namespace Someta.Fody.Tests
             [InjectAccess(NonPublicTestClass.NoParametersVoidWasInvokedName)]
             public Action<object> NoParametersVoid { get; set; }
 
-            public object Invoke(MethodInfo methodInfo, object instance, object[] arguments, Func<object[], object> invoker)
+            public object Invoke(MethodInfo methodInfo, object instance, Type[] typeArguments, object[] arguments, Func<object[], object> invoker)
             {
                 if (methodInfo.Name != NonPublicTestClass.NoParametersVoidWasInvokedName)
                 {

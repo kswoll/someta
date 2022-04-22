@@ -71,9 +71,38 @@ namespace Someta.Fody
             }
         }
 
+        public void ComposeTypeArgumentsIntoArray(ILProcessor il, MethodDefinition method)
+        {
+            var typeType = ModuleDefinition.ImportReference(typeof(Type));
+
+            // I don't fully understand this, but if this line isn't here, you'll get the error:
+            // Member 'System.Type' is declared in another module and needs to be imported
+            // More context here: https://stackoverflow.com/a/32673098/189950
+            typeType = ModuleDefinition.ImportReference(typeType.Resolve());
+
+            // Colllect all the parameters into a single array as the third argument
+            il.Emit(OpCodes.Ldc_I4, method.GenericParameters.Count);       // Array length
+            il.Emit(OpCodes.Newarr, typeType);    // Instantiate array
+
+            for (var i = 0; i < method.GenericParameters.Count; i++)
+            {
+                // Duplicate array
+                il.Emit(OpCodes.Dup);
+
+                // Array index
+                il.Emit(OpCodes.Ldc_I4, i);
+
+                // Element value (the type argument)
+                il.LoadType(method.GenericParameters[i]);
+
+                // Set array at index to element value
+                il.Emit(OpCodes.Stelem_Any, typeType);
+            }
+        }
+
         public void ComposeArgumentsIntoArray(ILProcessor il, MethodDefinition method)
         {
-            // Colllect all the parameters into a single array as the third argument
+            // Colllect all the parameters into a single array as the fourth argument
             il.Emit(OpCodes.Ldc_I4, method.Parameters.Count);       // Array length
             il.Emit(OpCodes.Newarr, TypeSystem.ObjectReference);    // Instantiate array
             var startingIndex = method.IsStatic ? 0 : 1;
@@ -85,7 +114,7 @@ namespace Someta.Fody
                 // Array index
                 il.Emit(OpCodes.Ldc_I4, i);
 
-                // Element value
+                // Element value (startingIndex should be offset by one for instance methods since the first argument is "this")
                 il.Emit(OpCodes.Ldarg, (short)(i + startingIndex));
 
                 var parameter = method.Parameters[i];

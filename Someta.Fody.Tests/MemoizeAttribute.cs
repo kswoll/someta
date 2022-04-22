@@ -36,7 +36,7 @@ namespace Someta.Fody.Tests
             }
         }
 
-        public object Invoke(MethodInfo methodInfo, object instance, object[] parameters, Func<object[], object> invoker)
+        public object Invoke(MethodInfo methodInfo, object instance, Type[] typeArguments, object[] parameters, Func<object[], object> invoker)
         {
             lock (Locker.GetValue(instance))
             {
@@ -51,7 +51,7 @@ namespace Someta.Fody.Tests
             }
         }
 
-        public async Task<object> InvokeAsync(MethodInfo methodInfo, object instance, object[] arguments, Func<object[], Task<object>> invoker)
+        public async Task<object> InvokeAsync(MethodInfo methodInfo, object instance, Type[] typeArguments, object[] arguments, Func<object[], Task<object>> invoker)
         {
             using (await ((AsyncLock)Locker.GetValue(instance)).LockAsync())
             {

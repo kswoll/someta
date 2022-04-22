@@ -218,7 +218,7 @@ namespace Someta.Fody.Tests
         {
             public InjectedField<object> Field { get; set; }
 
-            public async Task<object> InvokeAsync(MethodInfo methodInfo, object instance, object[] arguments, Func<object[], Task<object>> invoker)
+            public async Task<object> InvokeAsync(MethodInfo methodInfo, object instance, Type[] typeArguments, object[] arguments, Func<object[], Task<object>> invoker)
             {
                 var currentValue = Field.GetValue(instance);
                 if (currentValue == null)

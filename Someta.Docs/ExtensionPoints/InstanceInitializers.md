@@ -56,9 +56,9 @@ This interface has one method:
 <!-- snippet: MethodInterceptor -->
 <a id='snippet-methodinterceptor'></a>
 ```cs
-object Invoke(MethodInfo methodInfo, object instance, object[] arguments, Func<object[], object> invoker);
+object Invoke(MethodInfo methodInfo, object instance, Type[] typeArguments, object[] arguments, Func<object[], object> invoker);
 ```
-<sup><a href='/Someta/IMethodInterceptor.cs#L25-L27' title='Snippet source file'>snippet source</a> | <a href='#snippet-methodinterceptor' title='Start of snippet'>anchor</a></sup>
+<sup><a href='/Someta/IMethodInterceptor.cs#L26-L28' title='Snippet source file'>snippet source</a> | <a href='#snippet-methodinterceptor' title='Start of snippet'>anchor</a></sup>
 <!-- endSnippet -->
 
 ### Example

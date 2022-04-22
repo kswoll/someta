@@ -1,5 +1,6 @@
 ﻿using Mono.Cecil;
 using Mono.Cecil.Cil;
+using System.Linq;
 
 namespace Someta.Fody
 {
@@ -39,7 +40,7 @@ namespace Someta.Fody
         private void ImplementBody(MethodDefinition method, ILProcessor il, FieldDefinition attributeField, FieldDefinition methodInfoField, MethodInterceptorBuilder builder)
         {
             // We want to call the interceptor's setter method:
-            // object InvokeMethod(MethodInfo methodInfo, object instance, object[] parameters, Func<object[], object> invoker)
+            // object InvokeMethod(MethodInfo methodInfo, object instance, Type[] typeArguments, object[] parameters, Func<object[], object> invoker)
 
             // Get interceptor attribute
             il.LoadField(attributeField);
@@ -50,7 +51,10 @@ namespace Someta.Fody
             // Leave the instance on the stack as the second argument
             EmitInstanceArgument(il, method);
 
-            // Colllect all the parameters into a single array as the third argument
+            // Collect all the method type arguments into a single array as the third argument
+            ComposeTypeArgumentsIntoArray(il, method);
+
+            // Colllect all the arguments into a single array as the fourth argument
             ComposeArgumentsIntoArray(il, method);
 
             // Leave the delegate for the proceed implementation on the stack as the fourth argument
@@ -96,8 +100,21 @@ namespace Someta.Fody
                 }
                 else
                 {
+                    var returnType = method.ReturnType;
+
+                    // If the return type is a generic method parameter, we need to replace the return type with the
+                    // type parameter that represents that argument in the class created to house the Proceed method.
+                    // i.e. If the original method call was `T M<T>()` we can't use the type parameter `T` here as it
+                    // doesn't exist.  Instead, we need to replace it with the type parmeter in the type.
+                    // Note: this logic doesn't exist in the async version because the return type is never a type
+                    // parameter -- it's always Task or Task<T>
+                    if (method.ReturnType.IsGenericParameter && method.GenericParameters.Contains((GenericParameter)method.ReturnType))
+                    {
+                        returnType = proceed.DeclaringType.GenericParameters.Single(x => x.Name == method.ReturnType.Name);
+                    }
+
                     // If it's a value type, box it
-                    il.EmitBoxIfNeeded(method.ReturnType);
+                    il.EmitBoxIfNeeded(returnType);
                 }
 
                 il.Emit(OpCodes.Ret);

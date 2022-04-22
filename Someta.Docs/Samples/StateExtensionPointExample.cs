@@ -32,7 +32,7 @@ public class StateExtensionPointExample
     {
         public InjectedField<int> TestField { get; set; } = default!;
 
-        public object? Invoke(MethodInfo methodInfo, object instance, object[] arguments, Func<object[], object> invoker)
+        public object? Invoke(MethodInfo methodInfo, object instance, Type[] typeArguments, object[] arguments, Func<object[], object> invoker)
         {
             var value = TestField.GetValue(instance);
             var newValue = value + 1;

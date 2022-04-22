@@ -28,7 +28,7 @@ public class MethodInterceptorExample
     [AttributeUsage(AttributeTargets.Method)]
     class MethodInterceptor : Attribute, IMethodInterceptor
     {
-        public object Invoke(MethodInfo methodInfo, object instance, object[] arguments, Func<object[], object> invoker)
+        public object Invoke(MethodInfo methodInfo, object instance, Type[] typeArguments, object[] arguments, Func<object[], object> invoker)
         {
             ((MethodTestClass)instance).InvocationCount++;
             return invoker(arguments);
