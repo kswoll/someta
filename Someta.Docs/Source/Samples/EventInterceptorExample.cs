@@ -1,7 +1,7 @@
 ﻿using NUnit.Framework;
 using System.Reflection;
 
-namespace Someta.Docs.Samples;
+namespace Someta.Docs.Source.Samples;
 
 [TestFixture]
 public class EventInterceptorExample
@@ -12,7 +12,7 @@ public class EventInterceptorExample
     #region EventInterceptorExample
     public void EventExample()
     {
-        var handler = () => {};
+        var handler = () => { };
         var testClass = new EventTestClass();
         testClass.TestEvent += handler;
         Console.WriteLine(testClass.TestEventHandlers.Count);       // Prints 1

@@ -6,7 +6,7 @@ using System.Reflection;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace Someta.Docs.Samples;
+namespace Someta.Docs.Source.Samples;
 
 [TestFixture]
 public class InstanceInitializerExample

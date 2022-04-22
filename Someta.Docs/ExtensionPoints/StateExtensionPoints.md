@@ -24,7 +24,7 @@ public void StateExample()
 {
     var testClass = new StateExtensionPointTestClass();
     testClass.Run();
-    var extensionPoint = ExtensionPoint.GetExtensionPoint<StateExtensionPoint>(testClass.GetType());
+    var extensionPoint = testClass.GetType().GetExtensionPoint<StateExtensionPoint>();
     var invocationCount = extensionPoint.GetCurrentValue(testClass);
     Console.WriteLine(invocationCount);     // Prints 1
 }
@@ -55,5 +55,5 @@ class StateExtensionPoint : Attribute, IStateExtensionPoint, IMethodInterceptor
     public int GetCurrentValue(object instance) => TestField.GetValue(instance);
 }
 ```
-<sup><a href='/Someta.Docs/Samples/StateExtensionPointExample.cs#L10-L45' title='Snippet source file'>snippet source</a> | <a href='#snippet-stateextensionpointexample' title='Start of snippet'>anchor</a></sup>
+<sup><a href='/Someta.Docs/Source/Samples/StateExtensionPointExample.cs#L10-L45' title='Snippet source file'>snippet source</a> | <a href='#snippet-stateextensionpointexample' title='Start of snippet'>anchor</a></sup>
 <!-- endSnippet -->

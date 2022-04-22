@@ -1,7 +1,7 @@
 ﻿using NUnit.Framework;
 using System.Reflection;
 
-namespace Someta.Docs.Samples;
+namespace Someta.Docs.Source.Samples;
 
 [TestFixture]
 public class StateExtensionPointExample
@@ -12,7 +12,7 @@ public class StateExtensionPointExample
     {
         var testClass = new StateExtensionPointTestClass();
         testClass.Run();
-        var extensionPoint = ExtensionPoint.GetExtensionPoint<StateExtensionPoint>(testClass.GetType());
+        var extensionPoint = testClass.GetType().GetExtensionPoint<StateExtensionPoint>();
         var invocationCount = extensionPoint.GetCurrentValue(testClass);
         Console.WriteLine(invocationCount);     // Prints 1
     }

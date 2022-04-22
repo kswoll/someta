@@ -47,7 +47,7 @@ class InitializerExtensionPoint : Attribute, IInstanceInitializer
     }
 }
 ```
-<sup><a href='/Someta.Docs/Samples/InstanceInitializerExample.cs#L15-L36' title='Snippet source file'>snippet source</a> | <a href='#snippet-instanceinitializerexample' title='Start of snippet'>anchor</a></sup>
+<sup><a href='/Someta.Docs/Source/Samples/InstanceInitializerExample.cs#L15-L36' title='Snippet source file'>snippet source</a> | <a href='#snippet-instanceinitializerexample' title='Start of snippet'>anchor</a></sup>
 <!-- endSnippet -->
 
 ## [IInstancePreinitializer](/Someta/IInstancePreinitializer.cs)
@@ -94,5 +94,5 @@ class PreinitializerExtensionPoint : Attribute, IInstancePreinitializer
     }
 }
 ```
-<sup><a href='/Someta.Docs/Samples/InstancePreinitializerExample.cs#L10-L37' title='Snippet source file'>snippet source</a> | <a href='#snippet-instancepreinitializerexample' title='Start of snippet'>anchor</a></sup>
+<sup><a href='/Someta.Docs/Source/Samples/InstancePreinitializerExample.cs#L10-L37' title='Snippet source file'>snippet source</a> | <a href='#snippet-instancepreinitializerexample' title='Start of snippet'>anchor</a></sup>
 <!-- endSnippet -->

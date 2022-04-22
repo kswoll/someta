@@ -2,7 +2,7 @@
 using System.ComponentModel;
 using System.Reflection;
 
-namespace Someta.Docs.Samples;
+namespace Someta.Docs.Source.Samples;
 
 [TestFixture]
 public class NonPublicAccessExample

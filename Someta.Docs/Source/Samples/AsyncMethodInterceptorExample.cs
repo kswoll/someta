@@ -1,7 +1,8 @@
 ﻿using NUnit.Framework;
+using Shouldly;
 using System.Reflection;
 
-namespace Someta.Docs.Samples;
+namespace Someta.Docs.Source.Samples;
 
 [TestFixture]
 public class AsyncMethodInterceptorExample
@@ -12,7 +13,7 @@ public class AsyncMethodInterceptorExample
     {
         var testClass = new AsyncMethodTestClass();
         await testClass.AsyncMethod();
-        Console.WriteLine(testClass.InvocationCount);     // Prints 1
+        testClass.InvocationCount.ShouldBe(1);
     }
 
     class AsyncMethodTestClass

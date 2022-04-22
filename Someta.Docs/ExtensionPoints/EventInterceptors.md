@@ -51,7 +51,7 @@ class PropertyGetInterceptor : Attribute, IPropertyGetInterceptor
     }
 }
 ```
-<sup><a href='/Someta.Docs/Samples/PropertyGetInterceptorExample.cs#L10-L33' title='Snippet source file'>snippet source</a> | <a href='#snippet-propertygetinterceptorexample' title='Start of snippet'>anchor</a></sup>
+<sup><a href='/Someta.Docs/Source/Samples/PropertyGetInterceptorExample.cs#L10-L33' title='Snippet source file'>snippet source</a> | <a href='#snippet-propertygetinterceptorexample' title='Start of snippet'>anchor</a></sup>
 <!-- endSnippet -->
 
 ## [IPropertySetInterceptor](/Someta/IPropertySetInterceptor.cs)
@@ -97,5 +97,5 @@ class PropertySetInterceptor : Attribute, IPropertySetInterceptor
     }
 }
 ```
-<sup><a href='/Someta.Docs/Samples/PropertySetInterceptorExample.cs#L10-L34' title='Snippet source file'>snippet source</a> | <a href='#snippet-propertysetinterceptorexample' title='Start of snippet'>anchor</a></sup>
+<sup><a href='/Someta.Docs/Source/Samples/PropertySetInterceptorExample.cs#L10-L34' title='Snippet source file'>snippet source</a> | <a href='#snippet-propertysetinterceptorexample' title='Start of snippet'>anchor</a></sup>
 <!-- endSnippet -->
