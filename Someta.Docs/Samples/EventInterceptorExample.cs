@@ -28,6 +28,7 @@ public class EventInterceptorExample
         public List<Action> TestEventHandlers = new();
     }
 
+    [AttributeUsage(AttributeTargets.Class)]
     class EventInterceptor : Attribute, IEventAddInterceptor, IEventRemoveInterceptor
     {
         public void AddEventHandler(EventInfo eventInfo, object instance, Delegate handler, Action<Delegate> proceed)

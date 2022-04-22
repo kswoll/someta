@@ -59,8 +59,10 @@ namespace Someta.Fody
                         accessor.Parameters.Add(new ParameterDefinition(parameter.ParameterType));
                     }
 
-                    accessor.Body = new MethodBody(accessor);
-                    accessor.Body.InitLocals = true;
+                    accessor.Body = new MethodBody(accessor)
+                    {
+                        InitLocals = true
+                    };
                     accessor.Body.Emit(il =>
                     {
                         il.Emit(OpCodes.Ldarg_0);
@@ -80,8 +82,10 @@ namespace Someta.Fody
                     {
                         var isVoid = targetMethod.ReturnType.CompareTo(TypeSystem.VoidReference);
                         var delegateType = (isVoid ? Context.ActionTypes : Context.FuncTypes)[targetMethod.Parameters.Count + 1];
-                        var typeArguments = new List<TypeReference>();
-                        typeArguments.Add(TypeSystem.ObjectReference);
+                        var typeArguments = new List<TypeReference>
+                        {
+                            TypeSystem.ObjectReference
+                        };
                         typeArguments.AddRange(targetMethod.Parameters.Select(x => x.ParameterType));
                         if (!isVoid)
                             typeArguments.Add(targetMethod.ReturnType);

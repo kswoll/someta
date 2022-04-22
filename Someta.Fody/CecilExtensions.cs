@@ -166,7 +166,6 @@ namespace Someta.Fody
                 },
                 OriginalMethodAttributeConstructor = originalMethodAttributeConstructor,
                 FindMethod = findMethod,
-                FindProperty = findProperty,
                 MethodFinder = methodFinder,
                 MethodInfoType = methodInfoType,
                 PropertyInfoType = propertyInfoType,
@@ -213,9 +212,9 @@ namespace Someta.Fody
                 if (constructor.Body.Instructions.Count > 1)
                 {
                     var potentialConstructorCall = constructor.Body.Instructions[1];    // [0] is loading "this"
-                    if (potentialConstructorCall.Operand is MethodReference)
+                    if (potentialConstructorCall.Operand is MethodReference reference)
                     {
-                        var potentialConstructor = ((MethodReference)potentialConstructorCall.Operand).Resolve();
+                        var potentialConstructor = reference.Resolve();
                         if (potentialConstructor.Resolve().IsConstructor && potentialConstructor.DeclaringType.CompareTo(type))
                         {
                             // This is not a primary constructor, so skip
@@ -237,9 +236,9 @@ namespace Someta.Fody
                 if (constructor.Body.Instructions.Count > 1)
                 {
                     var potentialConstructorCall = constructor.Body.Instructions[1];    // [0] is loading "this"
-                    if (potentialConstructorCall.Operand is MethodReference)
+                    if (potentialConstructorCall.Operand is MethodReference reference)
                     {
-                        var potentialConstructor = ((MethodReference)potentialConstructorCall.Operand).Resolve();
+                        var potentialConstructor = reference.Resolve();
                         if (potentialConstructor.Resolve().IsConstructor && potentialConstructor.DeclaringType.CompareTo(type))
                         {
                             // This is not a primary constructor, so skip
@@ -270,7 +269,7 @@ namespace Someta.Fody
 
         public static bool IsAssignableFrom(this TypeReference baseType, TypeReference type, Action<string> logger = null)
         {
-            logger = logger ?? (x => { });
+            logger ??= (x => { });
 
             if (type.IsGenericParameter)
                 return baseType.CompareTo(type);
@@ -418,10 +417,12 @@ namespace Someta.Fody
 
         public static MethodReference Bind(this MethodReference method, GenericInstanceType genericType)
         {
-            var reference = new MethodReference(method.Name, method.ReturnType, genericType);
-            reference.HasThis = method.HasThis;
-            reference.ExplicitThis = method.ExplicitThis;
-            reference.CallingConvention = method.CallingConvention;
+            var reference = new MethodReference(method.Name, method.ReturnType, genericType)
+            {
+                HasThis = method.HasThis,
+                ExplicitThis = method.ExplicitThis,
+                CallingConvention = method.CallingConvention
+            };
 
             foreach (var parameter in method.Parameters)
                 reference.Parameters.Add(new ParameterDefinition(ModuleDefinition.ImportReference(parameter.ParameterType)));
@@ -431,10 +432,12 @@ namespace Someta.Fody
 
         public static MethodReference BindMethod(this MethodReference method, TypeReference genericType, TypeReference[] genericArguments)
         {
-            var reference = new MethodReference(method.Name, method.ReturnType, genericType);
-            reference.HasThis = method.HasThis;
-            reference.ExplicitThis = method.ExplicitThis;
-            reference.CallingConvention = method.CallingConvention;
+            var reference = new MethodReference(method.Name, method.ReturnType, genericType)
+            {
+                HasThis = method.HasThis,
+                ExplicitThis = method.ExplicitThis,
+                CallingConvention = method.CallingConvention
+            };
 
             foreach (var parameter in method.Parameters)
                 reference.Parameters.Add(new ParameterDefinition(ModuleDefinition.ImportReference(parameter.ParameterType)));
@@ -974,8 +977,10 @@ namespace Someta.Fody
             original.DebugInformation.StateMachineKickOffMethod = null;
             original.DebugInformation.SequencePoints.Clear();
 
-            original.Body = new MethodBody(original);
-            original.Body.InitLocals = true;
+            original.Body = new MethodBody(original)
+            {
+                InitLocals = true
+            };
 
             return method;
         }
@@ -1224,8 +1229,7 @@ namespace Someta.Fody
 
         public static MethodInfo CaptureMethod(Expression<Action> expression)
         {
-            var body = expression.Body as MethodCallExpression;
-            if (body == null)
+            if (expression.Body is not MethodCallExpression body)
                 throw new ArgumentException("Pass in a method call expression", nameof(expression));
 
             return body.Method;
@@ -1233,8 +1237,7 @@ namespace Someta.Fody
 
         public static MethodInfo CaptureMethod<T>(Expression<Action<T>> expression)
         {
-            var body = expression.Body as MethodCallExpression;
-            if (body == null)
+            if (expression.Body is not MethodCallExpression body)
                 throw new ArgumentException("Pass in a method call expression", nameof(expression));
 
             return body.Method;
@@ -1242,8 +1245,7 @@ namespace Someta.Fody
 
         public static MethodInfo CaptureFunc<T>(Expression<Func<T>> expression)
         {
-            var body = expression.Body as MethodCallExpression;
-            if (body == null)
+            if (expression.Body is not MethodCallExpression body)
                 throw new ArgumentException("Pass in a method call expression", nameof(expression));
 
             return body.Method;
@@ -1251,8 +1253,7 @@ namespace Someta.Fody
 
         public static MethodInfo CaptureFunc<T, TReturn>(Expression<Func<T, TReturn>> expression)
         {
-            var body = expression.Body as MethodCallExpression;
-            if (body == null)
+            if (expression.Body is not MethodCallExpression body)
                 throw new ArgumentException("Pass in a method call expression", nameof(expression));
 
             return body.Method;
@@ -1267,8 +1268,10 @@ namespace Someta.Fody
         {
             var type = method.DeclaringType;
             var result = new MethodDefinition(name, attributes | method.Attributes.GetStatic(), returnType);
-            result.Body = new MethodBody(result);
-            result.Body.InitLocals = true;
+            result.Body = new MethodBody(result)
+            {
+                InitLocals = true
+            };
             type.Methods.Add(result);
             return result;
         }
@@ -1307,7 +1310,7 @@ namespace Someta.Fody
                 throw new InvalidOperationException($"Unexpected member type: {member.GetType().FullName}");
         }
 
-        private static ConcurrentDictionary<TypeDefinition, HashSet<MethodDefinition>> isPropertyAccessorCache = new();
+        private static readonly ConcurrentDictionary<TypeDefinition, HashSet<MethodDefinition>> isPropertyAccessorCache = new();
 
         public static bool IsPropertyAccessor(this MethodDefinition method)
         {

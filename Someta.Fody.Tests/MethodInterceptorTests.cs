@@ -74,6 +74,7 @@ public class MethodInterceptorTests
     {
         var testClass = new GenericClass<string>();
         var result = testClass.Create<TestClass>();
+        result.ShouldNotBeNull();
     }
 
     [Test]
@@ -81,6 +82,7 @@ public class MethodInterceptorTests
     {
         var testClass = new GenericClass<string>();
         var result = await testClass.CreateAsync<TestClass>();
+        result.ShouldNotBeNull();
     }
 
     public class LogInterceptorAttribute : Attribute, IMethodInterceptor
@@ -190,11 +192,6 @@ public class MethodInterceptorTests
         {
             return Task.FromResult(new TCreate());
         }
-
-        private void GenericWrapper<U2, V2>(T a, U2 u, V2 v)
-        {
-            WithGenericParameters<U2, V2>(a, u, v);
-        }
     }
 
     public class NestedGenericClasses<T>
@@ -227,7 +224,7 @@ public class MethodInterceptorTests
 
     public struct GenericMethodTest<T>
     {
-        private MethodInterceptorTests instance;
+        private readonly MethodInterceptorTests instance;
 
         public GenericMethodTest(MethodInterceptorTests instance)
         {

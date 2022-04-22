@@ -52,6 +52,7 @@ class NonPublicAccessTestClass : INotifyPropertyChanged
     }
 }
 
+[AttributeUsage(AttributeTargets.Class)]
 class NotifyPropertyChanged : Attribute, IPropertySetInterceptor, INonPublicAccess
 {
     [InjectAccess("OnPropertyChanged")]
@@ -67,5 +68,5 @@ class NotifyPropertyChanged : Attribute, IPropertySetInterceptor, INonPublicAcce
     }
 }
 ```
-<sup><a href='/Someta.Docs/Samples/NonPublicAccessExample.cs#L11-L56' title='Snippet source file'>snippet source</a> | <a href='#snippet-nonpublicaccessexample' title='Start of snippet'>anchor</a></sup>
+<sup><a href='/Someta.Docs/Samples/NonPublicAccessExample.cs#L11-L57' title='Snippet source file'>snippet source</a> | <a href='#snippet-nonpublicaccessexample' title='Start of snippet'>anchor</a></sup>
 <!-- endSnippet -->

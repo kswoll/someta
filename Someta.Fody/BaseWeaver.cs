@@ -17,7 +17,7 @@ namespace Someta.Fody
         public Action<string> LogError { get; set; }
         public Action<string> LogWarning { get; set; }
 
-        private readonly Dictionary<(string, string, string), int> uniqueNamesCounter = new Dictionary<(string, string, string), int>();
+        private readonly Dictionary<(string, string, string), int> uniqueNamesCounter = new();
 
         public BaseWeaver(WeaverContext context)
         {
@@ -128,7 +128,7 @@ namespace Someta.Fody
         public void DecomposeArrayIntoArguments(ILProcessor il, TypeReference declaringType, MethodReference method, bool? isStatic = null)
         {
             // Decompose array into arguments
-            isStatic = isStatic ?? !method.HasThis;
+            isStatic ??= !method.HasThis;
             for (var i = 0; i < method.Parameters.Count; i++)
             {
                 var parameterInfo = method.Parameters[i];

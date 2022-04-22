@@ -42,8 +42,10 @@ namespace Someta.Fody
                     var getMethodName = GenerateUniqueName(member, attributeType, $"{property.Name}Getter");
                     var getMethod = new MethodDefinition(getMethodName, MethodAttributes.Private | MethodAttributes.Static, propertyType);
                     getMethod.Parameters.Add(new ParameterDefinition(TypeSystem.ObjectReference));
-                    getMethod.Body = new MethodBody(getMethod);
-                    getMethod.Body.InitLocals = true;
+                    getMethod.Body = new MethodBody(getMethod)
+                    {
+                        InitLocals = true
+                    };
                     getMethod.Body.Emit(il =>
                     {
                         if (!isStatic)
@@ -60,8 +62,10 @@ namespace Someta.Fody
                     var setMethod = new MethodDefinition(setMethodName, MethodAttributes.Private | MethodAttributes.Static, TypeSystem.VoidReference);
                     setMethod.Parameters.Add(new ParameterDefinition(TypeSystem.ObjectReference));
                     setMethod.Parameters.Add(new ParameterDefinition(propertyType));
-                    setMethod.Body = new MethodBody(setMethod);
-                    setMethod.Body.InitLocals = true;
+                    setMethod.Body = new MethodBody(setMethod)
+                    {
+                        InitLocals = true
+                    };
                     setMethod.Body.Emit(il =>
                     {
                         if (!isStatic)
