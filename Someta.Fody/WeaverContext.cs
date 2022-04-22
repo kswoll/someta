@@ -33,7 +33,6 @@ namespace Someta.Fody
 
         public TypeReference MethodFinder { get; set; }
         public MethodReference FindMethod { get; set; }
-        public MethodReference FindProperty { get; set; }
         public MethodReference OriginalMethodAttributeConstructor { get; set; }
         public MethodReference RegisterExtensionPoint { get; set; }
         public TypeDefinition AssemblyState { get; set; }

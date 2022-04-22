@@ -166,7 +166,6 @@ namespace Someta.Fody
                 },
                 OriginalMethodAttributeConstructor = originalMethodAttributeConstructor,
                 FindMethod = findMethod,
-                FindProperty = findProperty,
                 MethodFinder = methodFinder,
                 MethodInfoType = methodInfoType,
                 PropertyInfoType = propertyInfoType,
