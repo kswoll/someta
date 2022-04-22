@@ -1,5 +1,4 @@
-﻿using System.Diagnostics;
-using System.Linq;
+﻿using System.Linq;
 using Mono.Cecil;
 using Mono.Cecil.Cil;
 using Mono.Cecil.Rocks;
@@ -13,7 +12,6 @@ namespace Someta.Fody
 
         public StateWeaver(WeaverContext context) : base(context)
         {
-//            Debugger.Launch();
             injectedFieldType = ModuleDefinition.FindType("Someta", "InjectedField`1", Context.Someta, "T");
             injectFieldAttributeType = ModuleDefinition.FindType("Someta", "InjectFieldAttribute", Context.Someta);
         }

@@ -203,7 +203,8 @@ namespace Someta.Fody
         }
 
         /// <summary>
-        /// Emits to all primary constructors (constructors that do not chain to other constructors of the same class)
+        /// Emits to all primary constructors (constructors that do not chain to other constructors of the same class).
+        /// The emitted code is appended to the end of the constructor.
         /// </summary>
         public static void EmitToConstructor(this TypeDefinition type, Action<ILProcessor> il)
         {
@@ -227,7 +228,8 @@ namespace Someta.Fody
         }
 
         /// <summary>
-        /// Emits to all primary constructors (constructors that do not chain to other constructors of the same class)
+        /// Emits to all primary constructors (constructors that do not chain to other constructors of the same class).
+        /// Emitted code is prepended to the start of the constructor.
         /// </summary>
         public static void EmitToConstructorStart(this TypeDefinition type, Action<ILProcessor> il)
         {
@@ -741,7 +743,6 @@ namespace Someta.Fody
 
         public static void EmitStruct(this ILProcessor il, TypeReference type, MethodReference constructor = null, Action emitArgs = null)
         {
-//            type = type.Import();
             if (constructor == null)
             {
                 var local = new VariableDefinition(type);
@@ -752,7 +753,6 @@ namespace Someta.Fody
             }
             else
             {
-//                il.Emit(OpCodes.Ldloc, local);
                 emitArgs();
                 il.Emit(OpCodes.Newobj, constructor);
             }

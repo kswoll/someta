@@ -139,6 +139,15 @@ namespace Someta.Fody
             }
         }
 
+        /// <summary>
+        /// Attributes are ephemeral.  Calling MemberInfo.GetCustomerAttribute will always return a new instance
+        /// of the attribute.  But we want attributes that are singleton static values so your extension points
+        /// can meaningfully store state.  And we also want the ability to, at runtime, fetch that instance in case
+        /// direct access to the extension point is required.  The latter behavior is defined in the `ExtensionPoint`
+        /// class.  But to achieve the first requirement, we define a static field to hold the extension point and
+        /// add logic to the static constructor to store these values and register the extension point with the
+        /// MemberInfo through ExtensionPointRegistry.
+        /// </summary>
         public FieldDefinition CacheAttributeInstance(IMemberDefinition member, ExtensionPointAttribute extensionPoint)
         {
             FieldDefinition attributeField;
@@ -153,7 +162,6 @@ namespace Someta.Fody
             }
             else if (member is MethodDefinition methodDefinition)
             {
-                //                Debugger.Launch();
                 var methodInfo = methodDefinition.CacheMethodInfo();
                 attributeField = CacheAttributeInstance(member, methodInfo, extensionPoint);
             }
@@ -175,6 +183,10 @@ namespace Someta.Fody
             return CacheAttributeInstance(type, null, extensionPoint);
         }
 
+        /// <summary>
+        /// We define a static field to hold the extension point and add logic to the static constructor to store
+        /// these values and register the extension point with the MemberInfo through ExtensionPointRegistry.
+        /// </summary>
         public FieldDefinition CacheAttributeInstance(IMemberDefinition member, FieldDefinition memberInfoField,
             ExtensionPointAttribute extensionPoint)
         {

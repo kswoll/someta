@@ -16,8 +16,6 @@ namespace Someta.Fody
 
         public void Weave(IMemberDefinition member, ExtensionPointAttribute extensionPoint)
         {
-//            Debugger.Launch();
-
             var attributeField = CacheAttributeInstance(member, extensionPoint);
             FieldDefinition memberInfoField;
             if (member is TypeDefinition)
