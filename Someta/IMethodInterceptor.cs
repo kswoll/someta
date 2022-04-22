@@ -9,8 +9,8 @@ namespace Someta
     ///
     /// NOTE: this does NOT apply to *properties* by design.  It needlessly complicates method interceptors
     /// and leads to surprising results when property getters and setters are included in method interception.
-    /// NOTE: If your extension *also* implements IAsyncMethodInterceptor then this
-    /// interface's Invoke method will not be called for methods that return Task.
+    /// NOTE: If your extension *also* implements IAsyncMethodInterceptor then this interface's Invoke method
+    /// will not be called for methods that return Task.
     /// </summary>
     public interface IMethodInterceptor : IExtensionPoint
     {

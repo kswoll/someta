@@ -58,7 +58,7 @@ class MethodInterceptor : Attribute, IMethodInterceptor
     }
 }
 ```
-<sup><a href='/Someta.Docs/Samples/MethodInterceptorExample.cs#L10-L37' title='Snippet source file'>snippet source</a> | <a href='#snippet-methodinterceptorexample' title='Start of snippet'>anchor</a></sup>
+<sup><a href='/Someta.Docs/Source/Samples/MethodInterceptorExample.cs#L10-L37' title='Snippet source file'>snippet source</a> | <a href='#snippet-methodinterceptorexample' title='Start of snippet'>anchor</a></sup>
 <!-- endSnippet -->
 
 ## [IAsyncMethodInterceptor](/Someta/IAsyncMethodInterceptor.cs)
@@ -82,7 +82,7 @@ public async Task AsyncMethodExample()
 {
     var testClass = new AsyncMethodTestClass();
     await testClass.AsyncMethod();
-    Console.WriteLine(testClass.InvocationCount);     // Prints 1
+    testClass.InvocationCount.ShouldBe(1);
 }
 
 class AsyncMethodTestClass
@@ -107,5 +107,5 @@ class AsyncMethodInterceptor : Attribute, IAsyncMethodInterceptor
     }
 }
 ```
-<sup><a href='/Someta.Docs/Samples/AsyncMethodInterceptorExample.cs#L10-L39' title='Snippet source file'>snippet source</a> | <a href='#snippet-asyncmethodinterceptorexample' title='Start of snippet'>anchor</a></sup>
+<sup><a href='/Someta.Docs/Source/Samples/AsyncMethodInterceptorExample.cs#L11-L40' title='Snippet source file'>snippet source</a> | <a href='#snippet-asyncmethodinterceptorexample' title='Start of snippet'>anchor</a></sup>
 <!-- endSnippet -->
