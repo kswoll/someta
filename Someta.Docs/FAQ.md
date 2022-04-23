@@ -13,7 +13,7 @@ Yes, to a certain extent.  But it is now in maintenance mode, and the implementa
 
 ### How does Someta compare to [MethodBoundaryAspect.Fody](https://github.com/vescon/MethodBoundaryAspect.Fody)?
 
-This (I think) is a partial fork of what was in Cauldron.Fody but either way has the exact same contract.  Consider the docs (see link) around changing the return value, changing the arguments, and handling async behavior.  Now compare that to:
+This (I think) is a partial fork of what was in Cauldron.Fody but either way has the exact same contract.  Consider the docs (see link) around changing the return value, changing the arguments, handling exceptions, and async behavior.  Now compare that to:
 
 ```
 public object Invoke(MethodInfo methodInfo, object instance, Type[] typeArguments, object[] arguments, Func<object[], object> invoker)
