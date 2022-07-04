@@ -67,45 +67,45 @@ namespace Someta.Fody
             }
             var extensionPointRegistryRegister = ModuleDefinition.FindMethod(extensionPointRegistry, "Register");
 
-            typeType = ModuleDefinition.ImportReference(typeof(Type)).Resolve();
+            typeType = ModuleDefinition.GetTypeReference(typeof(Type)).Resolve();
             if (typeType == null)
             {
                 throw new InvalidOperationException($"System.Type was somehow not found.  Aborting.");
             }
 
-            taskType = ModuleDefinition.ImportReference(typeof(Task));
+            taskType = ModuleDefinition.GetTypeReference(typeof(Task));
             getTypeFromRuntimeHandleMethod = ModuleDefinition.ImportReference(typeType.Methods.Single(x => x.Name == "GetTypeFromHandle"));
             typeGetMethods = ModuleDefinition.ImportReference(CaptureFunc<Type, MethodInfo[]>(x => x.GetMethods(default)));
             typeGetMethod = ModuleDefinition.ImportReference(typeType.Methods.Single(x => x.Name == "GetMethod" && x.Parameters.Count == 5));
             typeGetProperty = ModuleDefinition.ImportReference(CaptureFunc<Type, PropertyInfo>(x => x.GetProperty(default, default(BindingFlags))));
             typeGetEvent = ModuleDefinition.ImportReference(CaptureFunc<Type, EventInfo>(x => x.GetEvent(default, default)));
-            taskTType = ModuleDefinition.ImportReference(typeof(Task<>));
+            taskTType = ModuleDefinition.GetTypeReference(typeof(Task<>));
             taskFromResult = ModuleDefinition.ImportReference(taskType.Resolve().Methods.Single(x => x.Name == "FromResult"));
-            attributeType = ModuleDefinition.ImportReference(typeof(Attribute));
-            var attributeTypeDefinition = ModuleDefinition.ImportReference(typeof(Attribute)).Resolve();
-            var memberInfoType = ModuleDefinition.ImportReference(typeof(MemberInfo));
+            attributeType = ModuleDefinition.GetTypeReference(typeof(Attribute));
+            var attributeTypeDefinition = ModuleDefinition.GetTypeReference(typeof(Attribute)).Resolve();
+            var memberInfoType = ModuleDefinition.GetTypeReference(typeof(MemberInfo));
             attributeGetCustomAttribute = ModuleDefinition.ImportReference(attributeTypeDefinition.Methods.Single(x => x.Name == nameof(Attribute.GetCustomAttribute) && x.Parameters.Count == 2 && x.Parameters[0].ParameterType.CompareTo(memberInfoType)));
             attributeGetCustomAttributes = ModuleDefinition.ImportReference(attributeTypeDefinition.Methods.Single(x => x.Name == nameof(Attribute.GetCustomAttributes) && x.Parameters.Count == 1 && x.Parameters[0].ParameterType.CompareTo(memberInfoType)));
-            var assemblyType = ModuleDefinition.ImportReference(typeof(Assembly));
+            var assemblyType = ModuleDefinition.GetTypeReference(typeof(Assembly));
             attributeGetCustomAttributesForAssembly = ModuleDefinition.ImportReference(attributeTypeDefinition.Methods.Single(x => x.Name == nameof(Attribute.GetCustomAttributes) && x.Parameters.Count == 1 && x.Parameters[0].ParameterType.CompareTo(assemblyType)));
-            var methodBaseType = ModuleDefinition.ImportReference(typeof(MethodBase));
+            var methodBaseType = ModuleDefinition.GetTypeReference(typeof(MethodBase));
             methodBaseGetCurrentMethod = ModuleDefinition.FindMethod(methodBaseType, nameof(MethodBase.GetCurrentMethod));
             typeGetAssembly = ModuleDefinition.ImportReference(typeType.Properties.Single(x => x.Name == nameof(Type.Assembly)).GetMethod);
 
-            var func1Type = ModuleDefinition.ImportReference(typeof(Func<>));
-            var func2Type = ModuleDefinition.ImportReference(typeof(Func<,>));
-            var action1Type = ModuleDefinition.ImportReference(typeof(Action<>));
-            var objectArrayType = ModuleDefinition.ImportReference(typeof(object[]));
-            var asyncTaskMethodBuilder = ModuleDefinition.ImportReference(typeof(AsyncTaskMethodBuilder<>));
+            var func1Type = ModuleDefinition.GetTypeReference(typeof(Func<>));
+            var func2Type = ModuleDefinition.GetTypeReference(typeof(Func<,>));
+            var action1Type = ModuleDefinition.GetTypeReference(typeof(Action<>));
+            var objectArrayType = ModuleDefinition.GetTypeReference(typeof(object[]));
+            var asyncTaskMethodBuilder = ModuleDefinition.GetTypeReference(typeof(AsyncTaskMethodBuilder<>));
             var originalMethodAtttribute = ModuleDefinition.FindType("Someta.Reflection", "OriginalMethodAttribute", soMeta);
             var originalMethodAttributeConstructor = ModuleDefinition.FindConstructor(originalMethodAtttribute);
             var methodFinder = ModuleDefinition.FindType("Someta.Reflection", "MethodFinder`1", soMeta, "T");
             var findMethod = ModuleDefinition.FindMethod(methodFinder, "FindMethod");
             var findProperty = ModuleDefinition.FindMethod(methodFinder, "FindProperty");
-            var methodInfoType = ModuleDefinition.ImportReference(typeof(MethodInfo));
-            var propertyInfoType = ModuleDefinition.ImportReference(typeof(PropertyInfo));
-            var eventInfoType = ModuleDefinition.ImportReference(typeof(EventInfo));
-            var delegateType = ModuleDefinition.ImportReference(typeof(Delegate));
+            var methodInfoType = ModuleDefinition.GetTypeReference(typeof(MethodInfo));
+            var propertyInfoType = ModuleDefinition.GetTypeReference(typeof(PropertyInfo));
+            var eventInfoType = ModuleDefinition.GetTypeReference(typeof(EventInfo));
+            var delegateType = ModuleDefinition.GetTypeReference(typeof(Delegate));
 
             var context = new WeaverContext
             {
@@ -125,44 +125,44 @@ namespace Someta.Fody
                 DelegateType = delegateType,
                 ActionTypes = new List<TypeReference>
                 {
-                    ModuleDefinition.ImportReference(typeof(Action)),
-                    ModuleDefinition.ImportReference(typeof(Action<>)),
-                    ModuleDefinition.ImportReference(typeof(Action<,>)),
-                    ModuleDefinition.ImportReference(typeof(Action<,,>)),
-                    ModuleDefinition.ImportReference(typeof(Action<,,,>)),
-                    ModuleDefinition.ImportReference(typeof(Action<,,,,>)),
-                    ModuleDefinition.ImportReference(typeof(Action<,,,,,>)),
-                    ModuleDefinition.ImportReference(typeof(Action<,,,,,,>)),
-                    ModuleDefinition.ImportReference(typeof(Action<,,,,,,,>)),
-                    ModuleDefinition.ImportReference(typeof(Action<,,,,,,,,>)),
-                    ModuleDefinition.ImportReference(typeof(Action<,,,,,,,,,>)),
-                    ModuleDefinition.ImportReference(typeof(Action<,,,,,,,,,,>)),
-                    ModuleDefinition.ImportReference(typeof(Action<,,,,,,,,,,,>)),
-                    ModuleDefinition.ImportReference(typeof(Action<,,,,,,,,,,,,>)),
-                    ModuleDefinition.ImportReference(typeof(Action<,,,,,,,,,,,,,>)),
-                    ModuleDefinition.ImportReference(typeof(Action<,,,,,,,,,,,,,,>)),
-                    ModuleDefinition.ImportReference(typeof(Action<,,,,,,,,,,,,,,,>)),
-                    ModuleDefinition.ImportReference(typeof(Action<,,,,,,,,,,,,,,,>))
+                    ModuleDefinition.GetTypeReference(typeof(Action)),
+                    ModuleDefinition.GetTypeReference(typeof(Action<>)),
+                    ModuleDefinition.GetTypeReference(typeof(Action<,>)),
+                    ModuleDefinition.GetTypeReference(typeof(Action<,,>)),
+                    ModuleDefinition.GetTypeReference(typeof(Action<,,,>)),
+                    ModuleDefinition.GetTypeReference(typeof(Action<,,,,>)),
+                    ModuleDefinition.GetTypeReference(typeof(Action<,,,,,>)),
+                    ModuleDefinition.GetTypeReference(typeof(Action<,,,,,,>)),
+                    ModuleDefinition.GetTypeReference(typeof(Action<,,,,,,,>)),
+                    ModuleDefinition.GetTypeReference(typeof(Action<,,,,,,,,>)),
+                    ModuleDefinition.GetTypeReference(typeof(Action<,,,,,,,,,>)),
+                    ModuleDefinition.GetTypeReference(typeof(Action<,,,,,,,,,,>)),
+                    ModuleDefinition.GetTypeReference(typeof(Action<,,,,,,,,,,,>)),
+                    ModuleDefinition.GetTypeReference(typeof(Action<,,,,,,,,,,,,>)),
+                    ModuleDefinition.GetTypeReference(typeof(Action<,,,,,,,,,,,,,>)),
+                    ModuleDefinition.GetTypeReference(typeof(Action<,,,,,,,,,,,,,,>)),
+                    ModuleDefinition.GetTypeReference(typeof(Action<,,,,,,,,,,,,,,,>)),
+                    ModuleDefinition.GetTypeReference(typeof(Action<,,,,,,,,,,,,,,,>))
                 },
                 FuncTypes = new List<TypeReference>
                 {
-                    ModuleDefinition.ImportReference(typeof(Func<>)),
-                    ModuleDefinition.ImportReference(typeof(Func<,>)),
-                    ModuleDefinition.ImportReference(typeof(Func<,,>)),
-                    ModuleDefinition.ImportReference(typeof(Func<,,,>)),
-                    ModuleDefinition.ImportReference(typeof(Func<,,,,>)),
-                    ModuleDefinition.ImportReference(typeof(Func<,,,,,>)),
-                    ModuleDefinition.ImportReference(typeof(Func<,,,,,,>)),
-                    ModuleDefinition.ImportReference(typeof(Func<,,,,,,,>)),
-                    ModuleDefinition.ImportReference(typeof(Func<,,,,,,,,>)),
-                    ModuleDefinition.ImportReference(typeof(Func<,,,,,,,,,>)),
-                    ModuleDefinition.ImportReference(typeof(Func<,,,,,,,,,,>)),
-                    ModuleDefinition.ImportReference(typeof(Func<,,,,,,,,,,,>)),
-                    ModuleDefinition.ImportReference(typeof(Func<,,,,,,,,,,,,>)),
-                    ModuleDefinition.ImportReference(typeof(Func<,,,,,,,,,,,,,>)),
-                    ModuleDefinition.ImportReference(typeof(Func<,,,,,,,,,,,,,,>)),
-                    ModuleDefinition.ImportReference(typeof(Func<,,,,,,,,,,,,,,,>)),
-                    ModuleDefinition.ImportReference(typeof(Func<,,,,,,,,,,,,,,,,>))
+                    ModuleDefinition.GetTypeReference(typeof(Func<>)),
+                    ModuleDefinition.GetTypeReference(typeof(Func<,>)),
+                    ModuleDefinition.GetTypeReference(typeof(Func<,,>)),
+                    ModuleDefinition.GetTypeReference(typeof(Func<,,,>)),
+                    ModuleDefinition.GetTypeReference(typeof(Func<,,,,>)),
+                    ModuleDefinition.GetTypeReference(typeof(Func<,,,,,>)),
+                    ModuleDefinition.GetTypeReference(typeof(Func<,,,,,,>)),
+                    ModuleDefinition.GetTypeReference(typeof(Func<,,,,,,,>)),
+                    ModuleDefinition.GetTypeReference(typeof(Func<,,,,,,,,>)),
+                    ModuleDefinition.GetTypeReference(typeof(Func<,,,,,,,,,>)),
+                    ModuleDefinition.GetTypeReference(typeof(Func<,,,,,,,,,,>)),
+                    ModuleDefinition.GetTypeReference(typeof(Func<,,,,,,,,,,,>)),
+                    ModuleDefinition.GetTypeReference(typeof(Func<,,,,,,,,,,,,>)),
+                    ModuleDefinition.GetTypeReference(typeof(Func<,,,,,,,,,,,,,>)),
+                    ModuleDefinition.GetTypeReference(typeof(Func<,,,,,,,,,,,,,,>)),
+                    ModuleDefinition.GetTypeReference(typeof(Func<,,,,,,,,,,,,,,,>)),
+                    ModuleDefinition.GetTypeReference(typeof(Func<,,,,,,,,,,,,,,,,>))
                 },
                 OriginalMethodAttributeConstructor = originalMethodAttributeConstructor,
                 FindMethod = findMethod,
@@ -170,7 +170,7 @@ namespace Someta.Fody
                 MethodInfoType = methodInfoType,
                 PropertyInfoType = propertyInfoType,
                 EventInfoType = eventInfoType,
-                ValueType = ModuleDefinition.ImportReference(typeof(ValueType)),
+                ValueType = ModuleDefinition.GetTypeReference(typeof(ValueType)),
                 RegisterExtensionPoint = extensionPointRegistryRegister
             };
             Context = context;

@@ -73,7 +73,7 @@ namespace Someta.Fody
 
         public void ComposeTypeArgumentsIntoArray(ILProcessor il, MethodDefinition method)
         {
-            var typeType = ModuleDefinition.ImportReference(typeof(Type));
+            var typeType = ModuleDefinition.GetTypeReference(typeof(Type));
 
             // I don't fully understand this, but if this line isn't here, you'll get the error:
             // Member 'System.Type' is declared in another module and needs to be imported
